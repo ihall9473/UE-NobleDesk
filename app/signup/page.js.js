@@ -1,9 +1,17 @@
 "use client";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 
 export default function SignupPage() {
+  return (
+    <Suspense fallback={<div style={{ maxWidth: 360, margin: "60px auto" }}>Loading...</div>}>
+      <SignupForm />
+    </Suspense>
+  );
+}
+
+function SignupForm() {
   const params = useSearchParams();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
