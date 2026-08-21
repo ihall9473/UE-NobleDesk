@@ -10,6 +10,9 @@ export async function middleware(req) {
     pathname.startsWith("/set-password") ||
     pathname.startsWith("/api/signup") ||
     pathname.startsWith("/api/webhook") ||
+    pathname.startsWith("/api/cron") ||
+    pathname.startsWith("/privacy") ||
+    pathname.startsWith("/terms") ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon")
   ) {
