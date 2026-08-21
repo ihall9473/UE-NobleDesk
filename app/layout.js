@@ -1,6 +1,6 @@
 import "./globals.css";
 import NotificationSetup from "./components/NotificationSetup";
-import LogoutButton from "./components/LogoutButton";
+import NavBar from "./components/NavBar";
 
 export const metadata = {
   title: "UE NobleDesk",
@@ -24,17 +24,7 @@ export default function RootLayout({ children }) {
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
       </head>
       <body>
-        <nav className="nav">
-          <span style={{ color: "#fff", fontWeight: 700, marginRight: 8 }}>UE NobleDesk</span>
-          <a href="/leads">Leads</a>
-          <a href="/clients">Clients</a>
-          <a href="/compose">Send a Text</a>
-          <a href="/conversations">Conversations</a>
-          <a href="/occasions">Occasions</a>
-          <a href="/settings">Settings</a>
-          <a href="/admin">Admin</a>
-          <LogoutButton />
-        </nav>
+        <NavBar />
         <main className="main">
           <NotificationSetup />
           {children}
