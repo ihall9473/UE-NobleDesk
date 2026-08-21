@@ -61,6 +61,7 @@ function SignupForm() {
         <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         <input
           type="password"
+          autoComplete="new-password"
           placeholder="Password (8+ characters)"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -75,7 +76,7 @@ function SignupForm() {
         <button type="submit" disabled={loading}>{loading ? "Creating account..." : "Create Account"}</button>
       </form>
       <p className="subtitle" style={{ marginTop: 16 }}>
-        Already have an account? <a href="/login" style={{ color: "#4f46e5" }}>Log in</a>
+        Already have an account? <a href="/login" style={{ color: "#c9a227" }}>Log in</a>
       </p>
     </div>
   );
