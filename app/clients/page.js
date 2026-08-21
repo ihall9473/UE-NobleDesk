@@ -1,252 +1,229 @@
 "use client";
 import { useEffect, useState } from "react";
-import { DATE_PRESETS, getDateRange } from "@/lib/dateRanges";
+import { useParams } from "next/navigation";
+import AddressAutocomplete from "@/app/components/AddressAutocomplete";
+import BeneficiaryList from "@/app/components/BeneficiaryList";
+import { US_STATES } from "@/lib/usStates";
+import { calculateAge } from "@/lib/age";
 
-// Splits the stored full name into first/last for filtering and sorting,
-// without needing separate name fields in the database.
-function splitName(fullName) {
-  const parts = (fullName || "").trim().split(/\s+/);
-  return { first: parts[0] || "", last: parts.slice(1).join(" ") || "" };
-}
-
-export default function ClientsPage() {
-  const [clients, setClients] = useState(null);
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
+export default function ClientDetailPage() {
+  const { contactId } = useParams();
+  const [contact, setContact] = useState(null);
+  const [form, setForm] = useState(null);
   const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const [search, setSearch] = useState("");
-  const [carrierFilter, setCarrierFilter] = useState("all");
-  const [stateFilter, setStateFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("firstName"); // firstName | lastName | carrier | state
-  const [datePreset, setDatePreset] = useState("all");
-  const [customDate, setCustomDate] = useState("");
-  const [customStart, setCustomStart] = useState("");
-  const [customEnd, setCustomEnd] = useState("");
+  const [saving, setSaving] = useState(false);
 
   async function load() {
-    const res = await fetch("/api/clients");
+    const res = await fetch(`/api/clients/${contactId}`);
     const data = await res.json();
-    setClients(data.clients || []);
+    if (!res.ok) {
+      setMessage(data.error || "Couldn't load this client.");
+      return;
+    }
+    setContact(data.contact);
+    const d = data.contact.client_details || {};
+    setForm({
+      name: data.contact.name || "",
+      phone: data.contact.phone || "",
+      carrier: d.carrier || "",
+      policyProduct: d.policy_product || "",
+      coverageAmount: d.coverage_amount || "",
+      monthlyPremium: d.monthly_premium || "",
+      policyNumber: d.policy_number || "",
+      draftDate: d.draft_date || "",
+      applicationSubmittedDate: d.application_submitted_date || "",
+      primaryBeneficiaries: d.primary_beneficiaries?.length ? d.primary_beneficiaries : [],
+      contingentBeneficiaries: d.contingent_beneficiaries?.length ? d.contingent_beneficiaries : [],
+      dateOfBirth: d.date_of_birth || "",
+      birthState: d.birth_state || "",
+      email: d.email || "",
+      addressLine: d.address_line || "",
+      city: d.city || "",
+      state: d.state || "",
+      zip: d.zip || "",
+      health: d.health || "",
+      height: d.height || "",
+      weight: d.weight || "",
+      bankName: d.bank_name || "",
+      // Sensitive fields: intentionally left blank even though they're already
+      // saved. Typing a new value replaces it; leaving blank keeps what's on file.
+      ssn: "",
+      routingNumber: "",
+      accountNumber: "",
+      hasSSN: !!d.ssn,
+      hasRouting: !!d.routingNumber,
+      hasAccount: !!d.accountNumber,
+    });
   }
 
   useEffect(() => {
     load();
-  }, []);
+  }, [contactId]);
 
-  async function addClient(e) {
+  function set(field, value) {
+    setForm((f) => ({ ...f, [field]: value }));
+  }
+
+  async function save(e) {
     e.preventDefault();
-    setLoading(true);
-    const res = await fetch("/api/clients", {
-      method: "POST",
+    setSaving(true);
+    setMessage("");
+    const res = await fetch(`/api/clients/${contactId}`, {
+      method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, phone }),
+      body: JSON.stringify(form),
     });
-    setLoading(false);
+    setSaving(false);
     const data = await res.json();
     if (res.ok) {
-      setName("");
-      setPhone("");
-      window.location.href = `/clients/${data.contact.id}`;
+      setMessage("Saved.");
+      load();
     } else {
       setMessage(data.error || "Something went wrong.");
     }
   }
 
-  const allClients = clients || [];
+  async function removeClient() {
+    if (!confirm(`Remove ${form.name}? This deletes their full record and message history.`)) return;
+    await fetch(`/api/clients/${contactId}`, { method: "DELETE" });
+    window.location.href = "/clients";
+  }
 
-  // Distinct, sorted lists of carriers/states actually in use, for the filter dropdowns.
-  const carrierOptions = [...new Set(allClients.map((c) => c.client_details?.carrier).filter(Boolean))].sort();
-  const stateOptions = [...new Set(allClients.map((c) => c.client_details?.state).filter(Boolean))].sort();
+  if (!form) return <p>{message || "Loading..."}</p>;
 
-  const dateRange = getDateRange(datePreset, customDate, customStart, customEnd);
-
-  let visible = allClients.filter((c) => {
-    const matchesSearch =
-      c.name.toLowerCase().includes(search.toLowerCase()) || c.phone.includes(search);
-    const matchesCarrier = carrierFilter === "all" || c.client_details?.carrier === carrierFilter;
-    const matchesState = stateFilter === "all" || c.client_details?.state === stateFilter;
-
-    let matchesDate = true;
-    if (dateRange) {
-      const submitted = c.client_details?.application_submitted_date;
-      matchesDate = !!submitted && submitted >= dateRange.start && submitted <= dateRange.end;
-    }
-
-    return matchesSearch && matchesCarrier && matchesState && matchesDate;
-  });
-
-  visible = [...visible].sort((a, b) => {
-    if (sortBy === "firstName") return splitName(a.name).first.localeCompare(splitName(b.name).first);
-    if (sortBy === "lastName") return splitName(a.name).last.localeCompare(splitName(b.name).last);
-    if (sortBy === "carrier") return (a.client_details?.carrier || "").localeCompare(b.client_details?.carrier || "");
-    if (sortBy === "state") return (a.client_details?.state || "").localeCompare(b.client_details?.state || "");
-    return 0;
-  });
-
-  // Total annual premium - reflects whatever's currently filtered/searched,
-  // so "This Week" shows exactly what was submitted this week and what
-  // it's worth. Premiums are stored as free text (e.g. "$150", "150.00/mo")
-  // so strip anything that isn't a digit or decimal point before summing.
-  const totalMonthly = visible.reduce((sum, c) => {
-    const raw = c.client_details?.monthly_premium;
-    if (!raw) return sum;
-    const num = parseFloat(String(raw).replace(/[^0-9.]/g, ""));
-    return isNaN(num) ? sum : sum + num;
-  }, 0);
-  const totalAnnual = totalMonthly * 12;
-  const clientsWithPremium = visible.filter((c) => c.client_details?.monthly_premium).length;
-  const isFiltered = search || carrierFilter !== "all" || stateFilter !== "all" || datePreset !== "all";
+  const age = calculateAge(form.dateOfBirth);
 
   return (
     <div>
-      <h1>Clients</h1>
-      <p className="subtitle">Your book of business — full policy and contact details for every client.</p>
+      <a href="/clients" style={{ color: "#c9a227" }}>&larr; Back to Clients</a>
+      <h1>{form.name}</h1>
+      {message && <p className={message === "Saved." ? "success" : "error"}>{message}</p>}
 
-      {allClients.length > 0 && (
-        <div className="card" style={{ background: "#f0f4ff", border: "1px solid #c7d2fe" }}>
-          <div className="row">
-            <div>
-              <div style={{ fontSize: 13, color: "#4338ca", fontWeight: 600 }}>
-                TOTAL ANNUAL PREMIUM{isFiltered ? " (FILTERED)" : ""}
-              </div>
-              <div style={{ fontSize: 28, fontWeight: 700, color: "#1a1a2e" }}>
-                ${totalAnnual.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-            </div>
-            <div style={{ textAlign: "right", color: "#666", fontSize: 13 }}>
-              ${totalMonthly.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/mo total
-              <br />
-              across {clientsWithPremium} of {isFiltered ? visible.length : allClients.length} clients
-            </div>
-          </div>
-        </div>
-      )}
-
-      {message && <p className="error">{message}</p>}
-
-      <div className="card">
-        <h3>Add a new client</h3>
-        <p className="subtitle" style={{ marginBottom: 8 }}>
-          Just their name and number to start — you'll fill in policy details on the next page.
-        </p>
-        <form onSubmit={addClient}>
-          <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
-          <input placeholder="Phone number" value={phone} onChange={(e) => setPhone(e.target.value)} required />
-          <button type="submit" disabled={loading}>{loading ? "Adding..." : "Add Client & Continue"}</button>
-        </form>
-      </div>
-
-      <div className="card">
-        <input
-          placeholder="Search by name or phone..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <div style={{ flex: 1, minWidth: 140 }}>
-            <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Carrier</label>
-            <select value={carrierFilter} onChange={(e) => setCarrierFilter(e.target.value)} style={{ marginBottom: 0 }}>
-              <option value="all">All Carriers</option>
-              {carrierOptions.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-          <div style={{ flex: 1, minWidth: 140 }}>
-            <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>State</label>
-            <select value={stateFilter} onChange={(e) => setStateFilter(e.target.value)} style={{ marginBottom: 0 }}>
-              <option value="all">All States</option>
-              {stateOptions.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
-          <div style={{ flex: 1, minWidth: 140 }}>
-            <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Sort by</label>
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} style={{ marginBottom: 0 }}>
-              <option value="firstName">First Name</option>
-              <option value="lastName">Last Name</option>
-              <option value="carrier">Carrier</option>
-              <option value="state">State</option>
-            </select>
-          </div>
-          <div style={{ flex: 1, minWidth: 160 }}>
-            <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>
-              Application Submitted
-            </label>
-            <select value={datePreset} onChange={(e) => setDatePreset(e.target.value)} style={{ marginBottom: 0 }}>
-              {DATE_PRESETS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
-            </select>
-          </div>
+      <form onSubmit={save}>
+        <div className="card">
+          <h3>Contact Info</h3>
+          <input placeholder="Full name" value={form.name} onChange={(e) => set("name", e.target.value)} required />
+          <input placeholder="Phone number" value={form.phone} onChange={(e) => set("phone", e.target.value)} required />
+          <input placeholder="Email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} />
         </div>
 
-        {datePreset === "customDate" && (
-          <div style={{ marginTop: 10 }}>
-            <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Date</label>
-            <input type="date" value={customDate} onChange={(e) => setCustomDate(e.target.value)} style={{ marginBottom: 0 }} />
-          </div>
-        )}
+        <div className="card">
+          <h3>Personal Details</h3>
+          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Date of Birth</label>
+          <input type="date" value={form.dateOfBirth} onChange={(e) => set("dateOfBirth", e.target.value)} />
+          {age !== null && <p className="subtitle" style={{ marginTop: -8 }}>Age: {age}</p>}
 
-        {datePreset === "customRange" && (
-          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-            <div style={{ flex: 1 }}>
-              <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>From</label>
-              <input type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)} style={{ marginBottom: 0 }} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>To</label>
-              <input type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} style={{ marginBottom: 0 }} />
-            </div>
-          </div>
-        )}
+          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Birth State</label>
+          <select value={form.birthState} onChange={(e) => set("birthState", e.target.value)}>
+            <option value="">Select state...</option>
+            {US_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
 
-        {isFiltered && (
-          <button
-            type="button"
-            onClick={() => {
-              setSearch("");
-              setCarrierFilter("all");
-              setStateFilter("all");
-              setDatePreset("all");
-              setCustomDate("");
-              setCustomStart("");
-              setCustomEnd("");
+          <input placeholder="Health notes" value={form.health} onChange={(e) => set("health", e.target.value)} />
+          <div style={{ display: "flex", gap: 8 }}>
+            <input placeholder={'Height (e.g. 5\'10")'} value={form.height} onChange={(e) => set("height", e.target.value)} />
+            <input placeholder="Weight (lbs)" value={form.weight} onChange={(e) => set("weight", e.target.value)} />
+          </div>
+
+          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>
+            SSN {form.hasSSN && <span style={{ color: "#059669" }}>(on file — leave blank to keep)</span>}
+          </label>
+          <input
+            type="password"
+            placeholder={form.hasSSN ? "•••-••-••••" : "SSN"}
+            value={form.ssn}
+            onChange={(e) => set("ssn", e.target.value)}
+          />
+        </div>
+
+        <div className="card">
+          <h3>Address</h3>
+          <AddressAutocomplete
+            value={form.addressLine}
+            onChange={(v) => set("addressLine", v)}
+            onSelect={({ addressLine, city, state, zip }) => {
+              setForm((f) => ({ ...f, addressLine, city, state: state || f.state, zip }));
             }}
-            style={{ marginTop: 10, background: "#6b7280" }}
-          >
-            Clear Filters
-          </button>
-        )}
-      </div>
+          />
+          <div style={{ display: "flex", gap: 8 }}>
+            <input placeholder="City" value={form.city} onChange={(e) => set("city", e.target.value)} />
+            <select value={form.state} onChange={(e) => set("state", e.target.value)} style={{ maxWidth: 100 }}>
+              <option value="">State</option>
+              {US_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <input placeholder="Zip Code" value={form.zip} onChange={(e) => set("zip", e.target.value)} style={{ maxWidth: 120 }} />
+          </div>
+        </div>
 
-      <h3>
-        {visible.length === allClients.length ? "All Clients" : "Showing"} ({visible.length}
-        {visible.length !== allClients.length ? ` of ${allClients.length}` : ""})
-      </h3>
-      {clients === null && <p>Loading...</p>}
-      {visible.map((c) => {
-        const d = c.client_details || {};
-        return (
-          <a href={`/clients/${c.id}`} key={c.id} style={{ textDecoration: "none", color: "inherit" }}>
-            <div className="card">
-              <div className="row">
-                <strong>{c.name}</strong>
-                <span style={{ fontSize: 13, color: "#666" }}>{c.phone}</span>
-              </div>
-              <div style={{ color: "#666", fontSize: 13, marginTop: 4 }}>
-                {d.carrier || "No carrier set"}
-                {d.policy_product ? ` · ${d.policy_product}` : ""}
-                {d.coverage_amount ? ` · $${d.coverage_amount} coverage` : ""}
-                {d.state ? ` · ${d.state}` : ""}
-              </div>
-            </div>
-          </a>
-        );
-      })}
-      {allClients.length === 0 && (
-        <p className="subtitle">No clients yet. Add one above, or move a lead over from the Leads page.</p>
-      )}
-      {allClients.length > 0 && visible.length === 0 && (
-        <p className="subtitle">No clients match your search/filters.</p>
-      )}
+        <div className="card">
+          <h3>Policy Details</h3>
+          <input placeholder="Carrier" value={form.carrier} onChange={(e) => set("carrier", e.target.value)} />
+          <select value={form.policyProduct} onChange={(e) => set("policyProduct", e.target.value)}>
+            <option value="">Select policy product...</option>
+            <option value="Whole Life">Whole Life</option>
+            <option value="Term">Term</option>
+            <option value="IUL">IUL</option>
+          </select>
+          <input placeholder="Policy Number" value={form.policyNumber} onChange={(e) => set("policyNumber", e.target.value)} />
+          <div style={{ display: "flex", gap: 8 }}>
+            <input placeholder="Amount of Coverage" value={form.coverageAmount} onChange={(e) => set("coverageAmount", e.target.value)} />
+            <input placeholder="Monthly Premium" value={form.monthlyPremium} onChange={(e) => set("monthlyPremium", e.target.value)} />
+          </div>
+          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Draft Date</label>
+          <input type="date" value={form.draftDate} onChange={(e) => set("draftDate", e.target.value)} />
+
+          <label className="subtitle" style={{ display: "block", marginBottom: 4, marginTop: 8 }}>
+            Application Submitted Date
+          </label>
+          <input
+            type="date"
+            value={form.applicationSubmittedDate}
+            onChange={(e) => set("applicationSubmittedDate", e.target.value)}
+          />
+        </div>
+
+        <div className="card">
+          <h3>Beneficiaries</h3>
+          <BeneficiaryList
+            label="Primary Beneficiaries"
+            beneficiaries={form.primaryBeneficiaries}
+            onChange={(list) => set("primaryBeneficiaries", list)}
+          />
+          <BeneficiaryList
+            label="Contingent Beneficiaries"
+            beneficiaries={form.contingentBeneficiaries}
+            onChange={(list) => set("contingentBeneficiaries", list)}
+          />
+        </div>
+
+        <div className="card">
+          <h3>Banking (for premium draft)</h3>
+          <input placeholder="Bank Name" value={form.bankName} onChange={(e) => set("bankName", e.target.value)} />
+          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>
+            Routing Number {form.hasRouting && <span style={{ color: "#059669" }}>(on file — leave blank to keep)</span>}
+          </label>
+          <input
+            type="password"
+            placeholder={form.hasRouting ? "••••••••" : "Routing Number"}
+            value={form.routingNumber}
+            onChange={(e) => set("routingNumber", e.target.value)}
+          />
+          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>
+            Account Number {form.hasAccount && <span style={{ color: "#059669" }}>(on file — leave blank to keep)</span>}
+          </label>
+          <input
+            type="password"
+            placeholder={form.hasAccount ? "••••••••" : "Account Number"}
+            value={form.accountNumber}
+            onChange={(e) => set("accountNumber", e.target.value)}
+          />
+        </div>
+
+        <div style={{ display: "flex", gap: 8, marginBottom: 40 }}>
+          <button type="submit" disabled={saving}>{saving ? "Saving..." : "Save Client"}</button>
+          <button type="button" onClick={removeClient} style={{ background: "#dc2626" }}>Delete Client</button>
+        </div>
+      </form>
     </div>
   );
 }
