@@ -192,6 +192,51 @@ export default function SettingsPage() {
           <button type="submit" disabled={savingAlerts}>{savingAlerts ? "Saving..." : "Save"}</button>
         </form>
       </div>
+      <div className="card">
+        <h3>4. Your compliance pages (for Twilio registration)</h3>
+        <p className="subtitle" style={{ marginBottom: 8 }}>
+          Use these links when Twilio's A2P 10DLC form asks for a Privacy Policy and Terms of
+          Service - they automatically show your own name and number, nothing to edit.
+        </p>
+        {typeof window !== "undefined" && (
+          <>
+            <div style={{ marginBottom: 10 }}>
+              <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Privacy Policy</label>
+              <div className="row">
+                <code style={{ fontSize: 13, wordBreak: "break-all" }}>
+                  {window.location.origin}/privacy/{profile.id}
+                </code>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/privacy/${profile.id}`);
+                    setMessage("Privacy Policy link copied.");
+                  }}
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Terms of Service</label>
+              <div className="row">
+                <code style={{ fontSize: 13, wordBreak: "break-all" }}>
+                  {window.location.origin}/terms/{profile.id}
+                </code>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/terms/${profile.id}`);
+                    setMessage("Terms of Service link copied.");
+                  }}
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
