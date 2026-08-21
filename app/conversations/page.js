@@ -26,9 +26,9 @@ export default function ConversationsPage() {
 
       {conversations.map((c) => (
         <a href={`/conversations/${c.id}`} key={c.id} style={{ textDecoration: "none", color: "inherit" }}>
-          <div className="card">
+          <div className="card" style={{ background: "#f5f5f5", border: "1px solid #ddd" }}>
             <div className="row">
-              <strong>
+              <strong style={{ color: "#0e0e0f" }}>
                 {c.name}{" "}
                 <span
                   style={{
@@ -42,11 +42,11 @@ export default function ConversationsPage() {
                   {c.type === "client" ? "Client" : "Lead"}
                 </span>
               </strong>
-              <span style={{ fontSize: 12, color: "#999" }}>
+              <span style={{ fontSize: 12, color: "#666" }}>
                 {new Date(c.lastMessage.created_at).toLocaleString()}
               </span>
             </div>
-            <div style={{ color: "#666", marginTop: 4 }}>
+            <div style={{ color: "#444", marginTop: 4 }}>
               {c.lastMessage.direction === "outbound" ? "You: " : ""}
               {c.lastMessage.body}
             </div>
