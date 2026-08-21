@@ -3,23 +3,46 @@ import { useEffect, useState, useRef } from "react";
 import { US_STATES } from "@/lib/usStates";
 import { inferStateFromPhone } from "@/lib/areaCodeToState";
 
-// Splits pasted text into name/phone rows. Handles tab-separated (Google
-// Sheets copy) or comma-separated (CSV), 2+ columns, skips a header row.
+// Parses one line into { name, phone, state }. Handles tab-separated
+// (Google Sheets copy), comma-separated (CSV), or just plain typed text
+// separated by spaces - e.g. "Steve Stevens 3303456789 AZ". Finds the phone
+// number by looking for a token with 7+ digits; everything before it is the
+// name, and a state abbreviation found after it (if any) is captured too.
+function parseLine(line) {
+  let parts;
+  if (line.includes("\t")) parts = line.split("\t");
+  else if (line.includes(",")) parts = line.split(",");
+  else parts = line.split(/\s+/);
+  parts = parts.map((p) => p.trim()).filter((p) => p !== "");
+  if (parts.length < 2) return null;
+
+  let phoneIndex = -1;
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const digits = parts[i].replace(/\D/g, "");
+    if (digits.length >= 7) {
+      phoneIndex = i;
+      break;
+    }
+  }
+  if (phoneIndex === -1) return null; // no phone-like token on this line - probably a header row
+
+  const phone = parts[phoneIndex];
+  const name = parts.slice(0, phoneIndex).join(" ");
+  if (!name) return null;
+
+  const afterPhone = parts.slice(phoneIndex + 1);
+  const stateToken = afterPhone.find((p) => US_STATES.includes(p.toUpperCase()));
+
+  return { name, phone, state: stateToken ? stateToken.toUpperCase() : null };
+}
+
 function parseRows(text) {
-  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
-  const rows = lines
-    .map((line) => {
-      const parts = line.includes("\t") ? line.split("\t") : line.split(",");
-      return parts.map((p) => p.trim()).filter((p) => p !== "");
-    })
-    .filter((parts) => parts.length >= 2)
-    .map((parts) => {
-      const phone = parts[parts.length - 1];
-      const name = parts.slice(0, -1).join(" ");
-      return { name, phone };
-    });
-  if (rows.length > 0 && !/\d/.test(rows[0].phone)) rows.shift();
-  return rows.filter((r) => r.name && r.phone);
+  return text
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .map(parseLine)
+    .filter(Boolean);
 }
 
 export default function LeadsPage() {
@@ -145,13 +168,13 @@ export default function LeadsPage() {
       <div className="card">
         <h3>Import a lead pack</h3>
         <p className="subtitle" style={{ marginBottom: 8 }}>
-          From Google Sheets: select the relevant columns (First Name, Last Name, Phone all
-          work fine), copy, and paste below. Or upload a CSV.
+          Paste from Google Sheets (any columns, phone anywhere), or just type one lead per
+          line yourself - name, phone, and optionally their state at the end.
         </p>
         <form onSubmit={addBulk}>
           <textarea
             rows={6}
-            placeholder={"Paste directly from Google Sheets here, e.g.\nJane    Smith    555-123-4567\nJohn    Doe    555-987-6543"}
+            placeholder={"Type or paste one per line, e.g.\nSteve Stevens 3303456789 AZ\nJane Smith 555-123-4567"}
             value={bulk}
             onChange={(e) => setBulk(e.target.value)}
           />
@@ -164,8 +187,8 @@ export default function LeadsPage() {
           <input type="file" accept=".csv,.txt" ref={fileInputRef} onChange={handleFileUpload} />
         </div>
         <p className="subtitle" style={{ marginTop: 10, marginBottom: 0 }}>
-          State isn't set on bulk imports — each lead's state gets guessed from their area
-          code automatically wherever you sort/filter by state.
+          No state typed in? It gets guessed from the area code automatically wherever you
+          sort/filter by state.
         </p>
       </div>
 
