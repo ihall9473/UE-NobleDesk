@@ -15,40 +15,62 @@
 
 * { box-sizing: border-box; }
 
+html { scroll-behavior: smooth; }
+
 body {
   margin: 0;
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: var(--bg);
+  background:
+    radial-gradient(ellipse 900px 500px at 50% -10%, rgba(201, 162, 39, 0.05), transparent),
+    var(--bg);
+  background-attachment: fixed;
   color: var(--text);
 }
 
 .nav {
   display: flex;
   align-items: center;
-  gap: 24px;
-  padding: 16px 24px;
+  gap: 28px;
+  padding: 20px 32px;
   background: #0a0a0b;
   border-bottom: 1px solid var(--card-border);
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 .nav a {
   color: var(--text-muted);
   text-decoration: none;
   font-weight: 500;
-  font-size: 14px;
+  font-size: 14.5px;
   letter-spacing: 0.2px;
+  padding: 6px 2px;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
 }
 .nav a:hover { color: var(--gold); }
+.nav a.active { color: var(--gold); border-bottom-color: var(--gold); }
 
 .main {
-  max-width: 720px;
+  max-width: 880px;
   margin: 0 auto;
-  padding: 32px 20px;
+  padding: 44px 24px 80px;
 }
 
-h1 { font-size: 26px; margin-bottom: 4px; font-weight: 700; letter-spacing: -0.3px; }
-h3 { font-weight: 600; }
+/* Page-transition: replays this fade+rise animation every time route content
+   remounts (see PageTransition.js), so navigating never feels instant/flat. */
+.page-transition {
+  animation: pageIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
-.subtitle { color: var(--text-muted); margin-bottom: 24px; font-size: 14px; }
+h1 { font-size: 32px; margin-bottom: 6px; font-weight: 700; letter-spacing: -0.4px; }
+h3 { font-weight: 600; font-size: 17px; }
+
+.subtitle { color: var(--text-muted); margin-bottom: 28px; font-size: 15px; line-height: 1.5; }
 
 /* Small-caps section labels, like "ESTIMATED YIELD" style on the UE site */
 .label-caps {
@@ -61,41 +83,51 @@ h3 { font-weight: 600; }
 
 input, textarea, select {
   width: 100%;
-  padding: 10px 12px;
+  padding: 12px 14px;
   border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 8px;
+  border-radius: 9px;
   font-size: 15px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   font-family: inherit;
   background: #0e0e0f;
   color: var(--text);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 input::placeholder, textarea::placeholder { color: #6b6b6b; }
 input:focus, textarea:focus, select:focus {
   outline: none;
   border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.15);
 }
 
 button {
   background: var(--gold);
   color: #0e0e0f;
   border: none;
-  padding: 10px 18px;
-  border-radius: 8px;
-  font-size: 14px;
+  padding: 11px 20px;
+  border-radius: 9px;
+  font-size: 14.5px;
   font-weight: 600;
   cursor: pointer;
   letter-spacing: 0.2px;
+  transition: background 0.15s ease, transform 0.08s ease;
 }
 button:hover { background: var(--gold-hover); }
-button:disabled { background: #3a3a3a; color: #8a8a8a; cursor: not-allowed; }
+button:active { transform: scale(0.97); }
+button:disabled { background: #3a3a3a; color: #8a8a8a; cursor: not-allowed; transform: none; }
 
 .card {
   background: var(--card);
   border: 1px solid var(--card-border);
-  border-radius: 14px;
-  padding: 18px;
-  margin-bottom: 12px;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 14px;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+a .card:hover, .card.interactive:hover {
+  transform: translateY(-2px);
+  border-color: rgba(201, 162, 39, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -107,26 +139,33 @@ button:disabled { background: #3a3a3a; color: #8a8a8a; cursor: not-allowed; }
 .checkbox-row input { width: auto; margin: 0; accent-color: var(--gold); }
 
 .bubble-outbound {
-  background: var(--gold); color: #0e0e0f; padding: 10px 14px;
-  border-radius: 14px 14px 2px 14px; max-width: 75%; margin-left: auto; margin-bottom: 8px;
+  background: var(--gold); color: #0e0e0f; padding: 11px 15px;
+  border-radius: 16px 16px 3px 16px; max-width: 75%; margin-left: auto; margin-bottom: 10px;
   font-weight: 500;
+  animation: bubbleIn 0.25s ease;
 }
 .bubble-inbound {
-  background: #232323; color: var(--text); padding: 10px 14px;
-  border-radius: 14px 14px 14px 2px; max-width: 75%; margin-bottom: 8px;
+  background: #232323; color: var(--text); padding: 11px 15px;
+  border-radius: 16px 16px 16px 3px; max-width: 75%; margin-bottom: 10px;
   border: 1px solid var(--card-border);
+  animation: bubbleIn 0.25s ease;
 }
-.thread { display: flex; flex-direction: column; margin-bottom: 20px; }
-.timestamp { font-size: 11px; color: #6b6b6b; margin: 2px 0 10px; }
+@keyframes bubbleIn {
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.thread { display: flex; flex-direction: column; margin-bottom: 24px; }
+.timestamp { font-size: 11px; color: #6b6b6b; margin: 2px 0 12px; }
 
-a { color: var(--gold); }
+a { color: var(--gold); transition: opacity 0.15s ease; }
+a:hover { opacity: 0.8; }
 
 /* Pill-style badges, matching the UE site's "At Cost" / "Real-Time Drip" tags */
 .badge {
   display: inline-block;
   font-size: 11px;
   font-weight: 600;
-  padding: 3px 10px;
+  padding: 4px 11px;
   border-radius: 999px;
   border: 1px solid;
 }
