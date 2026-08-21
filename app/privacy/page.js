@@ -58,15 +58,15 @@ export default function PrivacyPolicyPage() {
 
       <h3>Your Choices</h3>
       <p>
-        You can ask me to stop contacting you, or to delete your information, at any time by
-        emailing me at the address below.
+        You can stop receiving text messages at any time by replying <strong>STOP</strong> to
+        any text from me. For any other questions about your information, reply{" "}
+        <strong>HELP</strong> or call/text <strong>330-607-9473</strong> directly.
       </p>
 
       <h3>Contact</h3>
       <p>
         Isaac Hall<br />
         Independent Insurance Agent<br />
-        Email: ihall9473@gmail.com<br />
         Phone: 330-607-9473
       </p>
     </div>
