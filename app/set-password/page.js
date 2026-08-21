@@ -52,6 +52,7 @@ export default function SetPasswordPage() {
         <form onSubmit={handleSubmit}>
           <input
             type="password"
+            autoComplete="new-password"
             placeholder="New password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -60,6 +61,7 @@ export default function SetPasswordPage() {
           />
           <input
             type="password"
+            autoComplete="new-password"
             placeholder="Confirm password"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
