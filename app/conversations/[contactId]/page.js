@@ -41,7 +41,7 @@ export default function ThreadPage() {
 
   return (
     <div>
-      <a href="/conversations" style={{ color: "#4f46e5" }}>&larr; Back to Conversations</a>
+      <a href="/conversations" style={{ color: "#c9a227" }}>&larr; Back to Conversations</a>
       <h1>{contact.name}</h1>
       <p className="subtitle">{contact.phone}</p>
 
