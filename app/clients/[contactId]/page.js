@@ -45,6 +45,8 @@ export default function ClientDetailPage() {
       height: d.height || "",
       weight: d.weight || "",
       bankName: d.bank_name || "",
+      // Sensitive fields: intentionally left blank even though they're already
+      // saved. Typing a new value replaces it; leaving blank keeps what's on file.
       ssn: "",
       routingNumber: "",
       accountNumber: "",
@@ -102,55 +104,7 @@ export default function ClientDetailPage() {
           <h3>Contact Info</h3>
           <input placeholder="Full name" value={form.name} onChange={(e) => set("name", e.target.value)} required />
           <input placeholder="Phone number" value={form.phone} onChange={(e) => set("phone", e.target.value)} required />
-          <input placeholder="Email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} />
-        </div>
-
-        <div className="card">
-          <h3>Personal Details</h3>
-          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Date of Birth</label>
-          <input type="date" value={form.dateOfBirth} onChange={(e) => set("dateOfBirth", e.target.value)} />
-          {age !== null && <p className="subtitle" style={{ marginTop: -8 }}>Age: {age}</p>}
-
-          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Birth State</label>
-          <select value={form.birthState} onChange={(e) => set("birthState", e.target.value)}>
-            <option value="">Select state...</option>
-            {US_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
-
-          <input placeholder="Health notes" value={form.health} onChange={(e) => set("health", e.target.value)} />
-          <div style={{ display: "flex", gap: 8 }}>
-            <input placeholder={'Height (e.g. 5\'10")'} value={form.height} onChange={(e) => set("height", e.target.value)} />
-            <input placeholder="Weight (lbs)" value={form.weight} onChange={(e) => set("weight", e.target.value)} />
-          </div>
-
-          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>
-            SSN {form.hasSSN && <span style={{ color: "#059669" }}>(on file — leave blank to keep)</span>}
-          </label>
-          <input
-            type="password"
-            placeholder={form.hasSSN ? "•••-••-••••" : "SSN"}
-            value={form.ssn}
-            onChange={(e) => set("ssn", e.target.value)}
-          />
-        </div>
-
-        <div className="card">
-          <h3>Address</h3>
-          <AddressAutocomplete
-            value={form.addressLine}
-            onChange={(v) => set("addressLine", v)}
-            onSelect={({ addressLine, city, state, zip }) => {
-              setForm((f) => ({ ...f, addressLine, city, state: state || f.state, zip }));
-            }}
-          />
-          <div style={{ display: "flex", gap: 8 }}>
-            <input placeholder="City" value={form.city} onChange={(e) => set("city", e.target.value)} />
-            <select value={form.state} onChange={(e) => set("state", e.target.value)} style={{ maxWidth: 100 }}>
-              <option value="">State</option>
-              {US_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
-            <input placeholder="Zip Code" value={form.zip} onChange={(e) => set("zip", e.target.value)} style={{ maxWidth: 120 }} />
-          </div>
+          <input placeholder="Email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} autoComplete="off" />
         </div>
 
         <div className="card">
@@ -181,6 +135,55 @@ export default function ClientDetailPage() {
         </div>
 
         <div className="card">
+          <h3>Personal Details</h3>
+          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Date of Birth</label>
+          <input type="date" value={form.dateOfBirth} onChange={(e) => set("dateOfBirth", e.target.value)} />
+          {age !== null && <p className="subtitle" style={{ marginTop: -8 }}>Age: {age}</p>}
+
+          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Birth State</label>
+          <select value={form.birthState} onChange={(e) => set("birthState", e.target.value)}>
+            <option value="">Select state...</option>
+            {US_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+
+          <input placeholder="Health notes" value={form.health} onChange={(e) => set("health", e.target.value)} autoComplete="off" />
+          <div style={{ display: "flex", gap: 8 }}>
+            <input placeholder={'Height (e.g. 5\'10")'} value={form.height} onChange={(e) => set("height", e.target.value)} autoComplete="off" />
+            <input placeholder="Weight (lbs)" value={form.weight} onChange={(e) => set("weight", e.target.value)} autoComplete="off" />
+          </div>
+
+          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>
+            SSN {form.hasSSN && <span style={{ color: "#059669" }}>(on file — leave blank to keep)</span>}
+          </label>
+          <input
+            type="password"
+            autoComplete="new-password"
+            placeholder={form.hasSSN ? "•••-••-••••" : "SSN"}
+            value={form.ssn}
+            onChange={(e) => set("ssn", e.target.value)}
+          />
+        </div>
+
+        <div className="card">
+          <h3>Address</h3>
+          <AddressAutocomplete
+            value={form.addressLine}
+            onChange={(v) => set("addressLine", v)}
+            onSelect={({ addressLine, city, state, zip }) => {
+              setForm((f) => ({ ...f, addressLine, city, state: state || f.state, zip }));
+            }}
+          />
+          <div style={{ display: "flex", gap: 8 }}>
+            <input placeholder="City" value={form.city} onChange={(e) => set("city", e.target.value)} autoComplete="off" />
+            <select value={form.state} onChange={(e) => set("state", e.target.value)} style={{ maxWidth: 100 }}>
+              <option value="">State</option>
+              {US_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <input placeholder="Zip Code" value={form.zip} onChange={(e) => set("zip", e.target.value)} style={{ maxWidth: 120 }} autoComplete="off" />
+          </div>
+        </div>
+
+        <div className="card">
           <h3>Beneficiaries</h3>
           <BeneficiaryList
             label="Primary Beneficiaries"
@@ -196,12 +199,13 @@ export default function ClientDetailPage() {
 
         <div className="card">
           <h3>Banking (for premium draft)</h3>
-          <input placeholder="Bank Name" value={form.bankName} onChange={(e) => set("bankName", e.target.value)} />
+          <input placeholder="Bank Name" value={form.bankName} onChange={(e) => set("bankName", e.target.value)} autoComplete="off" />
           <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>
             Routing Number {form.hasRouting && <span style={{ color: "#059669" }}>(on file — leave blank to keep)</span>}
           </label>
           <input
             type="password"
+            autoComplete="new-password"
             placeholder={form.hasRouting ? "••••••••" : "Routing Number"}
             value={form.routingNumber}
             onChange={(e) => set("routingNumber", e.target.value)}
@@ -211,6 +215,7 @@ export default function ClientDetailPage() {
           </label>
           <input
             type="password"
+            autoComplete="new-password"
             placeholder={form.hasAccount ? "••••••••" : "Account Number"}
             value={form.accountNumber}
             onChange={(e) => set("accountNumber", e.target.value)}
