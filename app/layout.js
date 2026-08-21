@@ -1,6 +1,7 @@
 import "./globals.css";
 import NotificationSetup from "./components/NotificationSetup";
 import NavBar from "./components/NavBar";
+import PageTransition from "./components/PageTransition";
 
 export const metadata = {
   title: "UE NobleDesk",
@@ -27,7 +28,7 @@ export default function RootLayout({ children }) {
         <NavBar />
         <main className="main">
           <NotificationSetup />
-          {children}
+          <PageTransition>{children}</PageTransition>
         </main>
       </body>
     </html>
