@@ -18,7 +18,7 @@ export default function NavBar() {
 
   return (
     <nav className="nav">
-      <span style={{ color: "#fff", fontWeight: 700, fontSize: 16, marginRight: 12, letterSpacing: 0.2 }}>UE NobleDesk</span>
+      <span style={{ color: "#fff", fontWeight: 700, fontSize: 24, marginRight: 20, letterSpacing: 0.2, fontFamily: "'Playfair Display', serif" }}>UE NobleDesk</span>
       {LINKS.map((link) => {
         const isActive = pathname.startsWith(link.href);
         return (
