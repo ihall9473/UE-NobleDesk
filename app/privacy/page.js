@@ -17,6 +17,14 @@ export default function PrivacyPolicyPage() {
         relevant to helping you find suitable coverage.
       </p>
 
+      <h3>How You May Have Been Contacted</h3>
+      <p>
+        Most individuals I contact have called a licensed insurance carrier's phone line
+        requesting information — whether that call was missed, disconnected, or resulted in a
+        conversation that did not lead to a finalized policy. I follow up with these individuals
+        by phone and text to continue assisting with their insurance inquiry.
+      </p>
+
       <h3>How I Use Your Information</h3>
       <p>
         I use your information solely to follow up on your insurance inquiry, answer your
