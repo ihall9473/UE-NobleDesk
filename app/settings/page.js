@@ -234,6 +234,25 @@ export default function SettingsPage() {
                 </button>
               </div>
             </div>
+            <div style={{ marginTop: 10 }}>
+              <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>
+                Request Info Page (opt-in CTA for Twilio)
+              </label>
+              <div className="row">
+                <code style={{ fontSize: 13, wordBreak: "break-all" }}>
+                  {window.location.origin}/request-info/{profile.id}
+                </code>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/request-info/${profile.id}`);
+                    setMessage("Request Info link copied.");
+                  }}
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
           </>
         )}
       </div>
