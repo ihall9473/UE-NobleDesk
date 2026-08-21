@@ -32,7 +32,7 @@ export default function TermsPage() {
         <li>Message frequency varies - typically a few messages during initial outreach, then only as needed afterward.</li>
         <li>Message and data rates may apply, based on your mobile carrier plan.</li>
         <li>Reply <strong>STOP</strong> at any time to opt out of further text messages.</li>
-        <li>Reply <strong>HELP</strong> for assistance, or contact me directly at ihall9473@gmail.com or 330-607-9473.</li>
+        <li>Reply <strong>HELP</strong> for assistance, or call/text 330-607-9473 directly.</li>
         <li>Carriers are not liable for delayed or undelivered messages.</li>
       </ul>
 
@@ -60,7 +60,6 @@ export default function TermsPage() {
       <p>
         Isaac Hall<br />
         Independent Insurance Agent<br />
-        Email: ihall9473@gmail.com<br />
         Phone: 330-607-9473
       </p>
     </div>
