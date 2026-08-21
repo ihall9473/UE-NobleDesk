@@ -29,6 +29,7 @@ export default function RootLayout({ children }) {
           <a href="/clients">Clients</a>
           <a href="/compose">Send a Text</a>
           <a href="/conversations">Conversations</a>
+          <a href="/occasions">Occasions</a>
           <a href="/settings">Settings</a>
           <a href="/admin">Admin</a>
         </nav>
