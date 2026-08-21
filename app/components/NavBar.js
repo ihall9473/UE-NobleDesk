@@ -18,18 +18,13 @@ export default function NavBar() {
 
   return (
     <nav className="nav">
-      <span style={{ color: "#fff", fontWeight: 700, fontSize: 16, marginRight: 12, letterSpacing: 0.2 }}>
-        UE NobleDesk
-      </span>
-      {LINKS.map((link) => (
-        
-          key={link.href}
-          href={link.href}
-          className={pathname.startsWith(link.href) ? "active" : ""}
-        >
-          {link.label}
-        </a>
-      ))}
+      <span style={{ color: "#fff", fontWeight: 700, fontSize: 16, marginRight: 12, letterSpacing: 0.2 }}>UE NobleDesk</span>
+      {LINKS.map((link) => {
+        const isActive = pathname.startsWith(link.href);
+        return (
+          <a key={link.href} href={link.href} className={isActive ? "active" : ""}>{link.label}</a>
+        );
+      })}
       <LogoutButton />
     </nav>
   );
