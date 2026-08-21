@@ -95,7 +95,7 @@ export default function ClientDetailPage() {
 
   return (
     <div>
-      <a href="/clients" style={{ color: "#4f46e5" }}>&larr; Back to Clients</a>
+      <a href="/clients" style={{ color: "#c9a227" }}>&larr; Back to Clients</a>
       <h1>{form.name}</h1>
       {message && <p className={message === "Saved." ? "success" : "error"}>{message}</p>}
 
