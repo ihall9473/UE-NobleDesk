@@ -25,7 +25,7 @@ export async function POST(req) {
 
   const body = await req.json();
   const defaultType = body.type === "client" ? "client" : "lead";
-  const rows = body.rows ? body.rows : [{ name: body.name, phone: body.phone, type: body.type }];
+  const rows = body.rows ? body.rows : [{ name: body.name, phone: body.phone, type: body.type, state: body.state }];
 
   const cleaned = rows
     .filter((r) => r.name && r.phone)
@@ -34,6 +34,7 @@ export async function POST(req) {
       name: r.name.trim(),
       phone: normalizePhone(r.phone),
       type: r.type === "client" ? "client" : r.type === "lead" ? "lead" : defaultType,
+      state: r.state || null,
     }));
 
   if (cleaned.length === 0) {
@@ -49,20 +50,26 @@ export async function POST(req) {
   return NextResponse.json({ contacts: data });
 }
 
-// Change a contact's type - e.g. moving a lead to client once they convert.
+// Change a contact's type and/or state - e.g. moving a lead to client once they convert.
 export async function PATCH(req) {
   const supabase = supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not logged in" }, { status: 401 });
 
-  const { id, type } = await req.json();
-  if (type !== "lead" && type !== "client") {
-    return NextResponse.json({ error: "Type must be 'lead' or 'client'" }, { status: 400 });
+  const { id, type, state } = await req.json();
+
+  const update = {};
+  if (type !== undefined) {
+    if (type !== "lead" && type !== "client") {
+      return NextResponse.json({ error: "Type must be 'lead' or 'client'" }, { status: 400 });
+    }
+    update.type = type;
   }
+  if (state !== undefined) update.state = state || null;
 
   const { error } = await supabase
     .from("contacts")
-    .update({ type })
+    .update(update)
     .eq("id", id)
     .eq("owner_id", user.id);
 
