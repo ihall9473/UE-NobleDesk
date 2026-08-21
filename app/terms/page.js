@@ -18,6 +18,14 @@ export default function TermsPage() {
         needs.
       </p>
 
+      <h3>How You May Have Been Contacted</h3>
+      <p>
+        Most individuals I contact have called a licensed insurance carrier's phone line
+        requesting information — whether that call was missed, disconnected, or resulted in a
+        conversation that did not lead to a finalized policy. I follow up with these individuals
+        by phone and text to continue assisting with their insurance inquiry.
+      </p>
+
       <h3>Text Messaging Program</h3>
       <ul>
         <li>By providing your mobile number, you consent to receive text messages from me regarding your insurance inquiry or policy.</li>
