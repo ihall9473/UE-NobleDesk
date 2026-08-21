@@ -1,70 +1,134 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
+
+:root {
+  --bg: #0e0e0f;
+  --card: #161616;
+  --card-border: rgba(255, 255, 255, 0.08);
+  --gold: #c9a227;
+  --gold-hover: #b8941f;
+  --green: #4ade80;
+  --text: #f5f5f5;
+  --text-muted: #9a9a9a;
+  --danger: #f87171;
+}
+
 * { box-sizing: border-box; }
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: #f7f7f8;
-  color: #1a1a1a;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
 }
+
 .nav {
   display: flex;
+  align-items: center;
   gap: 24px;
   padding: 16px 24px;
-  background: #1a1a2e;
+  background: #0a0a0b;
+  border-bottom: 1px solid var(--card-border);
 }
 .nav a {
-  color: #fff;
+  color: var(--text-muted);
   text-decoration: none;
-  font-weight: 600;
-  font-size: 15px;
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: 0.2px;
 }
-.nav a:hover { color: #a0a0ff; }
+.nav a:hover { color: var(--gold); }
+
 .main {
   max-width: 720px;
   margin: 0 auto;
   padding: 32px 20px;
 }
-h1 { font-size: 24px; margin-bottom: 4px; }
-.subtitle { color: #666; margin-bottom: 24px; }
+
+h1 { font-size: 26px; margin-bottom: 4px; font-weight: 700; letter-spacing: -0.3px; }
+h3 { font-weight: 600; }
+
+.subtitle { color: var(--text-muted); margin-bottom: 24px; font-size: 14px; }
+
+/* Small-caps section labels, like "ESTIMATED YIELD" style on the UE site */
+.label-caps {
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gold);
+}
+
 input, textarea, select {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #ccc;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 8px;
   font-size: 15px;
   margin-bottom: 12px;
   font-family: inherit;
+  background: #0e0e0f;
+  color: var(--text);
 }
+input::placeholder, textarea::placeholder { color: #6b6b6b; }
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
 button {
-  background: #4f46e5;
-  color: white;
+  background: var(--gold);
+  color: #0e0e0f;
   border: none;
   padding: 10px 18px;
   border-radius: 8px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+  letter-spacing: 0.2px;
 }
-button:hover { background: #4338ca; }
-button:disabled { background: #aaa; cursor: not-allowed; }
+button:hover { background: var(--gold-hover); }
+button:disabled { background: #3a3a3a; color: #8a8a8a; cursor: not-allowed; }
+
 .card {
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 18px;
   margin-bottom: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
+
 .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.error { color: #dc2626; margin-bottom: 12px; }
-.success { color: #16a34a; margin-bottom: 12px; }
+
+.error { color: var(--danger); margin-bottom: 12px; }
+.success { color: var(--green); margin-bottom: 12px; }
+
 .checkbox-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-.checkbox-row input { width: auto; margin: 0; }
+.checkbox-row input { width: auto; margin: 0; accent-color: var(--gold); }
+
 .bubble-outbound {
-  background: #4f46e5; color: white; padding: 10px 14px;
+  background: var(--gold); color: #0e0e0f; padding: 10px 14px;
   border-radius: 14px 14px 2px 14px; max-width: 75%; margin-left: auto; margin-bottom: 8px;
+  font-weight: 500;
 }
 .bubble-inbound {
-  background: #e5e5ea; color: #1a1a1a; padding: 10px 14px;
+  background: #232323; color: var(--text); padding: 10px 14px;
   border-radius: 14px 14px 14px 2px; max-width: 75%; margin-bottom: 8px;
+  border: 1px solid var(--card-border);
 }
 .thread { display: flex; flex-direction: column; margin-bottom: 20px; }
-.timestamp { font-size: 11px; color: #999; margin: 2px 0 10px; }
+.timestamp { font-size: 11px; color: #6b6b6b; margin: 2px 0 10px; }
+
+a { color: var(--gold); }
+
+/* Pill-style badges, matching the UE site's "At Cost" / "Real-Time Drip" tags */
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid;
+}
+.badge-gold { color: var(--gold); border-color: var(--gold); background: rgba(201, 162, 39, 0.08); }
+.badge-green { color: var(--green); border-color: var(--green); background: rgba(74, 222, 128, 0.08); }
+.badge-neutral { color: var(--text-muted); border-color: rgba(255,255,255,0.2); }
