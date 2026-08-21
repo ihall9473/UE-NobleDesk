@@ -47,7 +47,7 @@ export default async function PersonalizedTermsPage({ params }) {
         <li>Message frequency varies - typically a few messages during initial outreach, then only as needed afterward.</li>
         <li>Message and data rates may apply, based on your mobile carrier plan.</li>
         <li>Reply <strong>STOP</strong> at any time to opt out of further text messages.</li>
-        <li>Reply <strong>HELP</strong> for assistance, or contact me directly{email ? ` at ${email}` : ""}{phone ? `${email ? " or " : " at "}${phone}` : ""}.</li>
+        <li>Reply <strong>HELP</strong> for assistance{phone ? <>, or call/text {phone} directly</> : ""}.</li>
         <li>Carriers are not liable for delayed or undelivered messages.</li>
       </ul>
 
@@ -75,7 +75,6 @@ export default async function PersonalizedTermsPage({ params }) {
       <p>
         {name}<br />
         Independent Insurance Agent<br />
-        {email && <>Email: {email}<br /></>}
         {phone && <>Phone: {phone}</>}
       </p>
     </div>
