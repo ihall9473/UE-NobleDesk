@@ -1,5 +1,6 @@
 import "./globals.css";
 import NotificationSetup from "./components/NotificationSetup";
+import LogoutButton from "./components/LogoutButton";
 
 export const metadata = {
   title: "UE NobleDesk",
@@ -13,7 +14,7 @@ export const metadata = {
 };
 
 export const viewport = {
-  themeColor: "#1a1a2e",
+  themeColor: "#0e0e0f",
 };
 
 export default function RootLayout({ children }) {
@@ -32,6 +33,7 @@ export default function RootLayout({ children }) {
           <a href="/occasions">Occasions</a>
           <a href="/settings">Settings</a>
           <a href="/admin">Admin</a>
+          <LogoutButton />
         </nav>
         <main className="main">
           <NotificationSetup />
