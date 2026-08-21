@@ -2,6 +2,7 @@ import "./globals.css";
 import NotificationSetup from "./components/NotificationSetup";
 import NavBar from "./components/NavBar";
 import PageTransition from "./components/PageTransition";
+import BackgroundDecals from "./components/BackgroundDecals";
 
 export const metadata = {
   title: "UE NobleDesk",
@@ -25,6 +26,7 @@ export default function RootLayout({ children }) {
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
       </head>
       <body>
+        <BackgroundDecals />
         <NavBar />
         <main className="main">
           <NotificationSetup />
