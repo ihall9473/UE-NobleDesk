@@ -19,7 +19,7 @@ html { scroll-behavior: smooth; }
 
 body {
   margin: 0;
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "Playfair Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, serif;
   background:
     radial-gradient(ellipse 900px 500px at 50% -10%, rgba(201, 162, 39, 0.05), transparent),
     var(--bg);
@@ -30,8 +30,8 @@ body {
 .nav {
   display: flex;
   align-items: center;
-  gap: 28px;
-  padding: 20px 32px;
+  gap: 36px;
+  padding: 28px 40px;
   background: #0a0a0b;
   border-bottom: 1px solid var(--card-border);
   position: sticky;
@@ -41,10 +41,10 @@ body {
 .nav a {
   color: var(--text-muted);
   text-decoration: none;
-  font-weight: 500;
-  font-size: 14.5px;
+  font-weight: 600;
+  font-size: 17px;
   letter-spacing: 0.2px;
-  padding: 6px 2px;
+  padding: 8px 2px;
   border-bottom: 2px solid transparent;
   transition: color 0.15s ease, border-color 0.15s ease;
 }
@@ -57,8 +57,6 @@ body {
   padding: 44px 24px 80px;
 }
 
-/* Page-transition: replays this fade+rise animation every time route content
-   remounts (see PageTransition.js), so navigating never feels instant/flat. */
 .page-transition {
   animation: pageIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -67,12 +65,17 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-h1 { font-size: 32px; margin-bottom: 6px; font-weight: 700; letter-spacing: -0.4px; }
+h1 {
+  font-family: "Playfair Display", serif;
+  font-size: 38px;
+  margin-bottom: 8px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
 h3 { font-weight: 600; font-size: 17px; }
 
 .subtitle { color: var(--text-muted); margin-bottom: 28px; font-size: 15px; line-height: 1.5; }
 
-/* Small-caps section labels, like "ESTIMATED YIELD" style on the UE site */
 .label-caps {
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -160,7 +163,6 @@ a .card:hover, .card.interactive:hover {
 a { color: var(--gold); transition: opacity 0.15s ease; }
 a:hover { opacity: 0.8; }
 
-/* Pill-style badges, matching the UE site's "At Cost" / "Real-Time Drip" tags */
 .badge {
   display: inline-block;
   font-size: 11px;
