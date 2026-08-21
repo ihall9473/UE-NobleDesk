@@ -73,15 +73,15 @@ export default async function PersonalizedPrivacyPolicyPage({ params }) {
 
       <h3>Your Choices</h3>
       <p>
-        You can ask me to stop contacting you, or to delete your information, at any time by
-        emailing me at the address below.
+        You can stop receiving text messages at any time by replying <strong>STOP</strong> to
+        any text from me. For any other questions about your information, reply{" "}
+        <strong>HELP</strong>{phone ? <> or call/text <strong>{phone}</strong> directly</> : ""}.
       </p>
 
       <h3>Contact</h3>
       <p>
         {name}<br />
         Independent Insurance Agent<br />
-        {email && <>Email: {email}<br /></>}
         {phone && <>Phone: {phone}</>}
       </p>
     </div>
