@@ -8,6 +8,10 @@ export default function SettingsPage() {
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
 
+  const [personalPhone, setPersonalPhone] = useState("");
+  const [smsAlertsEnabled, setSmsAlertsEnabled] = useState(false);
+  const [savingAlerts, setSavingAlerts] = useState(false);
+
   const [areaCode, setAreaCode] = useState("");
   const [available, setAvailable] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -18,6 +22,8 @@ export default function SettingsPage() {
     const data = await res.json();
     setProfile(data.profile);
     setSid(data.profile?.twilio_account_sid || "");
+    setPersonalPhone(data.profile?.personal_phone || "");
+    setSmsAlertsEnabled(data.profile?.sms_alerts_enabled || false);
   }
 
   useEffect(() => {
@@ -57,6 +63,11 @@ export default function SettingsPage() {
   }
 
   async function buyNumber(phoneNumber) {
+    const confirmed = confirm(
+      `Buy ${phoneNumber}?\n\nThis charges your own Twilio account roughly $1.15/month for the number, plus about a penny per text sent or received going forward.\n\nThis can't be undone from here — click OK only if you're sure.`
+    );
+    if (!confirmed) return;
+
     setBuying(phoneNumber);
     const res = await fetch("/api/numbers", {
       method: "POST",
@@ -68,6 +79,25 @@ export default function SettingsPage() {
     if (res.ok) {
       setMessage(`You're all set! Your texting number is ${data.phoneNumber}.`);
       setAvailable([]);
+      load();
+    } else {
+      setMessage(data.error);
+    }
+  }
+
+  async function saveAlerts(e) {
+    e.preventDefault();
+    setSavingAlerts(true);
+    setMessage("");
+    const res = await fetch("/api/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ personalPhone, smsAlertsEnabled }),
+    });
+    setSavingAlerts(false);
+    const data = await res.json();
+    if (res.ok) {
+      setMessage("Alert preferences saved.");
       load();
     } else {
       setMessage(data.error);
@@ -96,10 +126,12 @@ export default function SettingsPage() {
             placeholder="Twilio Account SID (starts with AC...)"
             value={sid}
             onChange={(e) => setSid(e.target.value)}
+            autoComplete="off"
             required
           />
           <input
             type="password"
+            autoComplete="new-password"
             placeholder={profile.hasAuthToken ? "Auth Token (already saved - leave blank to keep it)" : "Auth Token"}
             value={token}
             onChange={(e) => setToken(e.target.value)}
@@ -134,6 +166,31 @@ export default function SettingsPage() {
             </button>
           </div>
         ))}
+      </div>
+
+      <div className="card">
+        <h3>3. Text alerts to your personal cell (optional)</h3>
+        <p className="subtitle" style={{ marginBottom: 8 }}>
+          Get an actual text message on your personal phone whenever a lead or client texts
+          back — separate from the app's own notifications. This sends an extra text each time
+          (charged to your Twilio account, roughly a cent per alert).
+        </p>
+        <form onSubmit={saveAlerts}>
+          <input
+            placeholder="Your personal cell number"
+            value={personalPhone}
+            onChange={(e) => setPersonalPhone(e.target.value)}
+          />
+          <div className="checkbox-row">
+            <input
+              type="checkbox"
+              checked={smsAlertsEnabled}
+              onChange={(e) => setSmsAlertsEnabled(e.target.checked)}
+            />
+            <span>Text me when someone replies</span>
+          </div>
+          <button type="submit" disabled={savingAlerts}>{savingAlerts ? "Saving..." : "Save"}</button>
+        </form>
       </div>
     </div>
   );
