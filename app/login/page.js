@@ -116,6 +116,11 @@ export default function LoginPage() {
             {loading ? "Logging in..." : "Log In"}
           </button>
         </form>
+        <p className="subtitle" style={{ marginTop: 24, fontSize: 12 }}>
+          <a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+          {" "}&middot;{" "}
+          <a href="/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a>
+        </p>
       </div>
     </div>
   );
