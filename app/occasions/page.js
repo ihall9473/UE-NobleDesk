@@ -25,6 +25,7 @@ function OccasionDateLabel({ occasion }) {
 
 export default function OccasionsPage() {
   const [occasions, setOccasions] = useState(null);
+  const [search, setSearch] = useState("");
   const [message, setMessage] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [kind, setKind] = useState("fixed");
@@ -121,6 +122,10 @@ export default function OccasionsPage() {
 
   if (!occasions) return <p>Loading...</p>;
 
+  const visibleOccasions = occasions.filter((o) =>
+    o.name.toLowerCase().includes(search.trim().toLowerCase())
+  );
+
   return (
     <div>
       <h1>Occasions</h1>
@@ -181,7 +186,17 @@ export default function OccasionsPage() {
         )}
       </div>
 
-      {occasions.map((o) => (
+      <h3 style={{ marginTop: 24 }}>
+        {visibleOccasions.length === occasions.length ? "Checklist" : "Showing"} ({visibleOccasions.length}
+        {visibleOccasions.length !== occasions.length ? ` of ${occasions.length}` : ""})
+      </h3>
+      <input
+        placeholder="Search occasions by name..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+
+      {visibleOccasions.map((o) => (
         <div className="card" key={o.id}>
           <div className="row">
             <div>
@@ -207,6 +222,9 @@ export default function OccasionsPage() {
           />
         </div>
       ))}
+      {occasions.length > 0 && visibleOccasions.length === 0 && (
+        <p className="subtitle">No occasions match your search.</p>
+      )}
 
       <button onClick={() => setShowForm(!showForm)} style={{ marginTop: 8 }}>
         {showForm ? "Cancel" : "+ Add a Custom Occasion"}
