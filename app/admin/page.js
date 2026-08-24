@@ -13,7 +13,6 @@ export default function AdminPage() {
   const [inviteCode, setInviteCode] = useState("");
 
   const isAdmin = myRole === "admin";
-  const isManager = myRole === "manager";
 
   async function load() {
     const res = await fetch("/api/admin/team");
@@ -69,24 +68,6 @@ export default function AdminPage() {
     });
     const data = await res.json();
     if (!res.ok) setMessage(data.error);
-    load();
-  }
-
-  async function toggleFrozen(userId, name, frozen) {
-    if (frozen) {
-      const confirmed = confirm(
-        `Freeze ${name}'s account? They'll still be able to log in and view their data, but won't be able to send texts or change anything in leads/clients.`
-      );
-      if (!confirmed) return;
-    }
-    const res = await fetch("/api/admin/team", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, frozen }),
-    });
-    const data = await res.json();
-    if (!res.ok) setMessage(data.error);
-    else setMessage(frozen ? `${name}'s account is now frozen.` : `${name}'s account is unfrozen.`);
     load();
   }
 
@@ -146,40 +127,23 @@ export default function AdminPage() {
 
       <h3>Team ({team ? team.length : 0})</h3>
       {team === null && <p>Loading...</p>}
-      {team && team.map((member) => {
-        const canFreeze =
-          member.role !== "admin" && (isAdmin || (isManager && member.role === "agent"));
-        return (
+      {team && team.map((member) => (
         <div className="card" key={member.id}>
           <div className="row">
-            <div className="row" style={{ gap: 8, justifyContent: "flex-start" }}>
-              <strong>{member.name}</strong>
-              {member.frozen && <span className="badge badge-neutral">Frozen</span>}
-            </div>
-            <div className="row" style={{ gap: 8, justifyContent: "flex-end" }}>
-              {isAdmin ? (
-                <select
-                  value={member.role}
-                  onChange={(e) => updateRole(member.id, e.target.value)}
-                  style={{ width: "auto", marginBottom: 0 }}
-                >
-                  <option value="agent">Agent</option>
-                  <option value="manager">Manager</option>
-                  <option value="admin">Admin</option>
-                </select>
-              ) : (
-                <span style={{ color: "#666", fontSize: 14, textTransform: "capitalize" }}>{member.role}</span>
-              )}
-              {canFreeze && (
-                <button
-                  type="button"
-                  onClick={() => toggleFrozen(member.id, member.name, !member.frozen)}
-                  style={{ width: "auto", marginBottom: 0 }}
-                >
-                  {member.frozen ? "Unfreeze" : "Freeze"}
-                </button>
-              )}
-            </div>
+            <strong>{member.name}</strong>
+            {isAdmin ? (
+              <select
+                value={member.role}
+                onChange={(e) => updateRole(member.id, e.target.value)}
+                style={{ width: "auto", marginBottom: 0 }}
+              >
+                <option value="agent">Agent</option>
+                <option value="manager">Manager</option>
+                <option value="admin">Admin</option>
+              </select>
+            ) : (
+              <span style={{ color: "#666", fontSize: 14, textTransform: "capitalize" }}>{member.role}</span>
+            )}
           </div>
           <div style={{ color: "#666", fontSize: 13, marginTop: 6 }}>
             {member.twilio_number ? (
@@ -194,8 +158,7 @@ export default function AdminPage() {
             {member.responseRate === null ? "no texts sent yet" : `${member.responseRate}% response rate`}
           </div>
         </div>
-        );
-      })}
+      ))}
     </div>
   );
 }

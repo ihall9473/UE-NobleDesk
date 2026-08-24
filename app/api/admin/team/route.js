@@ -117,63 +117,22 @@ export async function POST(req) {
   return NextResponse.json({ ok: true });
 }
 
-// Change a coworker's role, and/or freeze/unfreeze their account.
-// (Numbers/Twilio are self-managed now, in Settings.)
+// Change a coworker's role. (Numbers/Twilio are self-managed now, in Settings.)
 export async function PATCH(req) {
   const check = await requireStaff();
   if (check.error) return NextResponse.json({ error: check.error }, { status: check.status });
 
-  const { userId, role, frozen } = await req.json();
+  const { userId, role } = await req.json();
 
-  if (userId === check.profile.id) {
+  // Only true admins can change anyone's role.
+  if (check.profile.role !== "admin") {
     return NextResponse.json(
-      { error: "You can't change your own role or freeze your own account." },
-      { status: 400 }
+      { error: "Only admins can change someone's role." },
+      { status: 403 }
     );
   }
 
-  const { data: target } = await supabaseAdmin
-    .from("profiles")
-    .select("role")
-    .eq("id", userId)
-    .single();
-  if (!target) return NextResponse.json({ error: "That person wasn't found." }, { status: 404 });
-
-  const update = {};
-
-  if (role !== undefined) {
-    // Only true admins can change anyone's role.
-    if (check.profile.role !== "admin") {
-      return NextResponse.json(
-        { error: "Only admins can change someone's role." },
-        { status: 403 }
-      );
-    }
-    update.role = role;
-  }
-
-  if (frozen !== undefined) {
-    // Admins/managers can freeze someone if they're fired or need their
-    // access paused - they can still log in and view data, just not
-    // change anything. Managers can only freeze/unfreeze regular agents.
-    // Nobody can freeze an admin from here.
-    if (target.role === "admin") {
-      return NextResponse.json({ error: "Admins can't be frozen from here." }, { status: 403 });
-    }
-    if (check.profile.role === "manager" && target.role !== "agent") {
-      return NextResponse.json(
-        { error: "Managers can only freeze or unfreeze agents." },
-        { status: 403 }
-      );
-    }
-    update.frozen = frozen;
-  }
-
-  if (Object.keys(update).length === 0) {
-    return NextResponse.json({ error: "Nothing to update." }, { status: 400 });
-  }
-
-  const { error } = await supabaseAdmin.from("profiles").update(update).eq("id", userId);
+  const { error } = await supabaseAdmin.from("profiles").update({ role }).eq("id", userId);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
