@@ -11,6 +11,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [inviteLink, setInviteLink] = useState("");
   const [inviteCode, setInviteCode] = useState("");
+  const [suggestions, setSuggestions] = useState(null);
 
   const isAdmin = myRole === "admin";
 
@@ -26,8 +27,16 @@ export default function AdminPage() {
     setInviteCode(data.inviteCode || "");
   }
 
+  async function loadSuggestions() {
+    const res = await fetch("/api/suggestions");
+    if (!res.ok) return;
+    const data = await res.json();
+    setSuggestions(data.suggestions || []);
+  }
+
   useEffect(() => {
     load();
+    loadSuggestions();
     if (typeof window !== "undefined") {
       setInviteLink(`${window.location.origin}/signup`);
     }
@@ -81,6 +90,25 @@ export default function AdminPage() {
       <p className="subtitle">Invite coworkers and track how everyone's using the app.</p>
 
       {message && <p className="success">{message}</p>}
+
+      {suggestions && suggestions.length > 0 && (
+        <div className="card">
+          <h3>Suggestions ({suggestions.length})</h3>
+          <p className="subtitle" style={{ marginBottom: 8 }}>
+            Sent from the 💡 button in the corner of the app.
+          </p>
+          <div style={{ maxHeight: 260, overflowY: "auto" }}>
+            {suggestions.map((s) => (
+              <div key={s.id} style={{ padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                <div style={{ fontSize: 14 }}>{s.message}</div>
+                <div style={{ color: "#666", fontSize: 12, marginTop: 4 }}>
+                  {s.profiles?.name || "Someone"} · {new Date(s.created_at).toLocaleDateString()}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="card">
         <h3>Invite link (self-serve)</h3>

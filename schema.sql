@@ -105,6 +105,25 @@ alter table push_subscriptions enable row level security;
 create policy "Users manage their own push subscriptions" on push_subscriptions
   for all using (auth.uid() = owner_id);
 
+-- Feedback/suggestions from the little box in the corner of the app.
+-- Anyone can submit one; only admins/managers can read the list back
+-- (enforced in the API route, not RLS, since it needs everyone's name too).
+create table if not exists suggestions (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid references profiles(id) on delete cascade,
+  message text not null,
+  created_at timestamptz default now()
+);
+
+alter table suggestions enable row level security;
+
+create policy "Users submit their own suggestions" on suggestions
+  for insert with check (auth.uid() = owner_id);
+
+-- Already deployed this app before the suggestions box existed? Just run
+-- the create table + policy statements above by themselves - safe to run
+-- again ("if not exists") and won't touch anything else.
+
 -- Row Level Security: makes sure people can only ever see their own data,
 -- even if there were ever a bug in the app code.
 alter table profiles enable row level security;
