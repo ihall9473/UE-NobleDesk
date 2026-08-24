@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
+import Crest from "@/app/components/Crest";
 
 function CrossedSpears() {
   return (
@@ -30,21 +31,6 @@ function CrossedSpears() {
   );
 }
 
-function Crest() {
-  return (
-    <div className="login-rise" style={{ marginBottom: 20, animationDelay: "0s" }}>
-      <svg className="login-crest" width="76" height="76" viewBox="0 0 24 24" fill="none">
-        <path
-          d="M12 1.5 21 5.5V11c0 6-4 9.5-9 11.5C7 20.5 3 17 3 11V5.5L12 1.5Z"
-          stroke="#c9a227"
-          strokeWidth="1.2"
-        />
-        <path d="M12 6 16 8v3.2c0 3-1.7 5-4 6.3-2.3-1.3-4-3.3-4-6.3V8L12 6Z" fill="#c9a227" fillOpacity="0.9" />
-      </svg>
-    </div>
-  );
-}
-
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -61,7 +47,7 @@ export default function LoginPage() {
     if (error) {
       setError("Email or password isn't right. Try again, or ask your admin to reset it.");
     } else {
-      window.location.href = "/leads";
+      window.location.href = "/";
     }
   }
 
@@ -80,8 +66,8 @@ export default function LoginPage() {
     >
       <CrossedSpears />
       <div style={{ position: "relative", zIndex: 1, maxWidth: 720, width: "100%", textAlign: "center", padding: "48px 24px" }}>
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <Crest />
+        <div className="login-rise" style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+          <Crest size={76} glow />
         </div>
         <p
           className="login-rise"
@@ -109,8 +95,6 @@ export default function LoginPage() {
             animationDelay: "0.3s",
           }}
         >
-          Welcome to
-          <br />
           <span className="login-wordmark" style={{ fontStyle: "italic" }}>
             NobleDesk
           </span>
