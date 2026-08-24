@@ -10,6 +10,7 @@ export default function AdminPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [inviteLink, setInviteLink] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
 
   const isAdmin = myRole === "admin";
 
@@ -22,6 +23,7 @@ export default function AdminPage() {
     const data = await res.json();
     setTeam(data.team || []);
     setMyRole(data.myRole);
+    setInviteCode(data.inviteCode || "");
   }
 
   useEffect(() => {
@@ -90,10 +92,19 @@ export default function AdminPage() {
           <code style={{ fontSize: 13 }}>{inviteLink}</code>
           <button onClick={copyLink}>Copy Link</button>
         </div>
-        <p className="subtitle" style={{ marginTop: 8 }}>
-          Your invite code is set in your deployment's environment variables as{" "}
-          <code>APP_INVITE_CODE</code>.
-        </p>
+        <div className="row" style={{ marginTop: 8 }}>
+          <label className="subtitle" style={{ marginRight: 8 }}>Invite code:</label>
+          <code style={{ fontSize: 13 }}>{inviteCode}</code>
+          <button
+            type="button"
+            onClick={() => {
+              navigator.clipboard.writeText(inviteCode);
+              setMessage("Invite code copied.");
+            }}
+          >
+            Copy Code
+          </button>
+        </div>
       </div>
 
       <div className="card">
