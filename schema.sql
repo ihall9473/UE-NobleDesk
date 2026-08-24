@@ -19,12 +19,17 @@ create table if not exists contacts (
   phone text not null,
   type text not null default 'lead' check (type in ('lead', 'client')),
   created_at timestamptz default now(),
+  deleted_at timestamptz, -- soft delete: set instead of actually deleting, so "Undo" can restore
   unique(owner_id, phone)
 );
 
 -- If you already ran this schema before this column existed, run this line
 -- by itself to add it without losing any existing contacts:
 -- alter table contacts add column if not exists type text not null default 'lead' check (type in ('lead', 'client'));
+
+-- Already deployed this app before the "deleted_at" column existed? Run
+-- this line by itself to add it without losing any existing contacts:
+-- alter table contacts add column if not exists deleted_at timestamptz;
 
 create table if not exists messages (
   id uuid primary key default gen_random_uuid(),

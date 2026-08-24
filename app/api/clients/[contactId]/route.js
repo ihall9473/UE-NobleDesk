@@ -44,6 +44,18 @@ export async function PATCH(req, { params }) {
   const { contactId } = params;
   const body = await req.json();
 
+  // Restoring a soft-deleted client (undo) - nothing else to do since
+  // client_details was never touched.
+  if (body.restore) {
+    const { error } = await supabase
+      .from("contacts")
+      .update({ deleted_at: null })
+      .eq("id", contactId)
+      .eq("owner_id", user.id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: true });
+  }
+
   // Update the basic contact fields (name/phone) if provided.
   if (body.name || body.phone) {
     const update = {};
@@ -64,16 +76,18 @@ export async function PATCH(req, { params }) {
   return NextResponse.json({ ok: true });
 }
 
+// Soft-deletes (marks deleted_at) instead of actually deleting, so the
+// frontend can offer an "Undo" right after - their policy/SSN/bank details
+// in client_details are left completely untouched either way.
 export async function DELETE(req, { params }) {
   const supabase = supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not logged in" }, { status: 401 });
 
   const { contactId } = params;
-  // Deleting the contact cascades to client_details and messages automatically.
   const { error } = await supabase
     .from("contacts")
-    .delete()
+    .update({ deleted_at: new Date().toISOString() })
     .eq("id", contactId)
     .eq("owner_id", user.id);
 

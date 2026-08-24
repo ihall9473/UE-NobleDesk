@@ -1,6 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { DATE_PRESETS, getDateRange } from "@/lib/dateRanges";
+import UndoToast from "@/app/components/UndoToast";
 
 // Splits the stored full name into first/last for filtering and sorting,
 // without needing separate name fields in the database.
@@ -9,12 +11,33 @@ function splitName(fullName) {
   return { first: parts[0] || "", last: parts.slice(1).join(" ") || "" };
 }
 
+// Isolated in its own component (and Suspense boundary below) since
+// useSearchParams() would otherwise force the whole page out of static
+// rendering. Picked up right after deleting a client from their detail
+// page, which redirects here with these params since it can't show its
+// own toast.
+function UndoFromQuery({ onFound }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const undoId = searchParams.get("undoId");
+    if (undoId) {
+      onFound({ id: undoId, name: searchParams.get("undoName") });
+      router.replace("/clients");
+    }
+  }, [searchParams, router, onFound]);
+
+  return null;
+}
+
 export default function ClientsPage() {
   const [clients, setClients] = useState(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [undo, setUndo] = useState(null); // { id, text } - shown as a dismissable toast
 
   const [search, setSearch] = useState("");
   const [carrierFilter, setCarrierFilter] = useState("all");
@@ -34,6 +57,17 @@ export default function ClientsPage() {
   useEffect(() => {
     load();
   }, []);
+
+  async function undoRemove() {
+    if (!undo) return;
+    await fetch(`/api/clients/${undo.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ restore: true }),
+    });
+    setUndo(null);
+    load();
+  }
 
   async function addClient(e) {
     e.preventDefault();
@@ -96,6 +130,9 @@ export default function ClientsPage() {
 
   return (
     <div>
+      <Suspense fallback={null}>
+        <UndoFromQuery onFound={(u) => setUndo({ id: u.id, text: `Removed ${u.name || "client"}.` })} />
+      </Suspense>
       <h1>Clients</h1>
       <p className="subtitle">Your book of business — full policy and contact details for every client.</p>
 
@@ -242,6 +279,7 @@ export default function ClientsPage() {
       {allClients.length > 0 && visible.length === 0 && (
         <p className="subtitle">No clients match your search/filters.</p>
       )}
+      <UndoToast text={undo?.text} onUndo={undoRemove} onDismiss={() => setUndo(null)} />
     </div>
   );
 }
