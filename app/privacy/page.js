@@ -41,13 +41,22 @@ export default function PrivacyPolicyPage() {
         that carrier.
       </p>
 
+      <h3>Campaign Use Case</h3>
+      <p>
+        This texting program is a <strong>Customer Care</strong> campaign - used only to follow
+        up with individuals who have already reached out about insurance coverage, never for
+        cold outreach or general marketing.
+      </p>
+
       <h3>Text Messaging</h3>
       <p>
         If you provide your mobile number, I may contact you by text message regarding your
-        inquiry or policy. <strong>Message frequency varies</strong> — typically a few messages
-        during initial outreach, then only as needed afterward. <strong>Message and data rates
-        may apply.</strong> You can opt out of text messages at any time by replying{" "}
-        <strong>STOP</strong>, or get help by replying <strong>HELP</strong>.
+        inquiry or policy - messages may include a link back to this Privacy Policy and to my{" "}
+        <a href="/terms">Terms of Service</a>. <strong>Message frequency varies</strong> —
+        typically a few messages during initial outreach, then only as needed afterward.{" "}
+        <strong>Message and data rates may apply.</strong> You can opt out of text messages at
+        any time by replying <strong>STOP</strong> (you'll get one confirmation message and no
+        further texts), or get help by replying <strong>HELP</strong>.
       </p>
       <p>
         <strong>Your mobile phone number and consent to receive texts will never be sold,
