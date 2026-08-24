@@ -12,18 +12,10 @@ export default function AdminPage() {
   const [inviteLink, setInviteLink] = useState("");
   const [inviteCode, setInviteCode] = useState("");
 
-  const [accessCode, setAccessCode] = useState("");
-  const [unlocking, setUnlocking] = useState(false);
-  const [unlockError, setUnlockError] = useState("");
-
   const isAdmin = myRole === "admin";
 
   async function load() {
     const res = await fetch("/api/admin/team");
-    if (res.status === 401) {
-      setTeam("locked");
-      return;
-    }
     if (res.status === 403) {
       setTeam("forbidden");
       return;
@@ -32,26 +24,6 @@ export default function AdminPage() {
     setTeam(data.team || []);
     setMyRole(data.myRole);
     setInviteCode(data.inviteCode || "");
-  }
-
-  async function unlock(e) {
-    e.preventDefault();
-    setUnlocking(true);
-    setUnlockError("");
-    const res = await fetch("/api/admin/unlock", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: accessCode }),
-    });
-    setUnlocking(false);
-    if (res.ok) {
-      setAccessCode("");
-      setTeam(null);
-      load();
-    } else {
-      const data = await res.json();
-      setUnlockError(data.error || "Something went wrong.");
-    }
   }
 
   useEffect(() => {
@@ -101,29 +73,6 @@ export default function AdminPage() {
 
   if (team === "forbidden") {
     return <p>This page is for admins and managers only.</p>;
-  }
-
-  if (team === "locked") {
-    return (
-      <div>
-        <h1>Team Admin</h1>
-        <p className="subtitle">Enter the manager code to unlock this page.</p>
-        <div className="card" style={{ maxWidth: 360 }}>
-          <form onSubmit={unlock}>
-            {unlockError && <p className="error">{unlockError}</p>}
-            <input
-              type="password"
-              placeholder="Manager code"
-              value={accessCode}
-              onChange={(e) => setAccessCode(e.target.value)}
-              autoFocus
-              required
-            />
-            <button type="submit" disabled={unlocking}>{unlocking ? "Checking..." : "Unlock"}</button>
-          </form>
-        </div>
-      </div>
-    );
   }
 
   return (
