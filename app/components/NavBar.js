@@ -14,7 +14,13 @@ const LINKS = [
 
 export default function NavBar() {
   const pathname = usePathname();
-  if (pathname === "/login") return null;
+  if (
+    pathname === "/login" ||
+    pathname.startsWith("/privacy") ||
+    pathname.startsWith("/terms")
+  ) {
+    return null;
+  }
 
   return (
     <nav className="nav">
