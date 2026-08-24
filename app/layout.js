@@ -3,6 +3,7 @@ import NotificationSetup from "./components/NotificationSetup";
 import NavBar from "./components/NavBar";
 import PageTransition from "./components/PageTransition";
 import BackgroundDecals from "./components/BackgroundDecals";
+import SuggestionBox from "./components/SuggestionBox";
 
 export const metadata = {
   title: "UE NobleDesk",
@@ -32,6 +33,7 @@ export default function RootLayout({ children }) {
           <NotificationSetup />
           <PageTransition>{children}</PageTransition>
         </main>
+        <SuggestionBox />
       </body>
     </html>
   );
