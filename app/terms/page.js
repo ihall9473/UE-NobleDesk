@@ -6,16 +6,14 @@ export default function TermsPage() {
 
       <p>
         These Terms of Service govern text message and phone communications between you and
-        Isaac Hall, an independent licensed insurance agent, regarding insurance products and
-        services.
+        your independent licensed insurance agent, regarding insurance products and services.
       </p>
 
       <h3>Who I Am</h3>
       <p>
         I am an independent insurance agent, not employed by or exclusively affiliated with any
-        single carrier. I represent multiple carriers, including Transamerica, Mutual of Omaha,
-        Americo, and Aflac, and help individuals compare and select coverage that fits their
-        needs.
+        single carrier. I represent multiple carriers and help individuals compare and select
+        coverage that fits their needs.
       </p>
 
       <h3>How You May Have Been Contacted</h3>
@@ -32,7 +30,7 @@ export default function TermsPage() {
         <li>Message frequency varies - typically a few messages during initial outreach, then only as needed afterward.</li>
         <li>Message and data rates may apply, based on your mobile carrier plan.</li>
         <li>Reply <strong>STOP</strong> at any time to opt out of further text messages.</li>
-        <li>Reply <strong>HELP</strong> for assistance, or call/text 330-607-9473 directly.</li>
+        <li>Reply <strong>HELP</strong> for assistance, or contact your agent directly using the phone number they texted or called you from.</li>
         <li>Carriers are not liable for delayed or undelivered messages.</li>
       </ul>
 
@@ -58,9 +56,8 @@ export default function TermsPage() {
 
       <h3>Contact</h3>
       <p>
-        Isaac Hall<br />
-        Independent Insurance Agent<br />
-        Phone: 330-607-9473
+        Your independent insurance agent<br />
+        Contact information is provided in the text messages or calls you received.
       </p>
     </div>
   );

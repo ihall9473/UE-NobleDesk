@@ -5,9 +5,9 @@ export default function PrivacyPolicyPage() {
       <p className="subtitle">Last updated: {new Date().toLocaleDateString()}</p>
 
       <p>
-        This Privacy Policy explains how Isaac Hall, an independent licensed insurance agent
-        ("I," "me," or "my"), collects, uses, and protects your information when you contact me
-        or I contact you regarding insurance products and services.
+        This Privacy Policy explains how your independent licensed insurance agent ("I," "me,"
+        or "my") collects, uses, and protects your information when you contact me or I contact
+        you regarding insurance products and services.
       </p>
 
       <h3>Information I Collect</h3>
@@ -29,8 +29,7 @@ export default function PrivacyPolicyPage() {
       <p>
         I use your information solely to follow up on your insurance inquiry, answer your
         questions, provide quotes, and service any policy you choose to purchase through me. As
-        an independent agent, I represent multiple insurance carriers (including but not limited
-        to Transamerica, Mutual of Omaha, Americo, and Aflac) and will only share your
+        an independent agent, I represent multiple insurance carriers and will only share your
         information with a specific carrier if you choose to move forward with a policy through
         that carrier.
       </p>
@@ -60,14 +59,14 @@ export default function PrivacyPolicyPage() {
       <p>
         You can stop receiving text messages at any time by replying <strong>STOP</strong> to
         any text from me. For any other questions about your information, reply{" "}
-        <strong>HELP</strong> or call/text <strong>330-607-9473</strong> directly.
+        <strong>HELP</strong> or contact your agent directly using the phone number they
+        texted or called you from.
       </p>
 
       <h3>Contact</h3>
       <p>
-        Isaac Hall<br />
-        Independent Insurance Agent<br />
-        Phone: 330-607-9473
+        Your independent insurance agent<br />
+        Contact information is provided in the text messages or calls you received.
       </p>
     </div>
   );
