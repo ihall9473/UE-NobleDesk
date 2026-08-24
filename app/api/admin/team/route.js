@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { supabaseServer } from "@/lib/supabaseServer";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-// Admins and managers can both do day-to-day team management.
+// Admins and managers can both do day-to-day team management. On top of
+// that role check, this page also needs the separate manager/admin
+// access code entered (see /api/admin/unlock) - status 401 signals
+// "enter the code" specifically, distinct from 403 "not staff at all".
 async function requireStaff() {
   const supabase = supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
@@ -11,6 +15,10 @@ async function requireStaff() {
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
   if (profile?.role !== "admin" && profile?.role !== "manager") {
     return { error: "Admins and managers only", status: 403 };
+  }
+
+  if (cookies().get("admin_unlocked")?.value !== "1") {
+    return { error: "Enter the manager code to unlock this page.", status: 401, locked: true };
   }
 
   return { profile };
