@@ -121,47 +121,65 @@ export default function SettingsPage() {
           Twilio is the service that actually sends and receives your texts, billed directly to
           you. Here's the full process, step by step:
         </p>
-        <ol className="subtitle" style={{ paddingLeft: 20, marginBottom: 16 }}>
-          <li style={{ marginBottom: 8 }}>
-            Go to{" "}
-            <a href="https://www.twilio.com/try-twilio" target="_blank" rel="noopener noreferrer">
-              twilio.com/try-twilio
-            </a>{" "}
-            and create a free account.
-          </li>
-          <li style={{ marginBottom: 8 }}>
-            In the Twilio Console, add a payment method — your own card, since Twilio bills you
-            directly and not NobleDesk.
-          </li>
-          <li style={{ marginBottom: 8 }}>
-            Go to <strong>Messaging → Regulatory Compliance → A2P 10DLC</strong> and register
-            your business info. This is required before you can send real texting volume, and
-            can take a few days to a couple weeks to get approved. When it asks for a Privacy
-            Policy and Terms of Service link, use the ones under{" "}
-            <strong>section 4 below</strong>.
-          </li>
-          <li style={{ marginBottom: 8 }}>
-            Back on the Twilio Console home page, copy your <strong>Account SID</strong> and{" "}
-            <strong>Auth Token</strong>.
-          </li>
-          <li>Paste them into the fields below and click Save.</li>
-        </ol>
         <form onSubmit={saveCredentials}>
-          <input
-            placeholder="Twilio Account SID (starts with AC...)"
-            value={sid}
-            onChange={(e) => setSid(e.target.value)}
-            autoComplete="off"
-            required
-          />
-          <input
-            type="password"
-            autoComplete="new-password"
-            placeholder={profile.hasAuthToken ? "Auth Token (already saved - leave blank to keep it)" : "Auth Token"}
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-          />
-          <button type="submit" disabled={saving}>{saving ? "Saving..." : "Save"}</button>
+          <ol className="subtitle" style={{ paddingLeft: 20, marginBottom: 0 }}>
+            <li style={{ marginBottom: 14 }}>
+              Go to{" "}
+              <a href="https://www.twilio.com/try-twilio" target="_blank" rel="noopener noreferrer">
+                twilio.com/try-twilio
+              </a>{" "}
+              and create a free account.
+            </li>
+            <li style={{ marginBottom: 14 }}>
+              In the{" "}
+              <a href="https://console.twilio.com/" target="_blank" rel="noopener noreferrer">
+                Twilio Console
+              </a>
+              , open <strong>Billing</strong> in the left-hand menu and add a payment method —
+              your own card, since Twilio bills you directly and not NobleDesk.
+            </li>
+            <li style={{ marginBottom: 14 }}>
+              Still in the{" "}
+              <a href="https://console.twilio.com/" target="_blank" rel="noopener noreferrer">
+                Twilio Console
+              </a>
+              , go to <strong>Messaging → Regulatory Compliance → A2P 10DLC</strong> and register
+              your business info. This is required before you can send real texting volume, and
+              can take a few days to a couple weeks to get approved. When it asks for a Privacy
+              Policy and Terms of Service link, use the ones under{" "}
+              <a href="#compliance-pages">section 4 below</a>.
+            </li>
+            <li style={{ marginBottom: 14 }}>
+              On the{" "}
+              <a href="https://console.twilio.com/" target="_blank" rel="noopener noreferrer">
+                Twilio Console home page
+              </a>
+              , copy your <strong>Account SID</strong> (starts with "AC"), then paste it here:
+              <input
+                placeholder="Twilio Account SID (starts with AC...)"
+                value={sid}
+                onChange={(e) => setSid(e.target.value)}
+                autoComplete="off"
+                required
+                style={{ marginTop: 8, marginBottom: 0 }}
+              />
+            </li>
+            <li style={{ marginBottom: 14 }}>
+              On that same page, click "show" to reveal your <strong>Auth Token</strong>, copy
+              it, then paste it here:
+              <input
+                type="password"
+                autoComplete="new-password"
+                placeholder={profile.hasAuthToken ? "Auth Token (already saved - leave blank to keep it)" : "Auth Token"}
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                style={{ marginTop: 8, marginBottom: 0 }}
+              />
+            </li>
+          </ol>
+          <button type="submit" disabled={saving} style={{ marginTop: 6 }}>
+            {saving ? "Saving..." : "Save"}
+          </button>
         </form>
       </div>
 
@@ -222,7 +240,7 @@ export default function SettingsPage() {
           <button type="submit" disabled={savingAlerts}>{savingAlerts ? "Saving..." : "Save"}</button>
         </form>
       </div>
-      <div className="card">
+      <div className="card" id="compliance-pages">
         <h3>4. Your compliance pages (for Twilio registration)</h3>
         <p className="subtitle" style={{ marginBottom: 8 }}>
           Use these links when Twilio's A2P 10DLC form asks for a Privacy Policy and Terms of
