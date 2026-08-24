@@ -6,7 +6,7 @@ export default function AdminPage() {
   const [myRole, setMyRole] = useState(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("member");
+  const [role, setRole] = useState("agent");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [inviteLink, setInviteLink] = useState("");
@@ -51,7 +51,7 @@ export default function AdminPage() {
       setMessage(`Invited ${name} directly by email.`);
       setName("");
       setEmail("");
-      setRole("member");
+      setRole("agent");
       load();
     } else {
       setMessage(data.error || "Something went wrong.");
@@ -103,12 +103,12 @@ export default function AdminPage() {
           <input type="email" placeholder="Work email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           {isAdmin ? (
             <select value={role} onChange={(e) => setRole(e.target.value)}>
-              <option value="member">Member</option>
+              <option value="agent">Agent</option>
               <option value="manager">Manager</option>
               <option value="admin">Admin</option>
             </select>
           ) : (
-            <p className="subtitle">New coworkers are added as Members.</p>
+            <p className="subtitle">New coworkers are added as Agents.</p>
           )}
           <button type="submit" disabled={loading}>{loading ? "Inviting..." : "Send Email Invite"}</button>
         </form>
@@ -126,7 +126,7 @@ export default function AdminPage() {
                 onChange={(e) => updateRole(member.id, e.target.value)}
                 style={{ width: "auto", marginBottom: 0 }}
               >
-                <option value="member">Member</option>
+                <option value="agent">Agent</option>
                 <option value="manager">Manager</option>
                 <option value="admin">Admin</option>
               </select>

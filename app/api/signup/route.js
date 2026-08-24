@@ -27,7 +27,7 @@ export async function POST(req) {
   const { error: profileErr } = await supabaseAdmin.from("profiles").insert({
     id: created.user.id,
     name,
-    role: "member",
+    role: "agent",
   });
 
   if (profileErr) return NextResponse.json({ error: profileErr.message }, { status: 500 });
