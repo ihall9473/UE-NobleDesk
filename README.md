@@ -43,6 +43,7 @@ anyone's number or billing; you just watch usage and stats.
    | SUPABASE_ANON_KEY | Supabase anon public key |
    | NEXT_PUBLIC_SUPABASE_ANON_KEY | same value again |
    | APP_INVITE_CODE | any code you choose — coworkers need this to sign up |
+   | ADMIN_ACCESS_CODE | a separate code you choose — admins/managers need this to unlock the Admin page, on top of their role |
    | NEXT_PUBLIC_VAPID_PUBLIC_KEY | included in `.env.example`, keep as-is |
    | VAPID_PRIVATE_KEY | included in `.env.example`, keep as-is |
    | NEXT_PUBLIC_SITE_URL | your Vercel address, e.g. `https://your-app.vercel.app` |
