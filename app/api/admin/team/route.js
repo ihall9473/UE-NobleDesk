@@ -88,9 +88,9 @@ export async function POST(req) {
     return NextResponse.json({ error: "Name and email are required" }, { status: 400 });
   }
 
-  // Only true admins can create another admin or manager. Managers can only add regular members.
-  const requestedRole = role === "admin" || role === "manager" ? role : "member";
-  if (requestedRole !== "member" && check.profile.role !== "admin") {
+  // Only true admins can create another admin or manager. Managers can only add regular agents.
+  const requestedRole = role === "admin" || role === "manager" ? role : "agent";
+  if (requestedRole !== "agent" && check.profile.role !== "admin") {
     return NextResponse.json(
       { error: "Only admins can grant admin or manager access." },
       { status: 403 }

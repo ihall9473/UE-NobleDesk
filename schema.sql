@@ -4,7 +4,7 @@
 create table if not exists profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   name text not null,
-  role text not null default 'member' check (role in ('admin', 'manager', 'member')),
+  role text not null default 'agent' check (role in ('admin', 'manager', 'agent')),
   twilio_number text unique, -- e.g. +15551234567, bought by this person themselves
   twilio_account_sid text, -- this person's OWN Twilio account - their own billing
   twilio_auth_token text,
@@ -121,3 +121,11 @@ create policy "Users manage their own messages" on messages
 -- The very first admin account: after you sign in once through Supabase Auth
 -- (see README), run this with your own email to make yourself an admin.
 -- update profiles set role = 'admin' where id = (select id from auth.users where email = 'you@example.com');
+
+-- Already deployed this app before the "member" role was renamed to "agent"?
+-- Run these two lines by themselves to migrate existing rows and the check
+-- constraint without losing any data:
+-- alter table profiles drop constraint if exists profiles_role_check;
+-- update profiles set role = 'agent' where role = 'member';
+-- alter table profiles add constraint profiles_role_check check (role in ('admin', 'manager', 'agent'));
+-- alter table profiles alter column role set default 'agent';
