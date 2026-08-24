@@ -118,9 +118,34 @@ export default function SettingsPage() {
       <div className="card">
         <h3>1. Connect your Twilio account</h3>
         <p className="subtitle" style={{ marginBottom: 8 }}>
-          Don't have one yet? Sign up free at twilio.com, add a payment method, then copy your
-          Account SID and Auth Token from the Console and paste them below.
+          Twilio is the service that actually sends and receives your texts, billed directly to
+          you. Here's the full process, step by step:
         </p>
+        <ol className="subtitle" style={{ paddingLeft: 20, marginBottom: 16 }}>
+          <li style={{ marginBottom: 8 }}>
+            Go to{" "}
+            <a href="https://www.twilio.com/try-twilio" target="_blank" rel="noopener noreferrer">
+              twilio.com/try-twilio
+            </a>{" "}
+            and create a free account.
+          </li>
+          <li style={{ marginBottom: 8 }}>
+            In the Twilio Console, add a payment method — your own card, since Twilio bills you
+            directly and not NobleDesk.
+          </li>
+          <li style={{ marginBottom: 8 }}>
+            Go to <strong>Messaging → Regulatory Compliance → A2P 10DLC</strong> and register
+            your business info. This is required before you can send real texting volume, and
+            can take a few days to a couple weeks to get approved. When it asks for a Privacy
+            Policy and Terms of Service link, use the ones under{" "}
+            <strong>section 4 below</strong>.
+          </li>
+          <li style={{ marginBottom: 8 }}>
+            Back on the Twilio Console home page, copy your <strong>Account SID</strong> and{" "}
+            <strong>Auth Token</strong>.
+          </li>
+          <li>Paste them into the fields below and click Save.</li>
+        </ol>
         <form onSubmit={saveCredentials}>
           <input
             placeholder="Twilio Account SID (starts with AC...)"
@@ -141,12 +166,17 @@ export default function SettingsPage() {
       </div>
 
       <div className="card">
-        <h3>2. Get your texting number</h3>
+        <h3>2. Buy your texting number (final step)</h3>
         {profile.twilio_number ? (
-          <p>Your current number: <strong>{profile.twilio_number}</strong></p>
+          <p>
+            Your current number: <strong>{profile.twilio_number}</strong> — you're fully linked
+            up and ready to send and receive texts through NobleDesk.
+          </p>
         ) : (
           <p className="subtitle" style={{ marginBottom: 8 }}>
-            Search by area code and buy a number — charged to your own Twilio account.
+            Search by area code and click Buy. This is what actually links your Twilio account
+            to NobleDesk — once you have a number, you're all set. It's charged to your own
+            Twilio account (about $1.15/month, plus roughly a penny per text).
           </p>
         )}
         <form onSubmit={searchNumbers} style={{ display: "flex", gap: 8 }}>
