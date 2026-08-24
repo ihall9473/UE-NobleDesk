@@ -30,34 +30,81 @@ body {
 
 /* Grander glass nav */
 .nav {
+  position: sticky;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 26px 44px;
-  background: rgba(10, 10, 11, 0.75);
+  padding: 22px 44px;
+  background:
+    radial-gradient(ellipse 700px 140px at 15% 0%, rgba(201, 162, 39, 0.08), transparent),
+    rgba(10, 10, 11, 0.8);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid transparent;
-  border-image: linear-gradient(90deg, transparent, rgba(201,162,39,0.4), transparent) 1;
-  position: sticky;
   top: 0;
   z-index: 50;
   flex-wrap: wrap;
+  box-shadow:
+    0 1px 0 rgba(201, 162, 39, 0.55),
+    0 12px 30px -12px rgba(0, 0, 0, 0.6);
 }
+.nav::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201, 162, 39, 0.9), transparent);
+}
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: 22px;
+  padding-right: 22px;
+  border-right: 1px solid rgba(201, 162, 39, 0.25);
+  text-decoration: none;
+}
+.nav-crest {
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 6px rgba(201, 162, 39, 0.45));
+}
+.nav-wordmark {
+  color: #fff;
+  font-weight: 700;
+  font-size: 21px;
+  letter-spacing: 0.3px;
+  font-family: "Playfair Display", serif;
+  background: linear-gradient(120deg, #f5f5f5, var(--gold) 60%, #f5f5f5);
+  background-size: 200% auto;
+  background-position: 0% center;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  transition: background-position 0.6s ease;
+}
+.nav-brand:hover .nav-wordmark { background-position: 100% center; }
 .nav a {
+  position: relative;
   color: var(--text-muted);
   text-decoration: none;
+  text-transform: uppercase;
   font-family: "Inter", sans-serif;
   font-weight: 600;
-  font-size: 15px;
-  letter-spacing: 0.2px;
-  padding: 9px 16px;
+  font-size: 12.5px;
+  letter-spacing: 1.1px;
+  padding: 10px 16px;
   border-radius: 999px;
   border: 1px solid transparent;
-  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
-.nav a:hover { color: var(--gold); border-color: rgba(201, 162, 39, 0.35); }
-.nav a.active { color: #0e0e0f; background: var(--gold); }
+.nav a:hover { color: var(--gold); border-color: rgba(201, 162, 39, 0.4); background: rgba(201, 162, 39, 0.08); }
+.nav a.active {
+  color: #0e0e0f;
+  background: linear-gradient(135deg, #e0bb3d, var(--gold));
+  border-color: transparent;
+  box-shadow: 0 4px 16px -4px rgba(201, 162, 39, 0.65);
+}
 
 .main {
   max-width: 900px;
