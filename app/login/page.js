@@ -2,34 +2,7 @@
 import { useState } from "react";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 import Crest from "@/app/components/Crest";
-
-function CrossedSpears() {
-  return (
-    <svg
-      viewBox="0 0 240 240"
-      className="login-glow"
-      style={{
-        position: "fixed",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        width: "min(80vw, 80vh)",
-        height: "min(80vw, 80vh)",
-        opacity: 0.13,
-        pointerEvents: "none",
-        zIndex: 0,
-      }}
-    >
-      {[45, -45].map((angle) => (
-        <g key={angle} transform={`rotate(${angle} 120 120)`}>
-          <line x1="120" y1="4" x2="120" y2="236" stroke="#e8d9a0" strokeWidth="1.5" />
-          <path d="M120 0 L136 36 L120 27 L104 36 Z" fill="#e8d9a0" />
-          <line x1="102" y1="42" x2="138" y2="42" stroke="#e8d9a0" strokeWidth="1.5" />
-        </g>
-      ))}
-    </svg>
-  );
-}
+import TempleBackdrop from "@/app/components/TempleBackdrop";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -64,7 +37,7 @@ export default function LoginPage() {
         overflowY: "auto",
       }}
     >
-      <CrossedSpears />
+      <TempleBackdrop />
       <div style={{ position: "relative", zIndex: 1, maxWidth: 720, width: "100%", textAlign: "center", padding: "48px 24px" }}>
         <div className="login-rise" style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
           <Crest size={76} glow />
