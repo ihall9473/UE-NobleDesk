@@ -2,7 +2,10 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DATE_PRESETS, getDateRange } from "@/lib/dateRanges";
+import { nextDraftInfo } from "@/lib/draftDate";
 import UndoToast from "@/app/components/UndoToast";
+
+const DRAFT_WARNING_DAYS = 5;
 
 // Splits the stored full name into first/last for filtering and sorting,
 // without needing separate name fields in the database.
@@ -128,6 +131,11 @@ export default function ClientsPage() {
   const clientsWithPremium = visible.filter((c) => c.client_details?.monthly_premium).length;
   const isFiltered = search || carrierFilter !== "all" || stateFilter !== "all" || datePreset !== "all";
 
+  const upcomingDrafts = allClients
+    .map((c) => ({ client: c, draft: nextDraftInfo(c.client_details?.draft_date) }))
+    .filter(({ draft }) => draft && draft.daysUntil >= 0 && draft.daysUntil <= DRAFT_WARNING_DAYS)
+    .sort((a, b) => a.draft.daysUntil - b.draft.daysUntil);
+
   return (
     <div>
       <Suspense fallback={null}>
@@ -153,6 +161,31 @@ export default function ClientsPage() {
               across {clientsWithPremium} of {isFiltered ? visible.length : allClients.length} clients
             </div>
           </div>
+        </div>
+      )}
+
+      {upcomingDrafts.length > 0 && (
+        <div className="card" style={{ background: "rgba(248, 113, 113, 0.06)", border: "1px solid rgba(248, 113, 113, 0.35)" }}>
+          <div className="label-caps" style={{ color: "var(--danger)" }}>
+            Upcoming Premium Drafts
+          </div>
+          <p className="subtitle" style={{ marginTop: 4, marginBottom: 8 }}>
+            Get ahead of an NSF or lapse — a heads-up before these draft, based on the draft date
+            saved on each client.
+          </p>
+          {upcomingDrafts.map(({ client, draft }) => (
+            <a
+              key={client.id}
+              href={`/clients/${client.id}`}
+              style={{ display: "block", textDecoration: "none", color: "inherit", fontSize: 14, marginBottom: 4 }}
+            >
+              <strong>{client.name}</strong>{" "}
+              <span style={{ color: "#9a9a9a" }}>
+                — {draft.daysUntil === 0 ? "drafts today" : `drafts in ${draft.daysUntil} day${draft.daysUntil === 1 ? "" : "s"}`}
+                {client.client_details?.monthly_premium ? ` ($${client.client_details.monthly_premium})` : ""}
+              </span>
+            </a>
+          ))}
         </div>
       )}
 
@@ -256,12 +289,21 @@ export default function ClientsPage() {
       {clients === null && <p>Loading...</p>}
       {visible.map((c) => {
         const d = c.client_details || {};
+        const draft = nextDraftInfo(d.draft_date);
+        const draftSoon = draft && draft.daysUntil >= 0 && draft.daysUntil <= DRAFT_WARNING_DAYS;
         return (
           <a href={`/clients/${c.id}`} key={c.id} style={{ textDecoration: "none", color: "inherit" }}>
             <div className="card">
               <div className="row">
                 <strong>{c.name}</strong>
-                <span style={{ fontSize: 13, color: "#9a9a9a" }}>{c.phone}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  {draftSoon && (
+                    <span className="badge" style={{ color: "var(--danger)", borderColor: "var(--danger)", background: "rgba(248,113,113,0.08)" }}>
+                      {draft.daysUntil === 0 ? "Drafts today" : `Drafts in ${draft.daysUntil}d`}
+                    </span>
+                  )}
+                  <span style={{ fontSize: 13, color: "#9a9a9a" }}>{c.phone}</span>
+                </div>
               </div>
               <div style={{ color: "#9a9a9a", fontSize: 13, marginTop: 4 }}>
                 {d.carrier || "No carrier set"}

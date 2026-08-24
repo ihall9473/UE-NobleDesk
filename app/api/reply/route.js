@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 import { twilioClientFor } from "@/lib/twilio";
+import { fillMessageTemplate } from "@/lib/messageTemplate";
 
 export async function POST(req) {
   const supabase = supabaseServer();
@@ -35,16 +36,17 @@ export async function POST(req) {
   }
 
   try {
+    const body = fillMessageTemplate(message, contact);
     await twilioClient.messages.create({
       from: profile.twilio_number,
       to: contact.phone,
-      body: message,
+      body,
     });
     await supabase.from("messages").insert({
       contact_id: contactId,
       owner_id: user.id,
       direction: "outbound",
-      body: message,
+      body,
     });
     return NextResponse.json({ ok: true });
   } catch (err) {

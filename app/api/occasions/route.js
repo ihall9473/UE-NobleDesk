@@ -34,6 +34,33 @@ export async function GET() {
     const { data: inserted, error: seedErr } = await supabase.from("occasions").insert(seeded).select();
     if (seedErr) return NextResponse.json({ error: seedErr.message }, { status: 500 });
     occasions = inserted;
+  } else {
+    // Backfill any built-in holidays added to the master list since this
+    // person's checklist was first seeded (matched by kind for the two
+    // per-contact ones, since those don't have a fixed name requirement;
+    // by name for everything else).
+    const existingKinds = new Set(occasions.map((o) => o.kind));
+    const existingNames = new Set(occasions.map((o) => o.name));
+    const missing = ALL_HOLIDAYS.filter((o) =>
+      o.kind === "birthday" || o.kind === "policy_anniversary"
+        ? !existingKinds.has(o.kind)
+        : !existingNames.has(o.name)
+    );
+    if (missing.length > 0) {
+      const toInsert = missing.map((o) => ({
+        owner_id: user.id,
+        name: o.name,
+        kind: o.kind,
+        month: o.month ?? null,
+        day: o.day ?? null,
+        weekday: o.weekday ?? null,
+        occurrence: o.occurrence ?? null,
+        enabled: o.enabled,
+        message: o.message,
+      }));
+      const { data: added, error: addErr } = await supabase.from("occasions").insert(toInsert).select();
+      if (!addErr && added) occasions = [...occasions, ...added];
+    }
   }
 
   return NextResponse.json({ occasions });
