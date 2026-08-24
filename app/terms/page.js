@@ -24,6 +24,14 @@ export default function TermsPage() {
         by phone and text to continue assisting with their insurance inquiry.
       </p>
 
+      <h3>Requesting Information Online</h3>
+      <p>
+        You may also request information directly by submitting your name and phone number
+        through an online form and checking a box that reads: "By checking this box, I agree to
+        receive text messages from my insurance agent regarding my insurance inquiry." Checking
+        that box is your consent to the text messaging program described below.
+      </p>
+
       <h3>Text Messaging Program</h3>
       <ul>
         <li>By providing your mobile number, you consent to receive text messages from me regarding your insurance inquiry or policy.</li>

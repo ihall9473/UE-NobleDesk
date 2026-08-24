@@ -25,6 +25,13 @@ export default function PrivacyPolicyPage() {
         by phone and text to continue assisting with their insurance inquiry.
       </p>
 
+      <h3>Requesting Information Online</h3>
+      <p>
+        Individuals may also reach out directly by submitting their name and phone number
+        through an online "Request Info" form and checking a box to consent to being contacted
+        by text and phone about their insurance inquiry, before I follow up as described below.
+      </p>
+
       <h3>How I Use Your Information</h3>
       <p>
         I use your information solely to follow up on your insurance inquiry, answer your
