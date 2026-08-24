@@ -9,7 +9,7 @@ export async function GET(req) {
 
   const type = req.nextUrl.searchParams.get("type"); // "lead", "client", or omitted for all
 
-  let query = supabase.from("contacts").select("*").eq("owner_id", user.id);
+  let query = supabase.from("contacts").select("*").eq("owner_id", user.id).is("deleted_at", null);
   if (type === "lead" || type === "client") query = query.eq("type", type);
 
   const { data, error } = await query.order("created_at", { ascending: false });
@@ -35,6 +35,7 @@ export async function POST(req) {
       phone: normalizePhone(r.phone),
       type: r.type === "client" ? "client" : r.type === "lead" ? "lead" : defaultType,
       state: r.state || null,
+      deleted_at: null, // re-adding someone who was previously removed brings them back
     }));
 
   if (cleaned.length === 0) {
@@ -50,14 +51,15 @@ export async function POST(req) {
   return NextResponse.json({ contacts: data });
 }
 
-// Change a contact's type and/or state - e.g. moving a lead to client once they convert.
-// Accepts either a single `id` or a list of `ids` to update several at once.
+// Change a contact's type and/or state - e.g. moving a lead to client once they convert -
+// or restore one that was soft-deleted (undo). Accepts either a single `id` or a list of
+// `ids` to update several at once.
 export async function PATCH(req) {
   const supabase = supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not logged in" }, { status: 401 });
 
-  const { id, ids, type, state } = await req.json();
+  const { id, ids, type, state, restore } = await req.json();
   const targetIds = ids && ids.length > 0 ? ids : id ? [id] : [];
   if (targetIds.length === 0) {
     return NextResponse.json({ error: "id or ids is required" }, { status: 400 });
@@ -71,6 +73,7 @@ export async function PATCH(req) {
     update.type = type;
   }
   if (state !== undefined) update.state = state || null;
+  if (restore) update.deleted_at = null;
 
   const { error } = await supabase
     .from("contacts")
@@ -82,7 +85,9 @@ export async function PATCH(req) {
   return NextResponse.json({ ok: true });
 }
 
-// Accepts either a single `id` or a list of `ids` to delete several at once.
+// Soft-deletes (marks deleted_at) rather than actually deleting, so the
+// frontend can offer an "Undo" right after. Accepts either a single `id`
+// or a list of `ids` to remove several at once.
 export async function DELETE(req) {
   const supabase = supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
@@ -96,7 +101,7 @@ export async function DELETE(req) {
 
   const { error } = await supabase
     .from("contacts")
-    .delete()
+    .update({ deleted_at: new Date().toISOString() })
     .in("id", targetIds)
     .eq("owner_id", user.id);
 

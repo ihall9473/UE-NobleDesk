@@ -13,6 +13,7 @@ export async function GET() {
     .select("*, client_details(*)")
     .eq("owner_id", user.id)
     .eq("type", "client")
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -51,7 +52,13 @@ export async function POST(req) {
   const { data: contact, error: contactErr } = await supabase
     .from("contacts")
     .upsert(
-      { owner_id: user.id, name: body.name.trim(), phone: normalizePhone(body.phone), type: "client" },
+      {
+        owner_id: user.id,
+        name: body.name.trim(),
+        phone: normalizePhone(body.phone),
+        type: "client",
+        deleted_at: null, // re-adding someone who was previously removed brings them back
+      },
       { onConflict: "owner_id,phone" }
     )
     .select()

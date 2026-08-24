@@ -84,9 +84,9 @@ export default function ClientDetailPage() {
   }
 
   async function removeClient() {
-    if (!confirm(`Remove ${form.name}? This deletes their full record and message history.`)) return;
+    if (!confirm(`Remove ${form.name}?`)) return;
     await fetch(`/api/clients/${contactId}`, { method: "DELETE" });
-    window.location.href = "/clients";
+    window.location.href = `/clients?undoId=${contactId}&undoName=${encodeURIComponent(form.name)}`;
   }
 
   if (!form) return <p>{message || "Loading..."}</p>;

@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef } from "react";
 import { US_STATES } from "@/lib/usStates";
 import { inferStateFromPhone } from "@/lib/areaCodeToState";
+import UndoToast from "@/app/components/UndoToast";
 
 // Parses one line into { name, phone, state }. Handles tab-separated
 // (Google Sheets copy), comma-separated (CSV), or just plain typed text
@@ -55,6 +56,7 @@ export default function LeadsPage() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(new Set());
+  const [undo, setUndo] = useState(null); // { ids, text } - shown as a dismissable toast
   const fileInputRef = useRef(null);
 
   async function load() {
@@ -123,13 +125,14 @@ export default function LeadsPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
-  async function removeLead(id) {
+  async function removeLead(id, name) {
     if (!confirm("Remove this lead?")) return;
     await fetch("/api/contacts", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
     });
+    setUndo({ ids: [id], text: `Removed ${name}.` });
     load();
   }
 
@@ -172,7 +175,19 @@ export default function LeadsPage() {
       body: JSON.stringify({ ids }),
     });
     setSelected(new Set());
-    setMessage(`Removed ${ids.length} lead${ids.length === 1 ? "" : "s"}.`);
+    setUndo({ ids, text: `Removed ${ids.length} lead${ids.length === 1 ? "" : "s"}.` });
+    load();
+  }
+
+  async function undoRemove() {
+    if (!undo) return;
+    await fetch("/api/contacts", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: undo.ids, restore: true }),
+    });
+    setUndo(null);
+    setMessage("Restored.");
     load();
   }
 
@@ -320,7 +335,7 @@ export default function LeadsPage() {
               <button onClick={() => convertToClient(c.id)} style={{ background: "#059669" }}>
                 Move to Clients
               </button>
-              <button onClick={() => removeLead(c.id)} style={{ background: "#dc2626" }}>Remove</button>
+              <button onClick={() => removeLead(c.id, c.name)} style={{ background: "#dc2626" }}>Remove</button>
             </div>
           </div>
         );
@@ -329,6 +344,7 @@ export default function LeadsPage() {
       {leads.length > 0 && visibleLeads.length === 0 && (
         <p className="subtitle">No leads match your search.</p>
       )}
+      <UndoToast text={undo?.text} onUndo={undoRemove} onDismiss={() => setUndo(null)} />
     </div>
   );
 }
