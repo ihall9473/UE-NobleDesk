@@ -1,16 +1,49 @@
 "use client";
 import { useEffect, useState } from "react";
 import { inferStateFromPhone } from "@/lib/areaCodeToState";
+import { STATE_TIMEZONES } from "@/lib/stateTimezones";
+
+const TIMEZONE_LABELS = {
+  "America/New_York": "Eastern",
+  "America/Chicago": "Central",
+  "America/Denver": "Mountain",
+  "America/Phoenix": "Arizona (no DST)",
+  "America/Los_Angeles": "Pacific",
+  "America/Anchorage": "Alaska",
+  "Pacific/Honolulu": "Hawaii",
+};
+
+// West to east feels most natural for a timezone list; unrecognized last.
+const TIMEZONE_ORDER = [
+  "Pacific/Honolulu",
+  "America/Anchorage",
+  "America/Los_Angeles",
+  "America/Phoenix",
+  "America/Denver",
+  "America/Chicago",
+  "America/New_York",
+  "Unknown",
+];
 
 function stateOf(contact) {
   return contact.state || inferStateFromPhone(contact.phone) || "Unknown";
+}
+
+function timezoneOf(contact) {
+  const state = stateOf(contact);
+  return STATE_TIMEZONES[state] || "Unknown";
+}
+
+function timezoneLabel(tz) {
+  if (tz === "Unknown") return "Unknown Time Zone";
+  return `${TIMEZONE_LABELS[tz] || tz} Time`;
 }
 
 export default function ComposePage() {
   const [contacts, setContacts] = useState([]);
   const [filter, setFilter] = useState("all"); // all | lead | client
   const [stateFilter, setStateFilter] = useState("all");
-  const [sortByState, setSortByState] = useState(false);
+  const [groupBy, setGroupBy] = useState("none"); // none | state | timezone
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(new Set());
   const [message, setMessage] = useState("");
@@ -38,8 +71,13 @@ export default function ComposePage() {
     return c.name.toLowerCase().includes(q) || first.includes(q) || last.includes(q) || c.phone.includes(q);
   });
 
-  if (sortByState) {
+  if (groupBy === "state") {
     visible = [...visible].sort((a, b) => stateOf(a).localeCompare(stateOf(b)));
+  } else if (groupBy === "timezone") {
+    visible = [...visible].sort((a, b) => {
+      const diff = TIMEZONE_ORDER.indexOf(timezoneOf(a)) - TIMEZONE_ORDER.indexOf(timezoneOf(b));
+      return diff !== 0 ? diff : stateOf(a).localeCompare(stateOf(b));
+    });
   }
 
   function toggle(id) {
@@ -49,14 +87,13 @@ export default function ComposePage() {
     setSelected(next);
   }
 
-  function toggleAll() {
-    const visibleIds = visible.map((c) => c.id);
-    const allVisibleSelected = visibleIds.every((id) => selected.has(id));
+  function toggleIds(ids) {
+    const allSelected = ids.length > 0 && ids.every((id) => selected.has(id));
     const next = new Set(selected);
-    if (allVisibleSelected) {
-      visibleIds.forEach((id) => next.delete(id));
+    if (allSelected) {
+      ids.forEach((id) => next.delete(id));
     } else {
-      visibleIds.forEach((id) => next.add(id));
+      ids.forEach((id) => next.add(id));
     }
     setSelected(next);
   }
@@ -86,19 +123,22 @@ export default function ComposePage() {
     }
   }
 
+  const visibleIds = visible.map((c) => c.id);
   const visibleSelectedCount = visible.filter((c) => selected.has(c.id)).length;
 
-  // Group into sections by state when sorting by state, so it's easy to
-  // scan and select a whole state at once.
+  // Group into sections by state or timezone, so it's easy to scan and
+  // select a whole group at once.
   let groups = null;
-  if (sortByState) {
+  if (groupBy !== "none") {
+    const keyOf = groupBy === "timezone" ? timezoneOf : stateOf;
+    const labelOf = groupBy === "timezone" ? timezoneLabel : (s) => s;
     groups = [];
-    let lastState = null;
+    let lastKey = null;
     for (const c of visible) {
-      const s = stateOf(c);
-      if (s !== lastState) {
-        groups.push({ state: s, contacts: [] });
-        lastState = s;
+      const key = keyOf(c);
+      if (key !== lastKey) {
+        groups.push({ key, label: labelOf(key), contacts: [] });
+        lastKey = key;
       }
       groups[groups.length - 1].contacts.push(c);
     }
@@ -139,13 +179,15 @@ export default function ComposePage() {
           <option value="all">All States</option>
           {stateOptions.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
-        <div className="checkbox-row" style={{ marginBottom: 0 }}>
-          <input type="checkbox" checked={sortByState} onChange={(e) => setSortByState(e.target.checked)} />
-          <span style={{ fontSize: 14 }}>Sort/group by state</span>
-        </div>
+        <select value={groupBy} onChange={(e) => setGroupBy(e.target.value)} style={{ marginBottom: 0, width: "auto", flex: 1 }}>
+          <option value="none">Don't group</option>
+          <option value="state">Sort/group by state</option>
+          <option value="timezone">Sort/group by time zone</option>
+        </select>
       </div>
       <p className="subtitle" style={{ marginTop: -6 }}>
-        State is whatever was set manually, or guessed from the area code when it wasn't.
+        State (and time zone) is whatever was set manually, or guessed from the area code when
+        it wasn't.
       </p>
 
       <input
@@ -157,23 +199,36 @@ export default function ComposePage() {
       <div className="card">
         <div className="row" style={{ marginBottom: 8 }}>
           <strong>Recipients ({selected.size} selected total)</strong>
-          <button type="button" onClick={toggleAll}>
+          <button type="button" onClick={() => toggleIds(visibleIds)}>
             {visibleSelectedCount === visible.length && visible.length > 0 ? "Unselect Shown" : "Select Shown"}
           </button>
         </div>
         <div style={{ maxHeight: 320, overflowY: "auto" }}>
-          {sortByState && groups
-            ? groups.map((g) => (
-                <div key={g.state} style={{ marginBottom: 10 }}>
-                  <div className="label-caps" style={{ marginBottom: 4 }}>{g.state} ({g.contacts.length})</div>
-                  {g.contacts.map((c) => (
-                    <div className="checkbox-row" key={c.id}>
-                      <input type="checkbox" checked={selected.has(c.id)} onChange={() => toggle(c.id)} />
-                      <span>{c.name} — {c.phone}</span>
+          {groups
+            ? groups.map((g) => {
+                const groupIds = g.contacts.map((c) => c.id);
+                const groupAllSelected = groupIds.every((id) => selected.has(id));
+                return (
+                  <div key={g.key} style={{ marginBottom: 10 }}>
+                    <div className="row" style={{ marginBottom: 4 }}>
+                      <div className="label-caps">{g.label} ({g.contacts.length})</div>
+                      <button
+                        type="button"
+                        onClick={() => toggleIds(groupIds)}
+                        style={{ width: "auto", marginBottom: 0, padding: "4px 12px", fontSize: 12 }}
+                      >
+                        {groupAllSelected ? "Unselect All" : "Select All"}
+                      </button>
                     </div>
-                  ))}
-                </div>
-              ))
+                    {g.contacts.map((c) => (
+                      <div className="checkbox-row" key={c.id}>
+                        <input type="checkbox" checked={selected.has(c.id)} onChange={() => toggle(c.id)} />
+                        <span>{c.name} — {c.phone}</span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })
             : visible.map((c) => (
                 <div className="checkbox-row" key={c.id}>
                   <input type="checkbox" checked={selected.has(c.id)} onChange={() => toggle(c.id)} />

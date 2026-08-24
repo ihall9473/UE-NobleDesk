@@ -54,6 +54,7 @@ export default function LeadsPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState(new Set());
   const fileInputRef = useRef(null);
 
   async function load() {
@@ -142,6 +143,52 @@ export default function LeadsPage() {
     load();
   }
 
+  function toggleSelected(id) {
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelected(next);
+  }
+
+  function toggleSelectAllVisible() {
+    const visibleIds = visibleLeads.map((c) => c.id);
+    const allSelected = visibleIds.length > 0 && visibleIds.every((id) => selected.has(id));
+    const next = new Set(selected);
+    if (allSelected) {
+      visibleIds.forEach((id) => next.delete(id));
+    } else {
+      visibleIds.forEach((id) => next.add(id));
+    }
+    setSelected(next);
+  }
+
+  async function removeSelected() {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    if (!confirm(`Remove ${ids.length} selected lead${ids.length === 1 ? "" : "s"}?`)) return;
+    await fetch("/api/contacts", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    });
+    setSelected(new Set());
+    setMessage(`Removed ${ids.length} lead${ids.length === 1 ? "" : "s"}.`);
+    load();
+  }
+
+  async function convertSelectedToClients() {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    await fetch("/api/contacts", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids, type: "client" }),
+    });
+    setSelected(new Set());
+    setMessage(`Moved ${ids.length} lead${ids.length === 1 ? "" : "s"} to Clients. Fill in their full details on the Clients page.`);
+    load();
+  }
+
   // Matches against the full name, just the first word, just the rest
   // (last name), or the phone number - so searching "Smith" or "555" both work.
   const visibleLeads = leads.filter((c) => {
@@ -214,27 +261,60 @@ export default function LeadsPage() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
+
+      {visibleLeads.length > 0 && (
+        <div className="row" style={{ marginBottom: 12 }}>
+          <div className="checkbox-row" style={{ marginBottom: 0 }}>
+            <input
+              type="checkbox"
+              checked={visibleLeads.length > 0 && visibleLeads.every((c) => selected.has(c.id))}
+              onChange={toggleSelectAllVisible}
+            />
+            <span style={{ fontSize: 14 }}>
+              {selected.size > 0 ? `${selected.size} selected` : "Select all shown"}
+            </span>
+          </div>
+          {selected.size > 0 && (
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={convertSelectedToClients} style={{ background: "#059669" }}>
+                Move Selected to Clients
+              </button>
+              <button onClick={removeSelected} style={{ background: "#dc2626" }}>
+                Remove Selected
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       {visibleLeads.map((c) => {
         const displayState = c.state || inferStateFromPhone(c.phone);
         return (
           <div className="card row" key={c.id}>
-            <div>
-              <strong>{c.name}</strong>{" "}
-              {displayState && (
-                <span
-                  style={{
-                    fontSize: 11,
-                    padding: "2px 8px",
-                    borderRadius: 10,
-                    border: `1px solid ${c.state ? "#c9a227" : "rgba(255,255,255,0.2)"}`,
-                    color: c.state ? "#c9a227" : "#9a9a9a",
-                  }}
-                  title={c.state ? "Set manually" : "Guessed from area code"}
-                >
-                  {displayState}
-                </span>
-              )}
-              <div style={{ color: "#9a9a9a", fontSize: 14 }}>{c.phone}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <input
+                type="checkbox"
+                checked={selected.has(c.id)}
+                onChange={() => toggleSelected(c.id)}
+              />
+              <div>
+                <strong>{c.name}</strong>{" "}
+                {displayState && (
+                  <span
+                    style={{
+                      fontSize: 11,
+                      padding: "2px 8px",
+                      borderRadius: 10,
+                      border: `1px solid ${c.state ? "#c9a227" : "rgba(255,255,255,0.2)"}`,
+                      color: c.state ? "#c9a227" : "#9a9a9a",
+                    }}
+                    title={c.state ? "Set manually" : "Guessed from area code"}
+                  >
+                    {displayState}
+                  </span>
+                )}
+                <div style={{ color: "#9a9a9a", fontSize: 14 }}>{c.phone}</div>
+              </div>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
               <button onClick={() => convertToClient(c.id)} style={{ background: "#059669" }}>

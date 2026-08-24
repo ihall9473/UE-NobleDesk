@@ -51,12 +51,17 @@ export async function POST(req) {
 }
 
 // Change a contact's type and/or state - e.g. moving a lead to client once they convert.
+// Accepts either a single `id` or a list of `ids` to update several at once.
 export async function PATCH(req) {
   const supabase = supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not logged in" }, { status: 401 });
 
-  const { id, type, state } = await req.json();
+  const { id, ids, type, state } = await req.json();
+  const targetIds = ids && ids.length > 0 ? ids : id ? [id] : [];
+  if (targetIds.length === 0) {
+    return NextResponse.json({ error: "id or ids is required" }, { status: 400 });
+  }
 
   const update = {};
   if (type !== undefined) {
@@ -70,23 +75,29 @@ export async function PATCH(req) {
   const { error } = await supabase
     .from("contacts")
     .update(update)
-    .eq("id", id)
+    .in("id", targetIds)
     .eq("owner_id", user.id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
 
+// Accepts either a single `id` or a list of `ids` to delete several at once.
 export async function DELETE(req) {
   const supabase = supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not logged in" }, { status: 401 });
 
-  const { id } = await req.json();
+  const { id, ids } = await req.json();
+  const targetIds = ids && ids.length > 0 ? ids : id ? [id] : [];
+  if (targetIds.length === 0) {
+    return NextResponse.json({ error: "id or ids is required" }, { status: 400 });
+  }
+
   const { error } = await supabase
     .from("contacts")
     .delete()
-    .eq("id", id)
+    .in("id", targetIds)
     .eq("owner_id", user.id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
