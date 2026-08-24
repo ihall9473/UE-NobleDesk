@@ -39,7 +39,7 @@ export default function SetPasswordPage() {
     if (error) {
       setError(error.message);
     } else {
-      window.location.href = "/leads";
+      window.location.href = "/";
     }
   }
 
