@@ -124,6 +124,25 @@ create policy "Users submit their own suggestions" on suggestions
 -- the create table + policy statements above by themselves - safe to run
 -- again ("if not exists") and won't touch anything else.
 
+-- Reusable message templates (e.g. "missed call follow-up", "quote
+-- follow-up") - picked from a dropdown on Send a Text and in a
+-- conversation reply, instead of retyping the same message every time.
+create table if not exists templates (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid references profiles(id) on delete cascade,
+  name text not null,
+  body text not null,
+  created_at timestamptz default now()
+);
+
+alter table templates enable row level security;
+
+create policy "Users manage their own templates" on templates
+  for all using (auth.uid() = owner_id);
+
+-- Already deployed this app before message templates existed? Just run
+-- the create table + policy statements above by themselves.
+
 -- Row Level Security: makes sure people can only ever see their own data,
 -- even if there were ever a bug in the app code.
 alter table profiles enable row level security;

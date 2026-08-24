@@ -17,6 +17,11 @@ export default function SettingsPage() {
   const [searching, setSearching] = useState(false);
   const [buying, setBuying] = useState("");
 
+  const [templates, setTemplates] = useState(null);
+  const [templateName, setTemplateName] = useState("");
+  const [templateBody, setTemplateBody] = useState("");
+  const [savingTemplate, setSavingTemplate] = useState(false);
+
   async function load() {
     const res = await fetch("/api/settings");
     const data = await res.json();
@@ -26,9 +31,54 @@ export default function SettingsPage() {
     setSmsAlertsEnabled(data.profile?.sms_alerts_enabled || false);
   }
 
+  async function loadTemplates() {
+    const res = await fetch("/api/templates");
+    const data = await res.json();
+    setTemplates(data.templates || []);
+  }
+
   useEffect(() => {
     load();
+    loadTemplates();
   }, []);
+
+  async function addTemplate(e) {
+    e.preventDefault();
+    setSavingTemplate(true);
+    const res = await fetch("/api/templates", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: templateName, body: templateBody }),
+    });
+    setSavingTemplate(false);
+    const data = await res.json();
+    if (res.ok) {
+      setTemplateName("");
+      setTemplateBody("");
+      loadTemplates();
+    } else {
+      setMessage(data.error || "Something went wrong.");
+    }
+  }
+
+  async function updateTemplateBody(template, body) {
+    if (body === template.body) return;
+    await fetch("/api/templates", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: template.id, body }),
+    });
+  }
+
+  async function removeTemplate(id) {
+    if (!confirm("Delete this template?")) return;
+    await fetch("/api/templates", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    loadTemplates();
+  }
 
   async function saveCredentials(e) {
     e.preventDefault();
@@ -284,6 +334,55 @@ export default function SettingsPage() {
             </div>
           </>
         )}
+      </div>
+
+      <div className="card">
+        <h3>5. Message templates</h3>
+        <p className="subtitle" style={{ marginBottom: 8 }}>
+          Save reusable messages - like a follow-up after a missed call, or a quote check-in -
+          so you can pick them from a dropdown on Send a Text and in a conversation reply
+          instead of retyping them every time.
+        </p>
+        {templates && templates.length > 0 && (
+          <div style={{ marginBottom: 14 }}>
+            {templates.map((t) => (
+              <div key={t.id} style={{ marginBottom: 10, paddingBottom: 10, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                <div className="row" style={{ marginBottom: 6 }}>
+                  <strong style={{ fontSize: 14 }}>{t.name}</strong>
+                  <button
+                    type="button"
+                    onClick={() => removeTemplate(t.id)}
+                    style={{ width: "auto", marginBottom: 0, background: "#dc2626", padding: "4px 12px", fontSize: 12 }}
+                  >
+                    Delete
+                  </button>
+                </div>
+                <textarea
+                  rows={2}
+                  defaultValue={t.body}
+                  onBlur={(e) => updateTemplateBody(t, e.target.value)}
+                  style={{ marginBottom: 0 }}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+        <form onSubmit={addTemplate}>
+          <input
+            placeholder="Template name, e.g. Missed Call Follow-up"
+            value={templateName}
+            onChange={(e) => setTemplateName(e.target.value)}
+            required
+          />
+          <textarea
+            rows={3}
+            placeholder="Message text... use {first_name} or {name} if you want it filled in automatically"
+            value={templateBody}
+            onChange={(e) => setTemplateBody(e.target.value)}
+            required
+          />
+          <button type="submit" disabled={savingTemplate}>{savingTemplate ? "Saving..." : "Save Template"}</button>
+        </form>
       </div>
     </div>
   );

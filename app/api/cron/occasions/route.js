@@ -4,13 +4,7 @@ import { twilioClientFor } from "@/lib/twilio";
 import { resolveHolidayDate } from "@/lib/holidays";
 import { inferStateFromPhone } from "@/lib/areaCodeToState";
 import { isQuietHoursForState } from "@/lib/stateTimezones";
-
-function fillTemplate(template, contact) {
-  const firstName = (contact.name || "").trim().split(/\s+/)[0] || "there";
-  return (template || "")
-    .replaceAll("{name}", contact.name || "")
-    .replaceAll("{first_name}", firstName);
-}
+import { fillMessageTemplate } from "@/lib/messageTemplate";
 
 // Runs once a day (see vercel.json). Vercel automatically sends this secret
 // as a Bearer token when it triggers the cron.
@@ -76,6 +70,29 @@ export async function GET(req) {
           const d = new Date(dob + "T00:00:00");
           return d.getMonth() + 1 === todayMonth && d.getDate() === todayDay;
         });
+      } else if (occasion.kind === "policy_anniversary") {
+        const { data: clients } = await supabaseAdmin
+          .from("contacts")
+          .select("*, client_details(application_submitted_date)")
+          .eq("owner_id", profile.id)
+          .eq("type", "client");
+
+        matchingContacts = (clients || [])
+          .map((c) => {
+            const details = Array.isArray(c.client_details) ? c.client_details[0] : c.client_details;
+            return { contact: c, submitted: details?.application_submitted_date };
+          })
+          .filter(({ submitted }) => {
+            if (!submitted) return false;
+            const d = new Date(submitted + "T00:00:00");
+            // Skip the day the policy was actually submitted - only fire on
+            // real anniversaries, starting one year later.
+            return d.getMonth() + 1 === todayMonth && d.getDate() === todayDay && year > d.getFullYear();
+          })
+          .map(({ contact, submitted }) => ({
+            ...contact,
+            _years: year - new Date(submitted + "T00:00:00").getFullYear(),
+          }));
       }
 
       for (const contact of matchingContacts) {
@@ -99,7 +116,7 @@ export async function GET(req) {
           .maybeSingle();
         if (existing) continue;
 
-        const body = fillTemplate(occasion.message, contact);
+        const body = fillMessageTemplate(occasion.message, contact, contact._years ? { years: contact._years } : {});
         if (!body.trim()) continue;
 
         try {

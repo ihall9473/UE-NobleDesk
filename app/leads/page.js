@@ -4,6 +4,16 @@ import { US_STATES } from "@/lib/usStates";
 import { inferStateFromPhone } from "@/lib/areaCodeToState";
 import UndoToast from "@/app/components/UndoToast";
 
+const STALE_DAYS = 7;
+
+// Days since last outbound text, or since they were added if never texted
+// at all. Used to flag leads that are going cold.
+function daysSinceContact(lead) {
+  const from = lead.lastContactedAt || lead.created_at;
+  if (!from) return null;
+  return Math.floor((Date.now() - new Date(from).getTime()) / 86400000);
+}
+
 // Parses one line into { name, phone, state }. Handles tab-separated
 // (Google Sheets copy), comma-separated (CSV), or just plain typed text
 // separated by spaces - e.g. "Steve Stevens 3303456789 AZ". Finds the phone
@@ -220,12 +230,27 @@ export default function LeadsPage() {
     );
   });
 
+  const staleLeads = leads.filter((l) => {
+    const d = daysSinceContact(l);
+    return d !== null && d >= STALE_DAYS;
+  });
+
   return (
     <div>
       <h1>Leads</h1>
       <p className="subtitle">Add or remove leads, or bring in a whole lead pack at once.</p>
 
       {message && <p className="success">{message}</p>}
+
+      {staleLeads.length > 0 && (
+        <div className="card" style={{ background: "rgba(248, 113, 113, 0.06)", border: "1px solid rgba(248, 113, 113, 0.35)" }}>
+          <div className="label-caps" style={{ color: "var(--danger)" }}>Going Cold</div>
+          <p className="subtitle" style={{ marginTop: 4, marginBottom: 0 }}>
+            {staleLeads.length} lead{staleLeads.length === 1 ? "" : "s"} haven't been texted in {STALE_DAYS}+ days
+            — worth a follow-up before they go cold for good.
+          </p>
+        </div>
+      )}
 
       <div className="card">
         <h3>Import a lead pack</h3>
@@ -304,6 +329,8 @@ export default function LeadsPage() {
 
       {visibleLeads.map((c) => {
         const displayState = c.state || inferStateFromPhone(c.phone);
+        const daysSince = daysSinceContact(c);
+        const isStale = daysSince !== null && daysSince >= STALE_DAYS;
         return (
           <div className="card row" key={c.id}>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -326,6 +353,15 @@ export default function LeadsPage() {
                     title={c.state ? "Set manually" : "Guessed from area code"}
                   >
                     {displayState}
+                  </span>
+                )}{" "}
+                {isStale && (
+                  <span
+                    className="badge"
+                    style={{ color: "var(--danger)", borderColor: "var(--danger)", background: "rgba(248,113,113,0.08)" }}
+                    title={c.lastContactedAt ? `Last texted ${daysSince} days ago` : `Added ${daysSince} days ago, never texted`}
+                  >
+                    {c.lastContactedAt ? `No contact ${daysSince}d` : `Never contacted (${daysSince}d)`}
                   </span>
                 )}
                 <div style={{ color: "#9a9a9a", fontSize: 14 }}>{c.phone}</div>

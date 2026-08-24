@@ -50,6 +50,20 @@ export async function GET() {
         const d = new Date(dob + "T00:00:00");
         return d.getMonth() + 1 === todayMonth && d.getDate() === todayDay;
       });
+    } else if (occasion.kind === "policy_anniversary") {
+      const { data: clients } = await supabase
+        .from("contacts")
+        .select("id, name, phone, state, client_details(application_submitted_date)")
+        .eq("owner_id", user.id)
+        .eq("type", "client");
+
+      candidates = (clients || []).filter((c) => {
+        const details = Array.isArray(c.client_details) ? c.client_details[0] : c.client_details;
+        const submitted = details?.application_submitted_date;
+        if (!submitted) return false;
+        const d = new Date(submitted + "T00:00:00");
+        return d.getMonth() + 1 === todayMonth && d.getDate() === todayDay && year > d.getFullYear();
+      });
     }
 
     for (const c of candidates) {

@@ -15,6 +15,29 @@ export async function GET(req) {
   const { data, error } = await query.order("created_at", { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // For leads specifically, attach when they were last texted (outbound)
+  // so the frontend can flag ones that have gone cold.
+  if (type === "lead" && data.length > 0) {
+    const { data: msgs } = await supabase
+      .from("messages")
+      .select("contact_id, created_at")
+      .eq("owner_id", user.id)
+      .eq("direction", "outbound")
+      .in("contact_id", data.map((c) => c.id));
+
+    const lastByContact = {};
+    (msgs || []).forEach((m) => {
+      if (!lastByContact[m.contact_id] || m.created_at > lastByContact[m.contact_id]) {
+        lastByContact[m.contact_id] = m.created_at;
+      }
+    });
+
+    data.forEach((c) => {
+      c.lastContactedAt = lastByContact[c.id] || null;
+    });
+  }
+
   return NextResponse.json({ contacts: data });
 }
 

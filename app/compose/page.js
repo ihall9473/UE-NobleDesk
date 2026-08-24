@@ -41,6 +41,7 @@ function timezoneLabel(tz) {
 
 export default function ComposePage() {
   const [contacts, setContacts] = useState([]);
+  const [templates, setTemplates] = useState([]);
   const [filter, setFilter] = useState("all"); // all | lead | client
   const [stateFilter, setStateFilter] = useState("all");
   const [groupBy, setGroupBy] = useState("none"); // none | state | timezone
@@ -54,6 +55,9 @@ export default function ComposePage() {
     fetch("/api/contacts")
       .then((r) => r.json())
       .then((d) => setContacts(d.contacts || []));
+    fetch("/api/templates")
+      .then((r) => r.json())
+      .then((d) => setTemplates(d.templates || []));
   }, []);
 
   const stateOptions = [...new Set(contacts.map(stateOf))].sort();
@@ -244,9 +248,22 @@ export default function ComposePage() {
       </div>
 
       <form onSubmit={send}>
+        {templates.length > 0 && (
+          <select
+            defaultValue=""
+            onChange={(e) => {
+              const t = templates.find((t) => t.id === e.target.value);
+              if (t) setMessage(t.body);
+              e.target.value = "";
+            }}
+          >
+            <option value="" disabled>Insert a saved template...</option>
+            {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select>
+        )}
         <textarea
           rows={5}
-          placeholder="Type your message..."
+          placeholder="Type your message... {first_name} and {name} fill in automatically per recipient"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           required

@@ -11,6 +11,9 @@ const MONTHS = [
 
 function OccasionDateLabel({ occasion }) {
   if (occasion.kind === "birthday") return <span className="subtitle">Each client's own birthday</span>;
+  if (occasion.kind === "policy_anniversary") {
+    return <span className="subtitle">Each client's own policy anniversary (starting one year after they signed up)</span>;
+  }
   if (occasion.kind === "easter") return <span className="subtitle">Easter (date changes every year, calculated automatically)</span>;
   if (occasion.kind === "floating") {
     return (

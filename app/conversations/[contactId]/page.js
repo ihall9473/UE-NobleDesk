@@ -8,6 +8,7 @@ export default function ThreadPage() {
   const [messages, setMessages] = useState([]);
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
+  const [templates, setTemplates] = useState([]);
 
   async function load() {
     const res = await fetch(`/api/messages/${contactId}`);
@@ -21,6 +22,12 @@ export default function ThreadPage() {
     const interval = setInterval(load, 5000); // check for new replies every 5s
     return () => clearInterval(interval);
   }, [contactId]);
+
+  useEffect(() => {
+    fetch("/api/templates")
+      .then((r) => r.json())
+      .then((d) => setTemplates(d.templates || []));
+  }, []);
 
   async function sendReply(e) {
     e.preventDefault();
@@ -59,6 +66,19 @@ export default function ThreadPage() {
       </div>
 
       <form onSubmit={sendReply}>
+        {templates.length > 0 && (
+          <select
+            defaultValue=""
+            onChange={(e) => {
+              const t = templates.find((t) => t.id === e.target.value);
+              if (t) setReply(t.body);
+              e.target.value = "";
+            }}
+          >
+            <option value="" disabled>Insert a saved template...</option>
+            {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select>
+        )}
         <textarea
           rows={3}
           placeholder="Type a reply..."
