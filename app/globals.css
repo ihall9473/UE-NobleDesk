@@ -3,8 +3,9 @@
 
 :root {
   --bg: #0e0e0f;
-  --card: #161616;
-  --card-border: rgba(255, 255, 255, 0.08);
+  --card: #171712;
+  --card-top: #1c1c17;
+  --card-border: rgba(201, 162, 39, 0.14);
   --gold: #c9a227;
   --gold-hover: #b8941f;
   --green: #4ade80;
@@ -21,7 +22,8 @@ body {
   margin: 0;
   font-family: "Playfair Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, serif;
   background:
-    radial-gradient(ellipse 1100px 600px at 50% -10%, rgba(201, 162, 39, 0.07), transparent),
+    radial-gradient(ellipse 1100px 600px at 50% -10%, rgba(201, 162, 39, 0.09), transparent),
+    radial-gradient(ellipse 900px 500px at 100% 100%, rgba(201, 162, 39, 0.05), transparent),
     var(--bg);
   background-attachment: fixed;
   color: var(--text);
@@ -177,7 +179,7 @@ h1::after {
   background: linear-gradient(90deg, var(--gold), transparent);
   border-radius: 2px;
 }
-h3 { font-weight: 600; font-size: 18px; font-family: "Inter", sans-serif; }
+h3 { font-weight: 600; font-size: 17px; font-family: "Inter", sans-serif; letter-spacing: -0.1px; margin: 0 0 10px; }
 
 .subtitle { color: var(--text-muted); margin-bottom: 28px; font-size: 15px; line-height: 1.5; font-family: "Inter", sans-serif; }
 
@@ -193,48 +195,51 @@ h3 { font-weight: 600; font-size: 18px; font-family: "Inter", sans-serif; }
 input, textarea, select {
   width: 100%;
   padding: 13px 15px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
   font-size: 15px;
   margin-bottom: 14px;
   font-family: "Inter", sans-serif;
-  background: #0e0e0f;
+  background: #0b0b0c;
   color: var(--text);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.35);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 input::placeholder, textarea::placeholder { color: #6b6b6b; }
 input:focus, textarea:focus, select:focus {
   outline: none;
   border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.15);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.35), 0 0 0 3px rgba(201, 162, 39, 0.15);
 }
 
 button {
-  background: linear-gradient(135deg, #d9b94a, var(--gold));
+  background: linear-gradient(135deg, #dfc158, var(--gold));
   color: #0e0e0f;
   border: none;
   padding: 12px 22px;
-  border-radius: 10px;
+  border-radius: 9px;
   font-size: 14.5px;
   font-weight: 700;
   cursor: pointer;
   letter-spacing: 0.2px;
   font-family: "Inter", sans-serif;
+  position: relative;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 2px 10px rgba(201, 162, 39, 0.18);
   transition: filter 0.15s ease, transform 0.08s ease, box-shadow 0.15s ease;
-  box-shadow: 0 2px 10px rgba(201, 162, 39, 0.15);
 }
-button:hover { filter: brightness(1.08); box-shadow: 0 4px 16px rgba(201, 162, 39, 0.3); }
+button:hover { filter: brightness(1.08); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 4px 18px rgba(201, 162, 39, 0.35); }
 button:active { transform: scale(0.97); }
 button:disabled { background: #3a3a3a; color: #8a8a8a; cursor: not-allowed; transform: none; box-shadow: none; }
 
 .card {
-  background: var(--card);
+  background: linear-gradient(165deg, var(--card-top), var(--card));
   border: 1px solid var(--card-border);
-  border-radius: 18px;
+  border-radius: 14px;
   padding: 24px;
   margin-bottom: 16px;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 10px 28px -18px rgba(0, 0, 0, 0.7);
   transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .card::before {
@@ -243,13 +248,13 @@ button:disabled { background: #3a3a3a; color: #8a8a8a; cursor: not-allowed; tran
   top: 0; left: 0; right: 0;
   height: 2px;
   background: linear-gradient(90deg, var(--gold), transparent);
-  opacity: 0;
+  opacity: 0.4;
   transition: opacity 0.15s ease;
 }
 a .card:hover, .card.interactive:hover {
   transform: translateY(-3px);
-  border-color: rgba(201, 162, 39, 0.35);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  border-color: rgba(201, 162, 39, 0.4);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 16px 36px -14px rgba(0, 0, 0, 0.55);
 }
 a .card:hover::before, .card.interactive:hover::before { opacity: 1; }
 
