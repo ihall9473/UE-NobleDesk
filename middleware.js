@@ -46,6 +46,31 @@ export async function middleware(req) {
     return NextResponse.redirect(url);
   }
 
+  // The Admin page and the "frozen account" restriction both need this
+  // person's role/frozen status - only fetch it when actually needed, so
+  // ordinary page loads don't pay for an extra query.
+  const isMutating = req.method !== "GET" && req.method !== "HEAD";
+  if (pathname.startsWith("/admin") || isMutating) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role, frozen")
+      .eq("id", user.id)
+      .single();
+
+    if (pathname.startsWith("/admin") && profile?.role !== "admin" && profile?.role !== "manager") {
+      const url = req.nextUrl.clone();
+      url.pathname = "/leads";
+      return NextResponse.redirect(url);
+    }
+
+    if (isMutating && profile?.frozen) {
+      return NextResponse.json(
+        { error: "Your account has been frozen. You can view existing data, but can't make changes. Contact your admin." },
+        { status: 403 }
+      );
+    }
+  }
+
   return res;
 }
 
