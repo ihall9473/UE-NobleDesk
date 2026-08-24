@@ -49,12 +49,35 @@ export default async function PersonalizedTermsPage({ params }) {
         your consent to the text messaging program described below.
       </p>
 
+      <h3>Campaign Use Case</h3>
+      <p>
+        This texting program is a <strong>Customer Care</strong> campaign. It is used only to
+        follow up with individuals who have already reached out about insurance coverage - by
+        phone or through the online request form described above - never for cold outreach,
+        general marketing, or messages to people who haven't already made contact.
+      </p>
+
+      <h3>Sample Messages</h3>
+      <p>Examples of the kinds of text messages you may receive:</p>
+      <ul>
+        <li>
+          "Hi [Name], this is {name}, the licensed insurance agent you spoke with (or tried to
+          reach). Do you have a few minutes to go over your coverage options? Reply STOP to opt
+          out, HELP for help."
+        </li>
+        <li>
+          "Hi [Name], just following up on your insurance quote - let me know if you have any
+          questions! Msg &amp; data rates may apply. Reply STOP to unsubscribe."
+        </li>
+      </ul>
+
       <h3>Text Messaging Program</h3>
       <ul>
-        <li>By providing your mobile number, you consent to receive text messages from me regarding your insurance inquiry or policy.</li>
+        <li>By providing your mobile number - by phone or through the online form above - you consent to receive text messages from me regarding your insurance inquiry or policy.</li>
+        <li>Messages may include a link back to this Terms of Service page and to my <a href={`/privacy/${userId}`}>Privacy Policy</a>.</li>
         <li>Message frequency varies - typically a few messages during initial outreach, then only as needed afterward.</li>
         <li>Message and data rates may apply, based on your mobile carrier plan.</li>
-        <li>Reply <strong>STOP</strong> at any time to opt out of further text messages.</li>
+        <li>Reply <strong>STOP</strong> at any time to opt out - you'll get one confirmation message and receive no further texts from that number unless you opt back in.</li>
         <li>Reply <strong>HELP</strong> for assistance{phone ? <>, or call/text {phone} directly</> : ""}.</li>
         <li>Carriers are not liable for delayed or undelivered messages.</li>
       </ul>
