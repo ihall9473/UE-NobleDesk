@@ -1,5 +1,4 @@
 "use client";
-import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import LogoutButton from "./LogoutButton";
 
@@ -10,20 +9,11 @@ const LINKS = [
   { href: "/conversations", label: "Conversations" },
   { href: "/occasions", label: "Occasions" },
   { href: "/settings", label: "Settings" },
-  { href: "/admin", label: "Admin", staffOnly: true },
+  { href: "/admin", label: "Admin" },
 ];
 
 export default function NavBar() {
   const pathname = usePathname();
-  const [role, setRole] = useState(null);
-
-  useEffect(() => {
-    fetch("/api/settings")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setRole(data?.profile?.role || null))
-      .catch(() => {});
-  }, []);
-
   if (
     pathname === "/login" ||
     pathname.startsWith("/privacy") ||
@@ -31,9 +21,6 @@ export default function NavBar() {
   ) {
     return null;
   }
-
-  const isStaff = role === "admin" || role === "manager";
-  const links = LINKS.filter((link) => !link.staffOnly || isStaff);
 
   return (
     <nav className="nav">
@@ -48,7 +35,7 @@ export default function NavBar() {
         </svg>
         <span className="nav-wordmark">UE NobleDesk</span>
       </a>
-      {links.map((link) => {
+      {LINKS.map((link) => {
         const isActive = pathname.startsWith(link.href);
         return (
           <a key={link.href} href={link.href} className={isActive ? "active" : ""}>{link.label}</a>
