@@ -31,16 +31,6 @@ const FEATURES = [
     body:
       "Connect your own Twilio account in Settings - your number, your billing, your data. NobleDesk never buys a number or sends a text on your behalf without you.",
   },
-  {
-    title: "Compliance built in",
-    body:
-      "Privacy Policy and Terms of Service pages are ready to hand to Twilio for A2P 10DLC campaign registration, covering use case, sample messages, and opt-in/opt-out details.",
-  },
-  {
-    title: "Team tools for Admins and Managers",
-    body:
-      "Invite coworkers, track who's connected their number and how their outreach is performing, and manage roles - all from the Admin page.",
-  },
 ];
 
 const QUICK_LINKS = [
