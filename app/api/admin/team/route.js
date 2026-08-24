@@ -73,7 +73,11 @@ export async function GET() {
 
   // Let the frontend know whether the current person is a true admin,
   // so it can show/hide the ability to grant admin/manager roles.
-  return NextResponse.json({ team, myRole: check.profile.role });
+  return NextResponse.json({
+    team,
+    myRole: check.profile.role,
+    inviteCode: process.env.APP_INVITE_CODE || "UpperEchelon",
+  });
 }
 
 // Creates a brand-new coworker login (alternative to self-serve signup).

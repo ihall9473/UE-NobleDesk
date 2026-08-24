@@ -8,7 +8,7 @@ export async function POST(req) {
     return NextResponse.json({ error: "All fields are required" }, { status: 400 });
   }
 
-  if (inviteCode !== process.env.APP_INVITE_CODE) {
+  if (inviteCode !== (process.env.APP_INVITE_CODE || "UpperEchelon")) {
     return NextResponse.json({ error: "That invite code isn't valid." }, { status: 403 });
   }
 
