@@ -43,8 +43,9 @@ export default async function PersonalizedTermsPage({ params }) {
 
       <h3>Requesting Information Online</h3>
       <p>
-        You may also request information directly by submitting your name and phone number
-        through an online form and checking a box that reads: "By checking this box, I agree to
+        You may also request information directly through my{" "}
+        <a href={`/request-info/${userId}`}>online Request Info form</a>, by submitting your
+        name and phone number and checking a box that reads: "By checking this box, I agree to
         receive text messages from {name} regarding my insurance inquiry." Checking that box is
         your consent to the text messaging program described below.
       </p>
