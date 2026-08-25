@@ -17,6 +17,9 @@ export default function SettingsPage() {
   const [searching, setSearching] = useState(false);
   const [buying, setBuying] = useState("");
 
+  const [existingNumber, setExistingNumber] = useState("");
+  const [linking, setLinking] = useState(false);
+
   const [templates, setTemplates] = useState(null);
   const [templateName, setTemplateName] = useState("");
   const [templateBody, setTemplateBody] = useState("");
@@ -129,6 +132,26 @@ export default function SettingsPage() {
     if (res.ok) {
       setMessage(`You're all set! Your texting number is ${data.phoneNumber}.`);
       setAvailable([]);
+      load();
+    } else {
+      setMessage(data.error);
+    }
+  }
+
+  async function linkNumber(e) {
+    e.preventDefault();
+    setLinking(true);
+    setMessage("");
+    const res = await fetch("/api/numbers/link", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phoneNumber: existingNumber }),
+    });
+    const data = await res.json();
+    setLinking(false);
+    if (res.ok) {
+      setMessage(`Linked! Your texting number is ${data.phoneNumber}.`);
+      setExistingNumber("");
       load();
     } else {
       setMessage(data.error);
@@ -264,6 +287,24 @@ export default function SettingsPage() {
             </button>
           </div>
         ))}
+
+        {!profile.twilio_number && (
+          <>
+            <p className="subtitle" style={{ marginTop: 18, marginBottom: 8 }}>
+              Already have a number in your connected Twilio account (bought directly in the
+              Twilio Console, e.g. for A2P registration)? Link it here instead of buying a new one.
+            </p>
+            <form onSubmit={linkNumber} style={{ display: "flex", gap: 8 }}>
+              <input
+                placeholder="Your number, e.g. +15551234567"
+                value={existingNumber}
+                onChange={(e) => setExistingNumber(e.target.value)}
+                style={{ marginBottom: 0 }}
+              />
+              <button type="submit" disabled={linking}>{linking ? "Linking..." : "Link"}</button>
+            </form>
+          </>
+        )}
       </div>
 
       <div className="card">
