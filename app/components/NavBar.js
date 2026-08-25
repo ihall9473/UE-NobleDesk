@@ -18,7 +18,8 @@ export default function NavBar() {
   if (
     pathname === "/login" ||
     pathname.startsWith("/privacy") ||
-    pathname.startsWith("/terms")
+    pathname.startsWith("/terms") ||
+    pathname.startsWith("/request-info")
   ) {
     return null;
   }
