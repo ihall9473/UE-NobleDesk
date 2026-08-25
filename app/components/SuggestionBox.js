@@ -1,24 +1,21 @@
 "use client";
-import { useState } from "react";
-import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { supabaseBrowser } from "@/lib/supabaseBrowser";
 
 export default function SuggestionBox() {
-  const pathname = usePathname();
+  const [authed, setAuthed] = useState(false);
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
 
-  if (
-    pathname === "/login" ||
-    pathname.startsWith("/signup") ||
-    pathname.startsWith("/set-password") ||
-    pathname.startsWith("/privacy") ||
-    pathname.startsWith("/terms")
-  ) {
-    return null;
-  }
+  useEffect(() => {
+    const supabase = supabaseBrowser();
+    supabase.auth.getUser().then(({ data }) => setAuthed(!!data?.user));
+  }, []);
+
+  if (!authed) return null;
 
   async function submit(e) {
     e.preventDefault();
