@@ -15,6 +15,7 @@ export async function middleware(req) {
     pathname.startsWith("/terms") ||
     pathname.startsWith("/request-info") ||
     pathname.startsWith("/api/request-info") ||
+    pathname === "/opt-in-screenshot.png" ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon")
   ) {
