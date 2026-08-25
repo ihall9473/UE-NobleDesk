@@ -44,9 +44,10 @@ export async function POST(req) {
   const results = [];
   for (const contact of contacts) {
     try {
+      const fromNumber = contact.twilio_number || profile.twilio_number;
       const body = fillMessageTemplate(message, contact);
       await twilioClient.messages.create({
-        from: profile.twilio_number,
+        from: fromNumber,
         to: contact.phone,
         body,
       });
@@ -56,6 +57,9 @@ export async function POST(req) {
         direction: "outbound",
         body,
       });
+      if (!contact.twilio_number) {
+        await supabase.from("contacts").update({ twilio_number: fromNumber }).eq("id", contact.id);
+      }
       results.push({ contact: contact.name, ok: true });
     } catch (err) {
       results.push({ contact: contact.name, ok: false, error: err.message });

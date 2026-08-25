@@ -18,7 +18,11 @@ export default function SettingsPage() {
   const [buying, setBuying] = useState("");
 
   const [existingNumber, setExistingNumber] = useState("");
+  const [newLabel, setNewLabel] = useState("");
   const [linking, setLinking] = useState(false);
+
+  const [numbers, setNumbers] = useState([]);
+  const [switchingTo, setSwitchingTo] = useState("");
 
   const [templates, setTemplates] = useState(null);
   const [templateName, setTemplateName] = useState("");
@@ -40,9 +44,16 @@ export default function SettingsPage() {
     setTemplates(data.templates || []);
   }
 
+  async function loadNumbers() {
+    const res = await fetch("/api/numbers/mine");
+    const data = await res.json();
+    setNumbers(data.numbers || []);
+  }
+
   useEffect(() => {
     load();
     loadTemplates();
+    loadNumbers();
   }, []);
 
   async function addTemplate(e) {
@@ -133,6 +144,25 @@ export default function SettingsPage() {
       setMessage(`You're all set! Your texting number is ${data.phoneNumber}.`);
       setAvailable([]);
       load();
+      loadNumbers();
+    } else {
+      setMessage(data.error);
+    }
+  }
+
+  async function switchActive(phoneNumber) {
+    setSwitchingTo(phoneNumber);
+    setMessage("");
+    const res = await fetch("/api/numbers/active", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phoneNumber }),
+    });
+    const data = await res.json();
+    setSwitchingTo("");
+    if (res.ok) {
+      setMessage(`Switched! New conversations will now send from ${phoneNumber}.`);
+      load();
     } else {
       setMessage(data.error);
     }
@@ -142,7 +172,7 @@ export default function SettingsPage() {
     e.preventDefault();
     if (profile.twilio_number) {
       const confirmed = confirm(
-        `Switch from ${profile.twilio_number} to ${existingNumber}?\n\nAll future texts will be sent from the new number. Your old number will stay in your Twilio account but NobleDesk will stop using it - release it in the Twilio Console if you don't need it anymore.`
+        `Switch to ${existingNumber} as your active number?\n\nNew conversations will send from this number going forward. Existing conversations keep using whichever number they've always used.`
       );
       if (!confirmed) return;
     }
@@ -151,14 +181,16 @@ export default function SettingsPage() {
     const res = await fetch("/api/numbers/link", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phoneNumber: existingNumber }),
+      body: JSON.stringify({ phoneNumber: existingNumber, label: newLabel }),
     });
     const data = await res.json();
     setLinking(false);
     if (res.ok) {
       setMessage(`Linked! Your texting number is ${data.phoneNumber}.`);
       setExistingNumber("");
+      setNewLabel("");
       load();
+      loadNumbers();
     } else {
       setMessage(data.error);
     }
@@ -263,12 +295,44 @@ export default function SettingsPage() {
       </div>
 
       <div className="card">
-        <h3>2. Buy your texting number (final step)</h3>
-        {profile.twilio_number ? (
-          <p>
-            Your current number: <strong>{profile.twilio_number}</strong> — you're fully linked
-            up and ready to send and receive texts through NobleDesk.
-          </p>
+        <h3>2. Your texting numbers</h3>
+        {numbers.length > 0 ? (
+          <>
+            <p className="subtitle" style={{ marginBottom: 8 }}>
+              New conversations send from your active number. Existing conversations keep using
+              whichever number they've always used, even after you switch.
+            </p>
+            {numbers.map((n) => {
+              const isActive = n.phone_number === profile.twilio_number;
+              return (
+                <div className="row" key={n.phone_number} style={{ marginTop: 10 }}>
+                  <span>
+                    <strong>{n.label || n.phone_number}</strong>
+                    {n.label && <span style={{ color: "#9a9a9a" }}> — {n.phone_number}</span>}
+                    {isActive && (
+                      <span
+                        style={{
+                          marginLeft: 8,
+                          fontSize: 11,
+                          padding: "2px 8px",
+                          borderRadius: 10,
+                          background: "rgba(201, 162, 39, 0.15)",
+                          color: "#c9a227",
+                        }}
+                      >
+                        Active
+                      </span>
+                    )}
+                  </span>
+                  {!isActive && (
+                    <button onClick={() => switchActive(n.phone_number)} disabled={switchingTo === n.phone_number}>
+                      {switchingTo === n.phone_number ? "Switching..." : "Set Active"}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </>
         ) : (
           <p className="subtitle" style={{ marginBottom: 8 }}>
             Search by area code and click Buy. This is what actually links your Twilio account
@@ -276,6 +340,9 @@ export default function SettingsPage() {
             Twilio account (about $1.15/month, plus roughly a penny per text).
           </p>
         )}
+        <p className="subtitle" style={{ marginTop: 18, marginBottom: 8 }}>
+          Buy a new number:
+        </p>
         <form onSubmit={searchNumbers} style={{ display: "flex", gap: 8 }}>
           <input
             placeholder="Area code, e.g. 216"
@@ -295,8 +362,8 @@ export default function SettingsPage() {
         ))}
 
         <p className="subtitle" style={{ marginTop: 18, marginBottom: 8 }}>
-          {profile.twilio_number
-            ? "Have a different number in your connected Twilio account you'd rather use instead? Link it here to switch."
+          {numbers.length > 0
+            ? "Already have another number in your connected Twilio account (e.g. one for a separate A2P campaign)? Link it here."
             : "Already have a number in your connected Twilio account (bought directly in the Twilio Console, e.g. for A2P registration)? Link it here instead of buying a new one."}
         </p>
         <form onSubmit={linkNumber} style={{ display: "flex", gap: 8 }}>
@@ -304,6 +371,12 @@ export default function SettingsPage() {
             placeholder="Your number, e.g. +15551234567"
             value={existingNumber}
             onChange={(e) => setExistingNumber(e.target.value)}
+            style={{ marginBottom: 0 }}
+          />
+          <input
+            placeholder="Label (optional), e.g. Campaign 2"
+            value={newLabel}
+            onChange={(e) => setNewLabel(e.target.value)}
             style={{ marginBottom: 0 }}
           />
           <button type="submit" disabled={linking}>{linking ? "Linking..." : "Link"}</button>

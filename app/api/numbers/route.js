@@ -56,6 +56,10 @@ export async function POST(req) {
     });
 
     await check.supabase
+      .from("phone_numbers")
+      .upsert({ owner_id: check.profile.id, phone_number: purchased.phoneNumber }, { onConflict: "phone_number" });
+
+    await check.supabase
       .from("profiles")
       .update({ twilio_number: purchased.phoneNumber })
       .eq("id", check.profile.id);

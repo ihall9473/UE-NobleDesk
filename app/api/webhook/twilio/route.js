@@ -20,33 +20,41 @@ export async function POST(req) {
   const fromPhone = normalizePhone(from);
   const toPhone = normalizePhone(to);
 
-  // Which coworker does this number belong to?
-  const { data: profile } = await supabaseAdmin
-    .from("profiles")
-    .select("*")
-    .eq("twilio_number", toPhone)
+  // Which coworker does this number belong to? Check the full roster of
+  // their numbers, not just whichever one is currently "active".
+  const { data: numberRow } = await supabaseAdmin
+    .from("phone_numbers")
+    .select("owner_id")
+    .eq("phone_number", toPhone)
     .single();
 
-  if (!profile) {
+  const ownerId = numberRow?.owner_id;
+  if (!ownerId) {
     // A text came in on a number that isn't assigned to anyone - nothing to do.
     return new NextResponse("<Response></Response>", { headers: { "Content-Type": "text/xml" } });
   }
 
+  const { data: profile } = await supabaseAdmin.from("profiles").select("*").eq("id", ownerId).single();
+
   let { data: contact } = await supabaseAdmin
     .from("contacts")
     .select("*")
-    .eq("owner_id", profile.id)
+    .eq("owner_id", ownerId)
     .eq("phone", fromPhone)
     .single();
 
-  // New lead texting in for the first time - add them automatically.
+  // New lead texting in for the first time - add them automatically,
+  // tagged with whichever of the agent's numbers they texted.
   if (!contact) {
     const { data: newContact } = await supabaseAdmin
       .from("contacts")
-      .insert({ owner_id: profile.id, name: fromPhone, phone: fromPhone })
+      .insert({ owner_id: ownerId, name: fromPhone, phone: fromPhone, twilio_number: toPhone })
       .select()
       .single();
     contact = newContact;
+  } else if (!contact.twilio_number) {
+    await supabaseAdmin.from("contacts").update({ twilio_number: toPhone }).eq("id", contact.id);
+    contact.twilio_number = toPhone;
   }
 
   await supabaseAdmin.from("messages").insert({

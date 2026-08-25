@@ -11,6 +11,25 @@ create table if not exists profiles (
   created_at timestamptz default now()
 );
 
+-- Every number an agent owns in their Twilio account, not just the one
+-- currently active. Lets them register/keep several numbers (e.g. one per
+-- A2P campaign) and switch which one is used for new outbound texts.
+create table if not exists phone_numbers (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid references profiles(id) on delete cascade,
+  phone_number text not null unique,
+  label text,
+  created_at timestamptz default now()
+);
+
+create index if not exists phone_numbers_owner_id_idx on phone_numbers(owner_id);
+
+alter table phone_numbers enable row level security;
+
+drop policy if exists "Users manage their own phone numbers" on phone_numbers;
+create policy "Users manage their own phone numbers" on phone_numbers
+  for all using (auth.uid() = owner_id);
+
 -- Each contact belongs to exactly one coworker.
 create table if not exists contacts (
   id uuid primary key default gen_random_uuid(),
@@ -22,6 +41,20 @@ create table if not exists contacts (
   deleted_at timestamptz, -- soft delete: set instead of actually deleting, so "Undo" can restore
   unique(owner_id, phone)
 );
+
+-- Already deployed this app before multiple numbers existed? This adds the
+-- new column without losing any existing contacts, then the two
+-- statements below bring your existing number into the new table and tag
+-- your existing conversations with it. All safe to re-run.
+alter table contacts add column if not exists twilio_number text; -- which of the agent's numbers this conversation is happening on
+
+insert into phone_numbers (owner_id, phone_number)
+  select id, twilio_number from profiles where twilio_number is not null
+  on conflict (phone_number) do nothing;
+
+update contacts set twilio_number = (
+  select twilio_number from profiles where profiles.id = contacts.owner_id
+) where twilio_number is null;
 
 -- If you already ran this schema before this column existed, run this line
 -- by itself to add it without losing any existing contacts:
