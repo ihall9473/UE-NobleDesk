@@ -50,7 +50,10 @@ export default function ThreadPage() {
     <div>
       <a href="/conversations" style={{ color: "#c9a227" }}>&larr; Back to Conversations</a>
       <h1>{contact.name}</h1>
-      <p className="subtitle">{contact.phone}</p>
+      <p className="subtitle">
+        {contact.phone}
+        {contact.twilio_number && <> &middot; via {contact.twilio_number}</>}
+      </p>
 
       <div className="thread">
         {messages.map((m) => (

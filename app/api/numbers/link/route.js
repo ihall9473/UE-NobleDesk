@@ -18,7 +18,7 @@ export async function POST(req) {
     );
   }
 
-  const { phoneNumber } = await req.json();
+  const { phoneNumber, label } = await req.json();
   if (!phoneNumber) return NextResponse.json({ error: "Phone number required" }, { status: 400 });
 
   try {
@@ -34,6 +34,17 @@ export async function POST(req) {
       smsUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/api/webhook/twilio`,
       smsMethod: "POST",
     });
+
+    const { data: existing } = await supabase
+      .from("phone_numbers")
+      .select("label")
+      .eq("phone_number", owned[0].phoneNumber)
+      .single();
+
+    await supabase.from("phone_numbers").upsert(
+      { owner_id: user.id, phone_number: owned[0].phoneNumber, label: label || existing?.label || null },
+      { onConflict: "phone_number" }
+    );
 
     await supabase.from("profiles").update({ twilio_number: owned[0].phoneNumber }).eq("id", user.id);
 
