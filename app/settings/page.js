@@ -140,6 +140,12 @@ export default function SettingsPage() {
 
   async function linkNumber(e) {
     e.preventDefault();
+    if (profile.twilio_number) {
+      const confirmed = confirm(
+        `Switch from ${profile.twilio_number} to ${existingNumber}?\n\nAll future texts will be sent from the new number. Your old number will stay in your Twilio account but NobleDesk will stop using it - release it in the Twilio Console if you don't need it anymore.`
+      );
+      if (!confirmed) return;
+    }
     setLinking(true);
     setMessage("");
     const res = await fetch("/api/numbers/link", {
@@ -288,23 +294,20 @@ export default function SettingsPage() {
           </div>
         ))}
 
-        {!profile.twilio_number && (
-          <>
-            <p className="subtitle" style={{ marginTop: 18, marginBottom: 8 }}>
-              Already have a number in your connected Twilio account (bought directly in the
-              Twilio Console, e.g. for A2P registration)? Link it here instead of buying a new one.
-            </p>
-            <form onSubmit={linkNumber} style={{ display: "flex", gap: 8 }}>
-              <input
-                placeholder="Your number, e.g. +15551234567"
-                value={existingNumber}
-                onChange={(e) => setExistingNumber(e.target.value)}
-                style={{ marginBottom: 0 }}
-              />
-              <button type="submit" disabled={linking}>{linking ? "Linking..." : "Link"}</button>
-            </form>
-          </>
-        )}
+        <p className="subtitle" style={{ marginTop: 18, marginBottom: 8 }}>
+          {profile.twilio_number
+            ? "Have a different number in your connected Twilio account you'd rather use instead? Link it here to switch."
+            : "Already have a number in your connected Twilio account (bought directly in the Twilio Console, e.g. for A2P registration)? Link it here instead of buying a new one."}
+        </p>
+        <form onSubmit={linkNumber} style={{ display: "flex", gap: 8 }}>
+          <input
+            placeholder="Your number, e.g. +15551234567"
+            value={existingNumber}
+            onChange={(e) => setExistingNumber(e.target.value)}
+            style={{ marginBottom: 0 }}
+          />
+          <button type="submit" disabled={linking}>{linking ? "Linking..." : "Link"}</button>
+        </form>
       </div>
 
       <div className="card">
