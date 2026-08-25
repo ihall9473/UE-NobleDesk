@@ -293,8 +293,12 @@ export default function SettingsPage() {
       <div className="card" id="compliance-pages">
         <h3>4. Your compliance pages (for Twilio registration)</h3>
         <p className="subtitle" style={{ marginBottom: 8 }}>
-          Use these links when Twilio's A2P 10DLC form asks for a Privacy Policy and Terms of
-          Service - they automatically show your own name and number, nothing to edit.
+          Use these links when Twilio's A2P 10DLC form asks for a Privacy Policy, Terms of
+          Service, or a Call to Action (CTA) / opt-in page - they automatically show your own
+          name and number, nothing to edit. If Twilio rejects a campaign over the CTA, use the
+          Request Info link below as the CTA URL - it's a real, live page showing exactly how
+          someone opts in (name, phone, and a consent checkbox), which is what Twilio needs to
+          be able to verify.
         </p>
         {typeof window !== "undefined" && (
           <>
@@ -326,6 +330,25 @@ export default function SettingsPage() {
                   onClick={() => {
                     navigator.clipboard.writeText(`${window.location.origin}/terms/${profile.id}`);
                     setMessage("Terms of Service link copied.");
+                  }}
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
+            <div style={{ marginTop: 10 }}>
+              <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>
+                Request Info Page (opt-in CTA for Twilio)
+              </label>
+              <div className="row">
+                <code style={{ fontSize: 13, wordBreak: "break-all" }}>
+                  {window.location.origin}/request-info/{profile.id}
+                </code>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/request-info/${profile.id}`);
+                    setMessage("Request Info link copied.");
                   }}
                 >
                   Copy

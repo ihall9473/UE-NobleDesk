@@ -13,6 +13,8 @@ export async function middleware(req) {
     pathname.startsWith("/api/cron") ||
     pathname.startsWith("/privacy") ||
     pathname.startsWith("/terms") ||
+    pathname.startsWith("/request-info") ||
+    pathname.startsWith("/api/request-info") ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon")
   ) {
