@@ -43,10 +43,10 @@ export default async function PersonalizedPrivacyPolicyPage({ params }) {
 
       <h3>Requesting Information Online</h3>
       <p>
-        Individuals may also reach out directly by submitting their name and phone number
-        through an online "Request Info" form and checking a box to consent to being contacted
-        by text and phone about their insurance inquiry, before {name} follows up as described
-        below.
+        Individuals may also reach out directly through my{" "}
+        <a href={`/request-info/${userId}`}>online Request Info form</a>, by submitting their
+        name and phone number and checking a box to consent to being contacted by text and phone
+        about their insurance inquiry, before {name} follows up as described below.
       </p>
 
       <h3>How I Use Your Information</h3>
