@@ -5,7 +5,7 @@ export default async function PersonalizedPrivacyPolicyPage({ params }) {
 
   const { data: profile } = await supabaseAdmin
     .from("profiles")
-    .select("name, twilio_number")
+    .select("name, twilio_number, business_name")
     .eq("id", userId)
     .single();
 
@@ -14,16 +14,19 @@ export default async function PersonalizedPrivacyPolicyPage({ params }) {
 
   const name = profile?.name || "This agent";
   const phone = profile?.twilio_number || "";
+  const businessName = profile?.business_name || "";
 
   return (
     <div style={{ maxWidth: 680, margin: "0 auto", padding: "40px 20px", lineHeight: 1.7 }}>
-      <h1>Privacy Policy</h1>
+      <h1>Privacy Policy{businessName ? ` — ${businessName}` : ""}</h1>
       <p className="subtitle">Last updated: {new Date().toLocaleDateString()}</p>
 
       <p>
-        This Privacy Policy explains how {name}, an independent licensed insurance agent
-        ("I," "me," or "my"), collects, uses, and protects your information when you contact me
-        or I contact you regarding insurance products and services.
+        This Privacy Policy explains how {name}
+        {businessName ? <>, doing business as <strong>{businessName}</strong>,</> : ","} an
+        independent licensed insurance agent ("I," "me," or "my"), collects, uses, and protects
+        your information when you contact me or I contact you regarding insurance products and
+        services.
       </p>
 
       <h3>Information I Collect</h3>
@@ -98,7 +101,7 @@ export default async function PersonalizedPrivacyPolicyPage({ params }) {
 
       <h3>Contact</h3>
       <p>
-        {name}<br />
+        {name}{businessName ? <> — {businessName}</> : ""}<br />
         Independent Insurance Agent<br />
         {phone && <>Phone: {phone}</>}
       </p>

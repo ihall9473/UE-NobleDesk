@@ -5,7 +5,7 @@ export default async function PersonalizedTermsPage({ params }) {
 
   const { data: profile } = await supabaseAdmin
     .from("profiles")
-    .select("name, twilio_number")
+    .select("name, twilio_number, business_name")
     .eq("id", userId)
     .single();
 
@@ -14,16 +14,18 @@ export default async function PersonalizedTermsPage({ params }) {
 
   const name = profile?.name || "This agent";
   const phone = profile?.twilio_number || "";
+  const businessName = profile?.business_name || "";
 
   return (
     <div style={{ maxWidth: 680, margin: "0 auto", padding: "40px 20px", lineHeight: 1.7 }}>
-      <h1>Terms of Service</h1>
+      <h1>Terms of Service{businessName ? ` — ${businessName}` : ""}</h1>
       <p className="subtitle">Last updated: {new Date().toLocaleDateString()}</p>
 
       <p>
         These Terms of Service govern text message and phone communications between you and
-        {" "}{name}, an independent licensed insurance agent, regarding insurance products and
-        services.
+        {" "}{name}
+        {businessName ? <>, doing business as <strong>{businessName}</strong>,</> : ","} an
+        independent licensed insurance agent, regarding insurance products and services.
       </p>
 
       <h3>Who I Am</h3>
@@ -105,7 +107,7 @@ export default async function PersonalizedTermsPage({ params }) {
 
       <h3>Contact</h3>
       <p>
-        {name}<br />
+        {name}{businessName ? <> — {businessName}</> : ""}<br />
         Independent Insurance Agent<br />
         {phone && <>Phone: {phone}</>}
       </p>
