@@ -8,8 +8,13 @@ create table if not exists profiles (
   twilio_number text unique, -- e.g. +15551234567, bought by this person themselves
   twilio_account_sid text, -- this person's OWN Twilio account - their own billing
   twilio_auth_token text,
+  business_name text, -- DBA/friendly name as registered with Twilio's A2P Brand, if different from `name`
   created_at timestamptz default now()
 );
+
+-- Already deployed this app before business_name existed? Run this line
+-- by itself to add it without losing any existing profile data:
+-- alter table profiles add column if not exists business_name text;
 
 -- Every number an agent owns in their Twilio account, not just the one
 -- currently active. Lets them register/keep several numbers (e.g. one per

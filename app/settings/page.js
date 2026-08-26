@@ -5,6 +5,7 @@ export default function SettingsPage() {
   const [profile, setProfile] = useState(null);
   const [sid, setSid] = useState("");
   const [token, setToken] = useState("");
+  const [businessName, setBusinessName] = useState("");
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -34,6 +35,7 @@ export default function SettingsPage() {
     const data = await res.json();
     setProfile(data.profile);
     setSid(data.profile?.twilio_account_sid || "");
+    setBusinessName(data.profile?.business_name || "");
     setPersonalPhone(data.profile?.personal_phone || "");
     setSmsAlertsEnabled(data.profile?.sms_alerts_enabled || false);
   }
@@ -101,7 +103,7 @@ export default function SettingsPage() {
     const res = await fetch("/api/settings", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ twilioAccountSid: sid, twilioAuthToken: token }),
+      body: JSON.stringify({ twilioAccountSid: sid, twilioAuthToken: token, businessName }),
     });
     setSaving(false);
     const data = await res.json();
@@ -259,6 +261,16 @@ export default function SettingsPage() {
               can take a few days to a couple weeks to get approved. When it asks for a Privacy
               Policy and Terms of Service link, use the ones under{" "}
               <a href="#compliance-pages">section 4 below</a>.
+              <br />
+              If you used a business/DBA name (e.g. "Isaac Hall Insurance") anywhere during that
+              registration, enter it exactly here — it gets added to your Privacy Policy and
+              Terms pages so Twilio's automated check can confirm they belong to you:
+              <input
+                placeholder="Business name (optional), e.g. Isaac Hall Insurance"
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                style={{ marginTop: 8, marginBottom: 0 }}
+              />
             </li>
             <li style={{ marginBottom: 14 }}>
               On the{" "}
