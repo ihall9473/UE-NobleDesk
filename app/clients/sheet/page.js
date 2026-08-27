@@ -119,8 +119,8 @@ export default function ClientSheetPage() {
         <div className="card">
           <h3>Proposed Insured</h3>
           <div style={{ display: "flex", gap: 8 }}>
-            <input placeholder="First Name" value={form.firstName} onChange={(e) => set("firstName", e.target.value)} required />
-            <input placeholder="Last Name" value={form.lastName} onChange={(e) => set("lastName", e.target.value)} required />
+            <input placeholder="First Name" value={form.firstName} onChange={(e) => set("firstName", e.target.value)} autoComplete="off" required />
+            <input placeholder="Last Name" value={form.lastName} onChange={(e) => set("lastName", e.target.value)} autoComplete="off" required />
           </div>
 
           <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Smoker?</label>
@@ -182,7 +182,7 @@ export default function ClientSheetPage() {
 
         <div className="card">
           <h3>Contact Info</h3>
-          <input placeholder="Phone number" value={form.phone} onChange={(e) => set("phone", e.target.value)} required />
+          <input placeholder="Phone number" value={form.phone} onChange={(e) => set("phone", e.target.value)} autoComplete="off" required />
           <input placeholder="Email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} autoComplete="off" />
         </div>
 
@@ -200,10 +200,10 @@ export default function ClientSheetPage() {
             <div style={{ marginTop: 8 }}>
               <h3 style={{ fontSize: 15 }}>Owner</h3>
               <div style={{ display: "flex", gap: 8 }}>
-                <input placeholder="Owner First Name" value={form.ownerFirstName} onChange={(e) => set("ownerFirstName", e.target.value)} />
-                <input placeholder="Owner Last Name" value={form.ownerLastName} onChange={(e) => set("ownerLastName", e.target.value)} />
+                <input placeholder="Owner First Name" value={form.ownerFirstName} onChange={(e) => set("ownerFirstName", e.target.value)} autoComplete="off" />
+                <input placeholder="Owner Last Name" value={form.ownerLastName} onChange={(e) => set("ownerLastName", e.target.value)} autoComplete="off" />
               </div>
-              <input placeholder="Relationship to Insured" value={form.ownerRelationship} onChange={(e) => set("ownerRelationship", e.target.value)} />
+              <input placeholder="Relationship to Insured" value={form.ownerRelationship} onChange={(e) => set("ownerRelationship", e.target.value)} autoComplete="off" />
             </div>
           )}
         </div>
@@ -223,13 +223,14 @@ export default function ClientSheetPage() {
               placeholder="Original Policy Carrier"
               value={form.originalCarrier}
               onChange={(e) => set("originalCarrier", e.target.value)}
+              autoComplete="off"
             />
           )}
 
-          <input placeholder="Carrier" value={form.carrier} onChange={(e) => set("carrier", e.target.value)} />
+          <input placeholder="Carrier" value={form.carrier} onChange={(e) => set("carrier", e.target.value)} autoComplete="off" />
           <div style={{ display: "flex", gap: 8 }}>
-            <input placeholder="Coverage Amount" value={form.coverageAmount} onChange={(e) => set("coverageAmount", e.target.value)} />
-            <input placeholder="Monthly Premium" value={form.monthlyPremium} onChange={(e) => set("monthlyPremium", e.target.value)} />
+            <input placeholder="Coverage Amount" value={form.coverageAmount} onChange={(e) => set("coverageAmount", e.target.value)} autoComplete="off" />
+            <input placeholder="Monthly Premium" value={form.monthlyPremium} onChange={(e) => set("monthlyPremium", e.target.value)} autoComplete="off" />
           </div>
 
           <select value={form.policyProduct} onChange={(e) => set("policyProduct", e.target.value)}>
@@ -303,7 +304,7 @@ export default function ClientSheetPage() {
             value={form.accountNumber}
             onChange={(e) => set("accountNumber", e.target.value)}
           />
-          <input placeholder="Policy Number" value={form.policyNumber} onChange={(e) => set("policyNumber", e.target.value)} />
+          <input placeholder="Policy Number" value={form.policyNumber} onChange={(e) => set("policyNumber", e.target.value)} autoComplete="off" />
         </div>
 
         <button type="submit" disabled={saving} style={{ marginBottom: 40 }}>

@@ -38,12 +38,14 @@ export default function BeneficiaryList({ label, beneficiaries, onChange }) {
               placeholder="First Name"
               value={b.firstName || ""}
               onChange={(e) => updateOne(i, "firstName", e.target.value)}
+              autoComplete="off"
               style={{ marginBottom: 8, flex: 1 }}
             />
             <input
               placeholder="Last Name"
               value={b.lastName || ""}
               onChange={(e) => updateOne(i, "lastName", e.target.value)}
+              autoComplete="off"
               style={{ marginBottom: 8, flex: 1 }}
             />
           </div>
@@ -52,12 +54,14 @@ export default function BeneficiaryList({ label, beneficiaries, onChange }) {
               placeholder="Relationship"
               value={b.relationship || ""}
               onChange={(e) => updateOne(i, "relationship", e.target.value)}
+              autoComplete="off"
               style={{ marginBottom: 8, flex: 1 }}
             />
             <input
               placeholder="%"
               value={b.percentage || ""}
               onChange={(e) => updateOne(i, "percentage", e.target.value)}
+              autoComplete="off"
               style={{ marginBottom: 8, width: 60 }}
             />
           </div>
@@ -65,12 +69,14 @@ export default function BeneficiaryList({ label, beneficiaries, onChange }) {
             placeholder="Phone Number"
             value={b.phone || ""}
             onChange={(e) => updateOne(i, "phone", e.target.value)}
+            autoComplete="off"
             style={{ marginBottom: 8 }}
           />
           <input
             placeholder="Address"
             value={b.address || ""}
             onChange={(e) => updateOne(i, "address", e.target.value)}
+            autoComplete="off"
             style={{ marginBottom: 8 }}
           />
           <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Date of Birth</label>

@@ -139,8 +139,8 @@ export default function ClientDetailPage() {
       <form onSubmit={save}>
         <div className="card">
           <h3>Contact Info</h3>
-          <input placeholder="Full name" value={form.name} onChange={(e) => set("name", e.target.value)} required />
-          <input placeholder="Phone number" value={form.phone} onChange={(e) => set("phone", e.target.value)} required />
+          <input placeholder="Full name" value={form.name} onChange={(e) => set("name", e.target.value)} autoComplete="off" required />
+          <input placeholder="Phone number" value={form.phone} onChange={(e) => set("phone", e.target.value)} autoComplete="off" required />
           <input placeholder="Email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} autoComplete="off" />
 
           <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>State</label>
@@ -164,10 +164,10 @@ export default function ClientDetailPage() {
             <div style={{ marginTop: 8 }}>
               <h3 style={{ fontSize: 15 }}>Owner</h3>
               <div style={{ display: "flex", gap: 8 }}>
-                <input placeholder="Owner First Name" value={form.ownerFirstName} onChange={(e) => set("ownerFirstName", e.target.value)} />
-                <input placeholder="Owner Last Name" value={form.ownerLastName} onChange={(e) => set("ownerLastName", e.target.value)} />
+                <input placeholder="Owner First Name" value={form.ownerFirstName} onChange={(e) => set("ownerFirstName", e.target.value)} autoComplete="off" />
+                <input placeholder="Owner Last Name" value={form.ownerLastName} onChange={(e) => set("ownerLastName", e.target.value)} autoComplete="off" />
               </div>
-              <input placeholder="Relationship to Insured" value={form.ownerRelationship} onChange={(e) => set("ownerRelationship", e.target.value)} />
+              <input placeholder="Relationship to Insured" value={form.ownerRelationship} onChange={(e) => set("ownerRelationship", e.target.value)} autoComplete="off" />
             </div>
           )}
         </div>
@@ -186,10 +186,11 @@ export default function ClientDetailPage() {
               placeholder="Original Policy Carrier"
               value={form.originalCarrier}
               onChange={(e) => set("originalCarrier", e.target.value)}
+              autoComplete="off"
             />
           )}
 
-          <input placeholder="Carrier" value={form.carrier} onChange={(e) => set("carrier", e.target.value)} />
+          <input placeholder="Carrier" value={form.carrier} onChange={(e) => set("carrier", e.target.value)} autoComplete="off" />
           <select value={form.policyProduct} onChange={(e) => set("policyProduct", e.target.value)}>
             <option value="">Select policy product...</option>
             <option value="Whole Life">Whole Life</option>
@@ -206,10 +207,10 @@ export default function ClientDetailPage() {
               </select>
             </>
           )}
-          <input placeholder="Policy Number" value={form.policyNumber} onChange={(e) => set("policyNumber", e.target.value)} />
+          <input placeholder="Policy Number" value={form.policyNumber} onChange={(e) => set("policyNumber", e.target.value)} autoComplete="off" />
           <div style={{ display: "flex", gap: 8 }}>
-            <input placeholder="Amount of Coverage" value={form.coverageAmount} onChange={(e) => set("coverageAmount", e.target.value)} />
-            <input placeholder="Monthly Premium" value={form.monthlyPremium} onChange={(e) => set("monthlyPremium", e.target.value)} />
+            <input placeholder="Amount of Coverage" value={form.coverageAmount} onChange={(e) => set("coverageAmount", e.target.value)} autoComplete="off" />
+            <input placeholder="Monthly Premium" value={form.monthlyPremium} onChange={(e) => set("monthlyPremium", e.target.value)} autoComplete="off" />
           </div>
           <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Draft Date</label>
           <input type="date" value={form.draftDate} onChange={(e) => set("draftDate", e.target.value)} />
