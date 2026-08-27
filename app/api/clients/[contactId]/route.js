@@ -56,11 +56,12 @@ export async function PATCH(req, { params }) {
     return NextResponse.json({ ok: true });
   }
 
-  // Update the basic contact fields (name/phone) if provided.
-  if (body.name || body.phone) {
+  // Update the basic contact fields (name/phone/state) if provided.
+  if (body.name || body.phone || body.contactState !== undefined) {
     const update = {};
     if (body.name) update.name = body.name.trim();
     if (body.phone) update.phone = normalizePhone(body.phone);
+    if (body.contactState !== undefined) update.state = body.contactState || null;
     const { error } = await supabase
       .from("contacts")
       .update(update)

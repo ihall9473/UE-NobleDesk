@@ -57,6 +57,7 @@ export async function POST(req) {
         name: body.name.trim(),
         phone: normalizePhone(body.phone),
         type: "client",
+        state: body.contactState || null,
         deleted_at: null, // re-adding someone who was previously removed brings them back
       },
       { onConflict: "owner_id,phone" }

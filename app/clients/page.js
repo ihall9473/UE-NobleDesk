@@ -195,6 +195,9 @@ export default function ClientsPage() {
         <h3>Add a new client</h3>
         <p className="subtitle" style={{ marginBottom: 8 }}>
           Just their name and number to start — you'll fill in policy details on the next page.
+          Or, use the{" "}
+          <a href="/clients/sheet" style={{ color: "#c9a227" }}>Client Sheet</a> to fill everything
+          out in order as you go through the application with them.
         </p>
         <form onSubmit={addClient}>
           <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
