@@ -332,7 +332,7 @@ export default function LeadsPage() {
         const daysSince = daysSinceContact(c);
         const isStale = daysSince !== null && daysSince >= STALE_DAYS;
         return (
-          <div className="card row" key={c.id}>
+          <div className="card row" key={c.id} style={{ flexWrap: "wrap" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <input
                 type="checkbox"
