@@ -8,9 +8,6 @@ export async function POST(req) {
   if (!userId || !name || !phone) {
     return NextResponse.json({ error: "Name and phone are required" }, { status: 400 });
   }
-  if (!consent) {
-    return NextResponse.json({ error: "Please check the box to agree to be contacted." }, { status: 400 });
-  }
 
   const { data: profile } = await supabaseAdmin
     .from("profiles")
@@ -27,6 +24,7 @@ export async function POST(req) {
       name: name.trim(),
       phone: normalizePhone(phone),
       type: "lead",
+      sms_consent: !!consent,
     },
     { onConflict: "owner_id,phone" }
   );

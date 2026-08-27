@@ -51,17 +51,17 @@ export default function RequestInfoForm({ userId, agentName }) {
           style={{ marginTop: 4 }}
         />
         <span style={{ fontSize: 13, color: "#9a9a9a", lineHeight: 1.5 }}>
-          By checking this box, I agree to receive text messages from {agentName} regarding my
-          insurance inquiry. Message frequency varies. Message and data rates may apply. Reply
-          HELP for help, STOP to opt out at any time. See{" "}
+          (Optional) By checking this box, I agree to receive text messages from {agentName}{" "}
+          regarding my insurance inquiry. Message frequency varies. Message and data rates may
+          apply. Reply HELP for help, STOP to opt out at any time. See{" "}
           <a href={`/privacy/${userId}`} target="_blank" rel="noopener noreferrer">Privacy Policy</a>{" "}
           and{" "}
           <a href={`/terms/${userId}`} target="_blank" rel="noopener noreferrer">Terms of Service</a>.
         </span>
       </div>
 
-      <button type="submit" disabled={loading || !consent}>
-        {loading ? "Submitting..." : "Yes, sign me up!"}
+      <button type="submit" disabled={loading}>
+        {loading ? "Submitting..." : "Submit Request"}
       </button>
     </form>
   );
