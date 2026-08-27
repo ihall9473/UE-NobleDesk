@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import AddressAutocomplete from "@/app/components/AddressAutocomplete";
 import BeneficiaryList from "@/app/components/BeneficiaryList";
+import SensitiveInput from "@/app/components/SensitiveInput";
 import { US_STATES } from "@/lib/usStates";
 import { calculateAge } from "@/lib/age";
 
@@ -306,12 +307,10 @@ export default function ClientDetailPage() {
           <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>
             Routing Number {form.hasRouting && <span style={{ color: "#059669" }}>(on file — leave blank to keep)</span>}
           </label>
-          <input
-            type="password"
-            autoComplete="new-password"
-            placeholder={form.hasRouting ? "••••••••" : "Routing Number"}
+          <SensitiveInput
+            placeholder={form.hasRouting ? "On file - leave blank to keep" : "Routing Number"}
             value={form.routingNumber}
-            onChange={(e) => handleRoutingChange(e.target.value)}
+            onChange={handleRoutingChange}
           />
           <input
             placeholder={lookingUpBank ? "Looking up bank..." : "Bank Name"}
@@ -322,12 +321,10 @@ export default function ClientDetailPage() {
           <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>
             Account Number {form.hasAccount && <span style={{ color: "#059669" }}>(on file — leave blank to keep)</span>}
           </label>
-          <input
-            type="password"
-            autoComplete="new-password"
-            placeholder={form.hasAccount ? "••••••••" : "Account Number"}
+          <SensitiveInput
+            placeholder={form.hasAccount ? "On file - leave blank to keep" : "Account Number"}
             value={form.accountNumber}
-            onChange={(e) => set("accountNumber", e.target.value)}
+            onChange={(v) => set("accountNumber", v)}
           />
         </div>
 
