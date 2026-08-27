@@ -144,6 +144,12 @@ export default function ClientsPage() {
       <h1>Clients</h1>
       <p className="subtitle">Your book of business — full policy and contact details for every client.</p>
 
+      <a href="/clients/sheet" style={{ textDecoration: "none" }}>
+        <button type="button" style={{ marginBottom: 16 }}>
+          Open Client Sheet
+        </button>
+      </a>
+
       {allClients.length > 0 && (
         <div className="card" style={{ background: "rgba(201, 162, 39, 0.06)", border: "1px solid rgba(201, 162, 39, 0.35)" }}>
           <div className="row">
@@ -195,9 +201,6 @@ export default function ClientsPage() {
         <h3>Add a new client</h3>
         <p className="subtitle" style={{ marginBottom: 8 }}>
           Just their name and number to start — you'll fill in policy details on the next page.
-          Or, use the{" "}
-          <a href="/clients/sheet" style={{ color: "#c9a227" }}>Client Sheet</a> to fill everything
-          out in order as you go through the application with them.
         </p>
         <form onSubmit={addClient}>
           <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
