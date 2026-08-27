@@ -5,6 +5,7 @@ import Crest from "./Crest";
 
 const LINKS = [
   { href: "/leads", label: "Leads" },
+  { href: "/clients/sheet", label: "Client Sheet" },
   { href: "/clients", label: "Clients" },
   { href: "/compose", label: "Send a Text" },
   { href: "/conversations", label: "Conversations" },
@@ -31,7 +32,10 @@ export default function NavBar() {
         <span className="nav-wordmark">UE NobleDesk</span>
       </a>
       {LINKS.map((link) => {
-        const isActive = pathname.startsWith(link.href);
+        const isActive =
+          link.href === "/clients"
+            ? pathname === "/clients" || (pathname.startsWith("/clients/") && !pathname.startsWith("/clients/sheet"))
+            : pathname.startsWith(link.href);
         return (
           <a key={link.href} href={link.href} className={isActive ? "active" : ""}>{link.label}</a>
         );
