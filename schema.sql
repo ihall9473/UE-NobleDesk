@@ -42,10 +42,15 @@ create table if not exists contacts (
   name text not null,
   phone text not null,
   type text not null default 'lead' check (type in ('lead', 'client')),
+  state text, -- quick state reference (e.g. for leads); separate from client_details.state (mailing address)
   created_at timestamptz default now(),
   deleted_at timestamptz, -- soft delete: set instead of actually deleting, so "Undo" can restore
   unique(owner_id, phone)
 );
+
+-- Already deployed this app before the "state" column existed? Safe to
+-- re-run any time - adds it without losing any existing contacts:
+alter table contacts add column if not exists state text;
 
 -- Already deployed this app before multiple numbers existed? This adds the
 -- new column without losing any existing contacts, then the two
@@ -91,17 +96,22 @@ create table if not exists client_details (
   owner_id uuid references profiles(id) on delete cascade,
   carrier text,
   policy_product text check (policy_product in ('Whole Life', 'Term', 'IUL')),
+  graded boolean, -- only meaningful when policy_product = 'Whole Life'
   coverage_amount text,
   monthly_premium text,
   policy_number text,
+  policy_type text check (policy_type in ('first_write', 'policy_flip')),
+  original_carrier text, -- only set when policy_type = 'policy_flip'
   draft_date text,
   application_submitted_date date default current_date,
   primary_beneficiaries jsonb not null default '[]'::jsonb, -- [{name, relationship, percentage}, ...]
   contingent_beneficiaries jsonb not null default '[]'::jsonb,
   date_of_birth date,
   birth_state text,
+  smoker boolean,
   email text,
   address_line text,
+  apt_unit text,
   city text,
   state text,
   zip text,
@@ -109,6 +119,11 @@ create table if not exists client_details (
   health text,
   height text,
   weight text,
+  is_owner boolean default true,
+  owner_first_name text, -- only set when is_owner = false
+  owner_last_name text,
+  owner_relationship text,
+  account_type text check (account_type in ('checking', 'savings')),
   bank_name text,
   routing_number_encrypted text,
   account_number_encrypted text,
@@ -117,8 +132,23 @@ create table if not exists client_details (
 
 alter table client_details enable row level security;
 
+drop policy if exists "Users manage their own client details" on client_details;
 create policy "Users manage their own client details" on client_details
   for all using (auth.uid() = owner_id);
+
+-- Already deployed this app before the Client Sheet fields existed? These
+-- add the new columns without losing any existing client data - safe to
+-- re-run any time, including as part of pasting this whole file again.
+alter table client_details add column if not exists graded boolean;
+alter table client_details add column if not exists policy_type text check (policy_type in ('first_write', 'policy_flip'));
+alter table client_details add column if not exists original_carrier text;
+alter table client_details add column if not exists smoker boolean;
+alter table client_details add column if not exists apt_unit text;
+alter table client_details add column if not exists is_owner boolean default true;
+alter table client_details add column if not exists owner_first_name text;
+alter table client_details add column if not exists owner_last_name text;
+alter table client_details add column if not exists owner_relationship text;
+alter table client_details add column if not exists account_type text check (account_type in ('checking', 'savings'));
 
 -- Already deployed this app before client_details existed? Just run the
 -- create table statement above by itself (it's safe to run again - "if not

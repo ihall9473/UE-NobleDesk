@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import AddressAutocomplete from "@/app/components/AddressAutocomplete";
 import BeneficiaryList from "@/app/components/BeneficiaryList";
@@ -12,6 +12,8 @@ export default function ClientDetailPage() {
   const [form, setForm] = useState(null);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const [lookingUpBank, setLookingUpBank] = useState(false);
+  const routingDebounce = useRef(null);
 
   async function load() {
     const res = await fetch(`/api/clients/${contactId}`);
@@ -25,25 +27,36 @@ export default function ClientDetailPage() {
     setForm({
       name: data.contact.name || "",
       phone: data.contact.phone || "",
+      contactState: data.contact.state || "",
       carrier: d.carrier || "",
       policyProduct: d.policy_product || "",
+      graded: d.graded === true ? "yes" : d.graded === false ? "no" : "",
       coverageAmount: d.coverage_amount || "",
       monthlyPremium: d.monthly_premium || "",
       policyNumber: d.policy_number || "",
+      policyType: d.policy_type || "first_write",
+      originalCarrier: d.original_carrier || "",
       draftDate: d.draft_date || "",
       applicationSubmittedDate: d.application_submitted_date || "",
       primaryBeneficiaries: d.primary_beneficiaries?.length ? d.primary_beneficiaries : [],
       contingentBeneficiaries: d.contingent_beneficiaries?.length ? d.contingent_beneficiaries : [],
       dateOfBirth: d.date_of_birth || "",
       birthState: d.birth_state || "",
+      smoker: d.smoker === true ? "yes" : d.smoker === false ? "no" : "",
       email: d.email || "",
       addressLine: d.address_line || "",
+      aptUnit: d.apt_unit || "",
       city: d.city || "",
       state: d.state || "",
       zip: d.zip || "",
       health: d.health || "",
       height: d.height || "",
       weight: d.weight || "",
+      isOwner: d.is_owner === false ? "no" : "yes",
+      ownerFirstName: d.owner_first_name || "",
+      ownerLastName: d.owner_last_name || "",
+      ownerRelationship: d.owner_relationship || "",
+      accountType: d.account_type || "",
       bankName: d.bank_name || "",
       // Sensitive fields: intentionally left blank even though they're already
       // saved. Typing a new value replaces it; leaving blank keeps what's on file.
@@ -64,14 +77,38 @@ export default function ClientDetailPage() {
     setForm((f) => ({ ...f, [field]: value }));
   }
 
+  function handleRoutingChange(value) {
+    set("routingNumber", value);
+    clearTimeout(routingDebounce.current);
+    const digits = value.replace(/\D/g, "");
+    if (digits.length !== 9) return;
+    routingDebounce.current = setTimeout(async () => {
+      setLookingUpBank(true);
+      try {
+        const res = await fetch(`/api/routing-lookup?rn=${digits}`);
+        const data = await res.json();
+        if (data.bankName) set("bankName", data.bankName);
+      } catch {
+        // best-effort - bank name stays editable either way
+      }
+      setLookingUpBank(false);
+    }, 500);
+  }
+
   async function save(e) {
     e.preventDefault();
     setSaving(true);
     setMessage("");
+    const body = {
+      ...form,
+      isOwner: form.isOwner === "no" ? false : true,
+      smoker: form.smoker === "" ? undefined : form.smoker === "yes",
+      graded: form.graded === "" ? undefined : form.graded === "yes",
+    };
     const res = await fetch(`/api/clients/${contactId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify(body),
     });
     setSaving(false);
     const data = await res.json();
@@ -105,10 +142,53 @@ export default function ClientDetailPage() {
           <input placeholder="Full name" value={form.name} onChange={(e) => set("name", e.target.value)} required />
           <input placeholder="Phone number" value={form.phone} onChange={(e) => set("phone", e.target.value)} required />
           <input placeholder="Email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} autoComplete="off" />
+
+          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>State</label>
+          <select value={form.contactState} onChange={(e) => set("contactState", e.target.value)}>
+            <option value="">Select state...</option>
+            {US_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+
+        <div className="card">
+          <h3>Ownership</h3>
+          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>
+            Is Proposed Insured the Owner?
+          </label>
+          <select value={form.isOwner} onChange={(e) => set("isOwner", e.target.value)}>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+
+          {form.isOwner === "no" && (
+            <div style={{ marginTop: 8 }}>
+              <h3 style={{ fontSize: 15 }}>Owner</h3>
+              <div style={{ display: "flex", gap: 8 }}>
+                <input placeholder="Owner First Name" value={form.ownerFirstName} onChange={(e) => set("ownerFirstName", e.target.value)} />
+                <input placeholder="Owner Last Name" value={form.ownerLastName} onChange={(e) => set("ownerLastName", e.target.value)} />
+              </div>
+              <input placeholder="Relationship to Insured" value={form.ownerRelationship} onChange={(e) => set("ownerRelationship", e.target.value)} />
+            </div>
+          )}
         </div>
 
         <div className="card">
           <h3>Policy Details</h3>
+          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>
+            First Write or Policy Flip?
+          </label>
+          <select value={form.policyType} onChange={(e) => set("policyType", e.target.value)}>
+            <option value="first_write">First Write</option>
+            <option value="policy_flip">Policy Flip</option>
+          </select>
+          {form.policyType === "policy_flip" && (
+            <input
+              placeholder="Original Policy Carrier"
+              value={form.originalCarrier}
+              onChange={(e) => set("originalCarrier", e.target.value)}
+            />
+          )}
+
           <input placeholder="Carrier" value={form.carrier} onChange={(e) => set("carrier", e.target.value)} />
           <select value={form.policyProduct} onChange={(e) => set("policyProduct", e.target.value)}>
             <option value="">Select policy product...</option>
@@ -116,6 +196,16 @@ export default function ClientDetailPage() {
             <option value="Term">Term</option>
             <option value="IUL">IUL</option>
           </select>
+          {form.policyProduct === "Whole Life" && (
+            <>
+              <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Graded?</label>
+              <select value={form.graded} onChange={(e) => set("graded", e.target.value)}>
+                <option value="">Select...</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </>
+          )}
           <input placeholder="Policy Number" value={form.policyNumber} onChange={(e) => set("policyNumber", e.target.value)} />
           <div style={{ display: "flex", gap: 8 }}>
             <input placeholder="Amount of Coverage" value={form.coverageAmount} onChange={(e) => set("coverageAmount", e.target.value)} />
@@ -136,6 +226,13 @@ export default function ClientDetailPage() {
 
         <div className="card">
           <h3>Personal Details</h3>
+          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Smoker?</label>
+          <select value={form.smoker} onChange={(e) => set("smoker", e.target.value)}>
+            <option value="">Select...</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+
           <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Date of Birth</label>
           <input type="date" value={form.dateOfBirth} onChange={(e) => set("dateOfBirth", e.target.value)} />
           {age !== null && <p className="subtitle" style={{ marginTop: -8 }}>Age: {age}</p>}
@@ -173,6 +270,7 @@ export default function ClientDetailPage() {
               setForm((f) => ({ ...f, addressLine, city, state: state || f.state, zip }));
             }}
           />
+          <input placeholder="Apt / Ste #" value={form.aptUnit} onChange={(e) => set("aptUnit", e.target.value)} autoComplete="off" />
           <div style={{ display: "flex", gap: 8 }}>
             <input placeholder="City" value={form.city} onChange={(e) => set("city", e.target.value)} autoComplete="off" />
             <select value={form.state} onChange={(e) => set("state", e.target.value)} style={{ maxWidth: 100 }}>
@@ -199,7 +297,11 @@ export default function ClientDetailPage() {
 
         <div className="card">
           <h3>Banking (for premium draft)</h3>
-          <input placeholder="Bank Name" value={form.bankName} onChange={(e) => set("bankName", e.target.value)} autoComplete="off" />
+          <select value={form.accountType} onChange={(e) => set("accountType", e.target.value)}>
+            <option value="">Account Type...</option>
+            <option value="checking">Checking</option>
+            <option value="savings">Savings</option>
+          </select>
           <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>
             Routing Number {form.hasRouting && <span style={{ color: "#059669" }}>(on file — leave blank to keep)</span>}
           </label>
@@ -208,7 +310,13 @@ export default function ClientDetailPage() {
             autoComplete="new-password"
             placeholder={form.hasRouting ? "••••••••" : "Routing Number"}
             value={form.routingNumber}
-            onChange={(e) => set("routingNumber", e.target.value)}
+            onChange={(e) => handleRoutingChange(e.target.value)}
+          />
+          <input
+            placeholder={lookingUpBank ? "Looking up bank..." : "Bank Name"}
+            value={form.bankName}
+            onChange={(e) => set("bankName", e.target.value)}
+            autoComplete="off"
           />
           <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>
             Account Number {form.hasAccount && <span style={{ color: "#059669" }}>(on file — leave blank to keep)</span>}
