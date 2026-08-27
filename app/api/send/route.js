@@ -43,6 +43,10 @@ export async function POST(req) {
 
   const results = [];
   for (const contact of contacts) {
+    if (contact.sms_consent === false) {
+      results.push({ contact: contact.name, ok: false, error: "Didn't consent to texts - call them instead" });
+      continue;
+    }
     try {
       const fromNumber = contact.twilio_number || profile.twilio_number;
       const body = fillMessageTemplate(message, contact);

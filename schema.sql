@@ -43,6 +43,7 @@ create table if not exists contacts (
   phone text not null,
   type text not null default 'lead' check (type in ('lead', 'client')),
   state text, -- quick state reference (e.g. for leads); separate from client_details.state (mailing address)
+  sms_consent boolean not null default true, -- false only when someone explicitly declined the texting checkbox on the public Request Info form
   created_at timestamptz default now(),
   deleted_at timestamptz, -- soft delete: set instead of actually deleting, so "Undo" can restore
   unique(owner_id, phone)
@@ -51,6 +52,11 @@ create table if not exists contacts (
 -- Already deployed this app before the "state" column existed? Safe to
 -- re-run any time - adds it without losing any existing contacts:
 alter table contacts add column if not exists state text;
+
+-- Already deployed this app before "sms_consent" existed? Safe to re-run
+-- any time - adds it (defaulting existing contacts to true, since they
+-- predate this being tracked) without losing any existing contacts:
+alter table contacts add column if not exists sms_consent boolean not null default true;
 
 -- Already deployed this app before multiple numbers existed? This adds the
 -- new column without losing any existing contacts, then the two

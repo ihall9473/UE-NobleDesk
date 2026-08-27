@@ -227,7 +227,12 @@ export default function ComposePage() {
                     {g.contacts.map((c) => (
                       <div className="checkbox-row" key={c.id}>
                         <input type="checkbox" checked={selected.has(c.id)} onChange={() => toggle(c.id)} />
-                        <span>{c.name} — {c.phone}</span>
+                        <span>
+                          {c.name} — {c.phone}
+                          {c.sms_consent === false && (
+                            <span style={{ color: "var(--danger)", fontSize: 12 }}> (no SMS consent - call instead)</span>
+                          )}
+                        </span>
                       </div>
                     ))}
                   </div>
