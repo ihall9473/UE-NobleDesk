@@ -51,7 +51,9 @@ export default function RequestInfoForm({ userId, agentName }) {
           style={{ marginTop: 4 }}
         />
         <span style={{ fontSize: 13, color: "#9a9a9a", lineHeight: 1.5 }}>
-          (Optional) By checking this box, I agree to receive text messages from {agentName}{" "}
+          (Optional — your request will be submitted either way, but checking this box is
+          required to receive text messages) By checking this box, I agree to receive text
+          messages from {agentName}{" "}
           regarding my insurance inquiry. Message frequency varies. Message and data rates may
           apply. Reply HELP for help, STOP to opt out at any time. See{" "}
           <a href={`/privacy/${userId}`} target="_blank" rel="noopener noreferrer">Privacy Policy</a>{" "}
