@@ -135,20 +135,26 @@ export default function SettingsPage() {
     if (!confirmed) return;
 
     setBuying(phoneNumber);
-    const res = await fetch("/api/numbers", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phoneNumber }),
-    });
-    const data = await res.json();
-    setBuying("");
-    if (res.ok) {
-      setMessage(`You're all set! Your texting number is ${data.phoneNumber}.`);
-      setAvailable([]);
-      load();
-      loadNumbers();
-    } else {
-      setMessage(data.error);
+    setMessage("");
+    try {
+      const res = await fetch("/api/numbers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phoneNumber }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setMessage(`You're all set! Your texting number is ${data.phoneNumber}.`);
+        setAvailable([]);
+        load();
+        loadNumbers();
+      } else {
+        setMessage(data.error || `Something went wrong buying that number (status ${res.status}).`);
+      }
+    } catch (err) {
+      setMessage(`Something went wrong: ${err.message}`);
+    } finally {
+      setBuying("");
     }
   }
 
