@@ -52,7 +52,7 @@ export default function NotificationSetup() {
   return (
     <div className="card" style={{ background: "#fffbea", border: "1px solid #fde68a" }}>
       <div className="row">
-        <span>Turn on notifications for new texts on this device?</span>
+        <span style={{ color: "#1a1a1a" }}>Turn on notifications for new texts on this device?</span>
         <button onClick={enableNotifications}>Enable</button>
       </div>
     </div>
