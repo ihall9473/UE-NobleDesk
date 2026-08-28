@@ -61,7 +61,7 @@ export default function HomePage() {
         >
           The Upper Echelon
         </p>
-        <h1 style={{ display: "inline-block", fontSize: "clamp(38px, 7vw, 72px)" }}>
+        <h1 className="full-width-underline" style={{ display: "inline-block", fontSize: "clamp(38px, 7vw, 72px)" }}>
           Welcome to{" "}
           <span className="login-wordmark" style={{ fontStyle: "italic" }}>
             NobleDesk
