@@ -99,7 +99,7 @@ export default function ClientSheetPage() {
     setSaving(false);
     const data = await res.json();
     if (res.ok) {
-      window.location.href = "/clients";
+      window.location.href = `/clients/${data.contact.id}`;
     } else {
       setMessage(data.error || "Something went wrong.");
     }
