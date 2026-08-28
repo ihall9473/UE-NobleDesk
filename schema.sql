@@ -217,6 +217,28 @@ create policy "Users manage their own templates" on templates
 -- Already deployed this app before message templates existed? Just run
 -- the create table + policy statements above by themselves.
 
+-- Per-agent carrier login credentials, shown on the Carriers directory page.
+-- Username is stored as plain text; password is encrypted at rest (see
+-- lib/encryption.js) but decrypted and shown unmasked in the UI on purpose -
+-- agents need to read these back at a glance, unlike SSNs/bank numbers.
+create table if not exists carrier_logins (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid references profiles(id) on delete cascade,
+  carrier_id text not null,
+  username text,
+  password_encrypted text,
+  updated_at timestamptz default now(),
+  unique (owner_id, carrier_id)
+);
+
+alter table carrier_logins enable row level security;
+
+create policy "Users manage their own carrier logins" on carrier_logins
+  for all using (auth.uid() = owner_id);
+
+-- Already deployed this app before the Carriers page existed? Just run
+-- the create table + policy statements above by themselves.
+
 -- Row Level Security: makes sure people can only ever see their own data,
 -- even if there were ever a bug in the app code.
 alter table profiles enable row level security;
