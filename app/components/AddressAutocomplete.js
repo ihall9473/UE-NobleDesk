@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef } from "react";
+import { toStateAbbr } from "@/lib/usStates";
 
 // Free address lookup (no API key/billing needed) via OpenStreetMap's
 // Nominatim service. Debounced so we're not hammering it on every keystroke.
@@ -39,7 +40,7 @@ export default function AddressAutocomplete({ value, onChange, onSelect }) {
     onSelect({
       addressLine: streetLine || place.display_name.split(",")[0],
       city: a.city || a.town || a.village || a.county || "",
-      state: a.state || "",
+      state: toStateAbbr(a.state),
       zip: a.postcode || "",
     });
     setSuggestions([]);
@@ -60,7 +61,8 @@ export default function AddressAutocomplete({ value, onChange, onSelect }) {
             top: "100%",
             left: 0,
             right: 0,
-            background: "white",
+            background: "#fff",
+            color: "#1a1a1a",
             border: "1px solid #ccc",
             borderRadius: 8,
             zIndex: 10,
@@ -73,7 +75,7 @@ export default function AddressAutocomplete({ value, onChange, onSelect }) {
             <div
               key={s.place_id}
               onClick={() => pick(s)}
-              style={{ padding: "8px 12px", cursor: "pointer", fontSize: 14, borderBottom: "1px solid #eee" }}
+              style={{ padding: "8px 12px", cursor: "pointer", fontSize: 14, color: "#1a1a1a", borderBottom: "1px solid #eee" }}
               onMouseDown={(e) => e.preventDefault()}
             >
               {s.display_name}

@@ -109,6 +109,7 @@ create table if not exists client_details (
   policy_type text check (policy_type in ('first_write', 'policy_flip')),
   original_carrier text, -- only set when policy_type = 'policy_flip'
   draft_date text,
+  effective_date date,
   application_submitted_date date default current_date,
   primary_beneficiaries jsonb not null default '[]'::jsonb, -- [{name, relationship, percentage}, ...]
   contingent_beneficiaries jsonb not null default '[]'::jsonb,
@@ -129,7 +130,7 @@ create table if not exists client_details (
   owner_first_name text, -- only set when is_owner = false
   owner_last_name text,
   owner_relationship text,
-  account_type text check (account_type in ('checking', 'savings')),
+  account_type text check (account_type in ('checking', 'savings', 'direct_express')),
   bank_name text,
   routing_number_encrypted text,
   account_number_encrypted text,
@@ -154,7 +155,15 @@ alter table client_details add column if not exists is_owner boolean default tru
 alter table client_details add column if not exists owner_first_name text;
 alter table client_details add column if not exists owner_last_name text;
 alter table client_details add column if not exists owner_relationship text;
-alter table client_details add column if not exists account_type text check (account_type in ('checking', 'savings'));
+alter table client_details add column if not exists account_type text check (account_type in ('checking', 'savings', 'direct_express'));
+alter table client_details add column if not exists effective_date date;
+
+-- Already deployed this app before "direct_express" was an account type
+-- option? Run these two lines by themselves to widen the existing check
+-- constraint without losing any existing client data:
+alter table client_details drop constraint if exists client_details_account_type_check;
+alter table client_details add constraint client_details_account_type_check
+  check (account_type in ('checking', 'savings', 'direct_express'));
 
 -- Already deployed this app before client_details existed? Just run the
 -- create table statement above by itself (it's safe to run again - "if not
