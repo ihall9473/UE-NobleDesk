@@ -45,11 +45,15 @@ export default function ClientsPage() {
   const [search, setSearch] = useState("");
   const [carrierFilter, setCarrierFilter] = useState("all");
   const [stateFilter, setStateFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("firstName"); // firstName | lastName | carrier | state
+  const [sortBy, setSortBy] = useState("firstName"); // firstName | lastName | carrier | state | effectiveDate | submittedDate
   const [datePreset, setDatePreset] = useState("all");
   const [customDate, setCustomDate] = useState("");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
+  const [effectiveDatePreset, setEffectiveDatePreset] = useState("all");
+  const [effectiveCustomDate, setEffectiveCustomDate] = useState("");
+  const [effectiveCustomStart, setEffectiveCustomStart] = useState("");
+  const [effectiveCustomEnd, setEffectiveCustomEnd] = useState("");
 
   async function load() {
     const res = await fetch("/api/clients");
@@ -97,6 +101,7 @@ export default function ClientsPage() {
   const stateOptions = [...new Set(allClients.map((c) => c.client_details?.state).filter(Boolean))].sort();
 
   const dateRange = getDateRange(datePreset, customDate, customStart, customEnd);
+  const effectiveDateRange = getDateRange(effectiveDatePreset, effectiveCustomDate, effectiveCustomStart, effectiveCustomEnd);
 
   let visible = allClients.filter((c) => {
     const matchesSearch =
@@ -110,7 +115,13 @@ export default function ClientsPage() {
       matchesDate = !!submitted && submitted >= dateRange.start && submitted <= dateRange.end;
     }
 
-    return matchesSearch && matchesCarrier && matchesState && matchesDate;
+    let matchesEffectiveDate = true;
+    if (effectiveDateRange) {
+      const effective = c.client_details?.effective_date;
+      matchesEffectiveDate = !!effective && effective >= effectiveDateRange.start && effective <= effectiveDateRange.end;
+    }
+
+    return matchesSearch && matchesCarrier && matchesState && matchesDate && matchesEffectiveDate;
   });
 
   visible = [...visible].sort((a, b) => {
@@ -118,6 +129,8 @@ export default function ClientsPage() {
     if (sortBy === "lastName") return splitName(a.name).last.localeCompare(splitName(b.name).last);
     if (sortBy === "carrier") return (a.client_details?.carrier || "").localeCompare(b.client_details?.carrier || "");
     if (sortBy === "state") return (a.client_details?.state || "").localeCompare(b.client_details?.state || "");
+    if (sortBy === "effectiveDate") return (a.client_details?.effective_date || "").localeCompare(b.client_details?.effective_date || "");
+    if (sortBy === "submittedDate") return (a.client_details?.application_submitted_date || "").localeCompare(b.client_details?.application_submitted_date || "");
     return 0;
   });
 
@@ -129,7 +142,8 @@ export default function ClientsPage() {
   }, 0);
   const totalAnnual = totalMonthly * 12;
   const clientsWithPremium = visible.filter((c) => c.client_details?.monthly_premium).length;
-  const isFiltered = search || carrierFilter !== "all" || stateFilter !== "all" || datePreset !== "all";
+  const isFiltered =
+    search || carrierFilter !== "all" || stateFilter !== "all" || datePreset !== "all" || effectiveDatePreset !== "all";
 
   const upcomingDrafts = allClients
     .map((c) => ({ client: c, draft: nextDraftInfo(c.client_details?.draft_date) }))
@@ -237,6 +251,8 @@ export default function ClientsPage() {
               <option value="lastName">Last Name</option>
               <option value="carrier">Carrier</option>
               <option value="state">State</option>
+              <option value="effectiveDate">Effective Date</option>
+              <option value="submittedDate">Application Submitted Date</option>
             </select>
           </div>
           <div style={{ flex: 1, minWidth: 160 }}>
@@ -247,11 +263,19 @@ export default function ClientsPage() {
               {DATE_PRESETS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
             </select>
           </div>
+          <div style={{ flex: 1, minWidth: 160 }}>
+            <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>
+              Effective Date
+            </label>
+            <select value={effectiveDatePreset} onChange={(e) => setEffectiveDatePreset(e.target.value)} style={{ marginBottom: 0 }}>
+              {DATE_PRESETS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+            </select>
+          </div>
         </div>
 
         {datePreset === "customDate" && (
           <div style={{ marginTop: 10 }}>
-            <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Date</label>
+            <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Application Submitted Date</label>
             <input type="date" value={customDate} onChange={(e) => setCustomDate(e.target.value)} style={{ marginBottom: 0 }} />
           </div>
         )}
@@ -259,12 +283,32 @@ export default function ClientsPage() {
         {datePreset === "customRange" && (
           <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
             <div style={{ flex: 1 }}>
-              <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>From</label>
+              <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Submitted From</label>
               <input type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)} style={{ marginBottom: 0 }} />
             </div>
             <div style={{ flex: 1 }}>
-              <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>To</label>
+              <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Submitted To</label>
               <input type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} style={{ marginBottom: 0 }} />
+            </div>
+          </div>
+        )}
+
+        {effectiveDatePreset === "customDate" && (
+          <div style={{ marginTop: 10 }}>
+            <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Effective Date</label>
+            <input type="date" value={effectiveCustomDate} onChange={(e) => setEffectiveCustomDate(e.target.value)} style={{ marginBottom: 0 }} />
+          </div>
+        )}
+
+        {effectiveDatePreset === "customRange" && (
+          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+            <div style={{ flex: 1 }}>
+              <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Effective From</label>
+              <input type="date" value={effectiveCustomStart} onChange={(e) => setEffectiveCustomStart(e.target.value)} style={{ marginBottom: 0 }} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Effective To</label>
+              <input type="date" value={effectiveCustomEnd} onChange={(e) => setEffectiveCustomEnd(e.target.value)} style={{ marginBottom: 0 }} />
             </div>
           </div>
         )}
@@ -280,6 +324,10 @@ export default function ClientsPage() {
               setCustomDate("");
               setCustomStart("");
               setCustomEnd("");
+              setEffectiveDatePreset("all");
+              setEffectiveCustomDate("");
+              setEffectiveCustomStart("");
+              setEffectiveCustomEnd("");
             }}
             style={{ marginTop: 10, background: "#6b7280" }}
           >
@@ -316,6 +364,9 @@ export default function ClientsPage() {
                 {d.policy_product ? ` · ${d.policy_product}` : ""}
                 {d.coverage_amount ? ` · $${d.coverage_amount} coverage` : ""}
                 {d.state ? ` · ${d.state}` : ""}
+              </div>
+              <div style={{ color: "#9a9a9a", fontSize: 13, marginTop: 2 }}>
+                Effective: {d.effective_date || "—"} · Submitted: {d.application_submitted_date || "—"}
               </div>
             </div>
           </a>
