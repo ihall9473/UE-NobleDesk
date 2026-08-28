@@ -37,17 +37,18 @@ export default async function PersonalizedTermsPage({ params }) {
 
       <h3>How You May Have Been Contacted</h3>
       <p>
-        Most individuals I contact have called a licensed insurance carrier's phone line
-        requesting information — whether that call was missed, disconnected, or resulted in a
-        conversation that did not lead to a finalized policy. I follow up with these individuals
-        by phone and text to continue assisting with their insurance inquiry.
+        Most individuals I first speak with have called a licensed insurance carrier's phone
+        line requesting information — whether that call was missed, disconnected, or resulted
+        in a conversation that did not lead to a finalized policy. I may follow up with these
+        individuals by phone about their inquiry. Phone contact alone does not enroll you in
+        text messages — texting requires the separate online opt-in described below.
       </p>
 
       <h3>Requesting Information Online</h3>
       <p>
-        You may also request information directly through my{" "}
-        <a href={`/request-info/${userId}`}>online Request Info form</a>, by submitting your
-        name and phone number and checking a box that reads: "By checking this box, I agree to
+        The only way to opt in to receive text messages from me is through my{" "}
+        <a href={`/request-info/${userId}`}>online Request Info form</a>. You submit your name
+        and phone number and check a box that reads: "By checking this box, I agree to
         receive text messages from {name} regarding my insurance inquiry." Checking that box is
         your consent to the text messaging program described below.
       </p>
@@ -55,9 +56,9 @@ export default async function PersonalizedTermsPage({ params }) {
       <h3>Campaign Use Case</h3>
       <p>
         This texting program is a <strong>Customer Care</strong> campaign. It is used only to
-        follow up with individuals who have already reached out about insurance coverage - by
-        phone or through the online request form described above - never for cold outreach,
-        general marketing, or messages to people who haven't already made contact.
+        follow up with individuals who have opted in through the online request form described
+        above - never for cold outreach, general marketing, or messages to people who haven't
+        opted in.
       </p>
 
       <h3>Sample Messages</h3>
@@ -76,7 +77,7 @@ export default async function PersonalizedTermsPage({ params }) {
 
       <h3>Text Messaging Program</h3>
       <ul>
-        <li>By providing your mobile number - by phone or through the online form above - you consent to receive text messages from me regarding your insurance inquiry or policy.</li>
+        <li>By checking the consent box on my online Request Info form, you consent to receive text messages from me regarding your insurance inquiry or policy.</li>
         <li>Messages may include a link back to this Terms of Service page and to my <a href={`/privacy/${userId}`}>Privacy Policy</a>.</li>
         <li>Message frequency varies - typically a few messages during initial outreach, then only as needed afterward.</li>
         <li>Message and data rates may apply, based on your mobile carrier plan.</li>
@@ -96,7 +97,7 @@ export default async function PersonalizedTermsPage({ params }) {
       <p>
         See my <a href={`/privacy/${userId}`}>Privacy Policy</a> for details on how your
         information is collected, used, and protected. Your mobile number will never be sold or
-        shared for marketing purposes.
+        shared with third parties or affiliates for marketing or promotional purposes.
       </p>
 
       <h3>Changes to These Terms</h3>
