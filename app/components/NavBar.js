@@ -10,6 +10,7 @@ const LINKS = [
   { href: "/compose", label: "Send a Text" },
   { href: "/conversations", label: "Conversations" },
   { href: "/occasions", label: "Occasions" },
+  { href: "/carriers", label: "Carriers" },
   { href: "/settings", label: "Settings" },
   { href: "/admin", label: "Admin" },
 ];
