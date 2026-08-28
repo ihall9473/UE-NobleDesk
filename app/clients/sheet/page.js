@@ -29,6 +29,8 @@ const initialForm = {
   policyType: "first_write",
   originalCarrier: "",
   carrier: "",
+  effectiveDate: "",
+  draftDate: "",
   coverageAmount: "",
   monthlyPremium: "",
   policyProduct: "",
@@ -97,7 +99,7 @@ export default function ClientSheetPage() {
     setSaving(false);
     const data = await res.json();
     if (res.ok) {
-      window.location.href = `/clients/${data.contact.id}`;
+      window.location.href = "/clients";
     } else {
       setMessage(data.error || "Something went wrong.");
     }
@@ -277,10 +279,17 @@ export default function ClientSheetPage() {
 
         <div className="card">
           <h3>Banking (for premium draft)</h3>
+          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Effective Date</label>
+          <input type="date" value={form.effectiveDate} onChange={(e) => set("effectiveDate", e.target.value)} />
+
+          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Draft Date</label>
+          <input type="date" value={form.draftDate} onChange={(e) => set("draftDate", e.target.value)} />
+
           <select value={form.accountType} onChange={(e) => set("accountType", e.target.value)}>
             <option value="">Account Type...</option>
             <option value="checking">Checking</option>
             <option value="savings">Savings</option>
+            <option value="direct_express">Direct Express</option>
           </select>
 
           <input

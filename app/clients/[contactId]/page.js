@@ -38,6 +38,7 @@ export default function ClientDetailPage() {
       policyType: d.policy_type || "first_write",
       originalCarrier: d.original_carrier || "",
       draftDate: d.draft_date || "",
+      effectiveDate: d.effective_date || "",
       applicationSubmittedDate: d.application_submitted_date || "",
       primaryBeneficiaries: d.primary_beneficiaries?.length ? d.primary_beneficiaries : [],
       contingentBeneficiaries: d.contingent_beneficiaries?.length ? d.contingent_beneficiaries : [],
@@ -213,9 +214,6 @@ export default function ClientDetailPage() {
             <input placeholder="Amount of Coverage" value={form.coverageAmount} onChange={(e) => set("coverageAmount", e.target.value)} autoComplete="off" />
             <input placeholder="Monthly Premium" value={form.monthlyPremium} onChange={(e) => set("monthlyPremium", e.target.value)} autoComplete="off" />
           </div>
-          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Draft Date</label>
-          <input type="date" value={form.draftDate} onChange={(e) => set("draftDate", e.target.value)} />
-
           <label className="subtitle" style={{ display: "block", marginBottom: 4, marginTop: 8 }}>
             Application Submitted Date
           </label>
@@ -299,10 +297,17 @@ export default function ClientDetailPage() {
 
         <div className="card">
           <h3>Banking (for premium draft)</h3>
+          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Effective Date</label>
+          <input type="date" value={form.effectiveDate} onChange={(e) => set("effectiveDate", e.target.value)} />
+
+          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Draft Date</label>
+          <input type="date" value={form.draftDate} onChange={(e) => set("draftDate", e.target.value)} />
+
           <select value={form.accountType} onChange={(e) => set("accountType", e.target.value)}>
             <option value="">Account Type...</option>
             <option value="checking">Checking</option>
             <option value="savings">Savings</option>
+            <option value="direct_express">Direct Express</option>
           </select>
           <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>
             Routing Number {form.hasRouting && <span style={{ color: "#059669" }}>(on file — leave blank to keep)</span>}
