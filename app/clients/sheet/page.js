@@ -2,7 +2,6 @@
 import { useState, useRef } from "react";
 import AddressAutocomplete from "@/app/components/AddressAutocomplete";
 import BeneficiaryList from "@/app/components/BeneficiaryList";
-import SensitiveInput from "@/app/components/SensitiveInput";
 import { US_STATES } from "@/lib/usStates";
 import { calculateAge } from "@/lib/age";
 
@@ -153,8 +152,7 @@ export default function ClientSheetPage() {
           </select>
 
           <input
-            type="password"
-            autoComplete="new-password"
+            autoComplete="off"
             placeholder="SSN"
             value={form.ssn}
             onChange={(e) => set("ssn", e.target.value)}
@@ -285,14 +283,24 @@ export default function ClientSheetPage() {
             <option value="savings">Savings</option>
           </select>
 
-          <SensitiveInput placeholder="Routing Number" value={form.routingNumber} onChange={handleRoutingChange} />
+          <input
+            autoComplete="off"
+            placeholder="Routing Number"
+            value={form.routingNumber}
+            onChange={(e) => handleRoutingChange(e.target.value)}
+          />
           <input
             placeholder={lookingUpBank ? "Looking up bank..." : "Bank Name"}
             value={form.bankName}
             onChange={(e) => set("bankName", e.target.value)}
             autoComplete="off"
           />
-          <SensitiveInput placeholder="Account Number" value={form.accountNumber} onChange={(v) => set("accountNumber", v)} />
+          <input
+            autoComplete="off"
+            placeholder="Account Number"
+            value={form.accountNumber}
+            onChange={(e) => set("accountNumber", e.target.value)}
+          />
           <input placeholder="Policy Number" value={form.policyNumber} onChange={(e) => set("policyNumber", e.target.value)} autoComplete="off" />
         </div>
 
