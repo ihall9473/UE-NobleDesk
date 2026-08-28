@@ -79,22 +79,37 @@ export default function CarriersPage() {
                   autoComplete="off"
                   style={{ flex: 1, minWidth: 160 }}
                 />
-                <input
-                  placeholder="Password"
-                  value={login.password}
-                  onChange={(e) => setField(carrier.id, "password", e.target.value)}
-                  autoComplete="off"
-                  style={{ flex: 1, minWidth: 160 }}
-                />
+                {carrier.passwordNote ? (
+                  <div
+                    style={{ flex: 1, minWidth: 160, display: "flex", alignItems: "center", color: "var(--gold)", fontSize: 14, fontWeight: 600 }}
+                  >
+                    {carrier.passwordNote}
+                  </div>
+                ) : (
+                  <input
+                    placeholder="Password"
+                    value={login.password}
+                    onChange={(e) => setField(carrier.id, "password", e.target.value)}
+                    autoComplete="off"
+                    style={{ flex: 1, minWidth: 160 }}
+                  />
+                )}
               </div>
-              <button
-                type="button"
-                onClick={() => save(carrier.id)}
-                disabled={savingId === carrier.id}
-                style={{ marginBottom: 20 }}
-              >
-                {savingId === carrier.id ? "Saving..." : savedId === carrier.id ? "Saved" : "Save Login Info"}
-              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20, flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  onClick={() => save(carrier.id)}
+                  disabled={savingId === carrier.id}
+                  style={{ marginBottom: 0 }}
+                >
+                  {savingId === carrier.id ? "Saving..." : savedId === carrier.id ? "Saved" : "Save Login Info"}
+                </button>
+                {carrier.loginHint && (
+                  <span className="subtitle" style={{ marginBottom: 0, color: "var(--gold)", fontWeight: 600, fontSize: 13.5 }}>
+                    {carrier.loginHint}
+                  </span>
+                )}
+              </div>
 
               <label className="label-caps" style={{ display: "block", marginBottom: 8 }}>
                 Phone Numbers
