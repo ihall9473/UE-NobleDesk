@@ -38,18 +38,21 @@ export default async function PersonalizedPrivacyPolicyPage({ params }) {
 
       <h3>How You May Have Been Contacted</h3>
       <p>
-        Most individuals I contact have called a licensed insurance carrier's phone line
-        requesting information — whether that call was missed, disconnected, or resulted in a
-        conversation that did not lead to a finalized policy. I follow up with these individuals
-        by phone and text to continue assisting with their insurance inquiry.
+        Most individuals I first speak with have called a licensed insurance carrier's phone
+        line requesting information — whether that call was missed, disconnected, or resulted
+        in a conversation that did not lead to a finalized policy. I may follow up with these
+        individuals by phone about their inquiry. Phone contact alone does not enroll you in
+        text messages — I only send text messages to individuals who have separately opted in
+        through the online form described below.
       </p>
 
       <h3>Requesting Information Online</h3>
       <p>
-        Individuals may also reach out directly through my{" "}
-        <a href={`/request-info/${userId}`}>online Request Info form</a>, by submitting their
-        name and phone number and checking a box to consent to being contacted by text and phone
-        about their insurance inquiry, before {name} follows up as described below.
+        The only way to opt in to receive text messages from me is through my{" "}
+        <a href={`/request-info/${userId}`}>online Request Info form</a>. You submit your name
+        and phone number and check a box that reads: "By checking this box, I agree to receive
+        text messages from {name} regarding my insurance inquiry." Checking that box is your
+        consent to the text messaging program described below.
       </p>
 
       <h3>How I Use Your Information</h3>
@@ -81,8 +84,9 @@ export default async function PersonalizedPrivacyPolicyPage({ params }) {
       </p>
       <p>
         <strong>Your mobile phone number and consent to receive texts will never be sold,
-        rented, or shared with third parties for marketing purposes.</strong> It is used solely
-        to communicate with you about your own insurance inquiry.
+        rented, or shared with third parties or affiliates for marketing or promotional
+        purposes.</strong> It is used solely to communicate with you about your own insurance
+        inquiry.
       </p>
 
       <h3>Data Security</h3>
