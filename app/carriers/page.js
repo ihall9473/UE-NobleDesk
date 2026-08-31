@@ -118,9 +118,13 @@ export default function CarriersPage() {
                 {PHONE_CATEGORIES.map((cat) => (
                   <div key={cat.key}>
                     <div className="subtitle" style={{ marginBottom: 2, fontSize: 13 }}>{cat.label}</div>
-                    <a href={`tel:${carrier.phones[cat.key].replace(/[^\d+]/g, "")}`} style={{ fontWeight: 600 }}>
-                      {carrier.phones[cat.key]}
-                    </a>
+                    {/\d/.test(carrier.phones[cat.key]) ? (
+                      <a href={`tel:${carrier.phones[cat.key].replace(/[^\d+]/g, "")}`} style={{ fontWeight: 600 }}>
+                        {carrier.phones[cat.key]}
+                      </a>
+                    ) : (
+                      <span style={{ fontWeight: 600 }}>{carrier.phones[cat.key]}</span>
+                    )}
                     {carrier.emails?.[cat.key] && (
                       <div>
                         <a href={`mailto:${carrier.emails[cat.key]}`} style={{ fontSize: 12.5 }}>
