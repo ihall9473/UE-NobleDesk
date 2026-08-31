@@ -121,6 +121,13 @@ export default function CarriersPage() {
                     <a href={`tel:${carrier.phones[cat.key].replace(/[^\d+]/g, "")}`} style={{ fontWeight: 600 }}>
                       {carrier.phones[cat.key]}
                     </a>
+                    {carrier.emails?.[cat.key] && (
+                      <div>
+                        <a href={`mailto:${carrier.emails[cat.key]}`} style={{ fontSize: 12.5 }}>
+                          {carrier.emails[cat.key]}
+                        </a>
+                      </div>
+                    )}
                   </div>
                 ))}
                 {carrier.extraPhones?.map((extra) => (
