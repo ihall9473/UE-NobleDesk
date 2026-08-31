@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { formatDateTime } from "@/lib/formatDate";
 
 export default function ThreadPage() {
   const { contactId } = useParams();
@@ -62,7 +63,7 @@ export default function ThreadPage() {
               {m.body}
             </div>
             <div className="timestamp" style={{ textAlign: m.direction === "outbound" ? "right" : "left" }}>
-              {new Date(m.created_at).toLocaleString()}
+              {formatDateTime(m.created_at)}
             </div>
           </div>
         ))}

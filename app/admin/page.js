@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { formatDateTime } from "@/lib/formatDate";
 
 export default function AdminPage() {
   const [team, setTeam] = useState(null);
@@ -102,7 +103,7 @@ export default function AdminPage() {
               <div key={s.id} style={{ padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
                 <div style={{ fontSize: 14 }}>{s.message}</div>
                 <div style={{ color: "#666", fontSize: 12, marginTop: 4 }}>
-                  {s.profiles?.name || "Someone"} · {new Date(s.created_at).toLocaleDateString()}
+                  {s.profiles?.name || "Someone"} · {formatDateTime(s.created_at)}
                 </div>
               </div>
             ))}

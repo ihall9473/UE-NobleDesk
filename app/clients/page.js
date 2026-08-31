@@ -3,6 +3,8 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DATE_PRESETS, getDateRange } from "@/lib/dateRanges";
 import { nextDraftInfo } from "@/lib/draftDate";
+import { formatCurrency } from "@/lib/formatCurrency";
+import { formatDate } from "@/lib/formatDate";
 import UndoToast from "@/app/components/UndoToast";
 
 const DRAFT_WARNING_DAYS = 5;
@@ -202,7 +204,7 @@ export default function ClientsPage() {
               <strong>{client.name}</strong>{" "}
               <span style={{ color: "#9a9a9a" }}>
                 — {draft.daysUntil === 0 ? "drafts today" : `drafts in ${draft.daysUntil} day${draft.daysUntil === 1 ? "" : "s"}`}
-                {client.client_details?.monthly_premium ? ` ($${client.client_details.monthly_premium})` : ""}
+                {client.client_details?.monthly_premium ? ` (${formatCurrency(client.client_details.monthly_premium)})` : ""}
               </span>
             </a>
           ))}
@@ -349,7 +351,14 @@ export default function ClientsPage() {
           <a href={`/clients/${c.id}`} key={c.id} style={{ textDecoration: "none", color: "inherit" }}>
             <div className="card">
               <div className="row">
-                <strong>{c.name}</strong>
+                <div>
+                  <strong>{c.name}</strong>
+                  {d.state && (
+                    <span style={{ fontSize: 13, color: "#9a9a9a", fontWeight: 600, marginLeft: 8 }}>
+                      {d.state}
+                    </span>
+                  )}
+                </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   {draftSoon && (
                     <span className="badge" style={{ color: "var(--danger)", borderColor: "var(--danger)", background: "rgba(248,113,113,0.08)" }}>
@@ -359,14 +368,17 @@ export default function ClientsPage() {
                   <span style={{ fontSize: 13, color: "#9a9a9a" }}>{c.phone}</span>
                 </div>
               </div>
-              <div style={{ color: "#9a9a9a", fontSize: 13, marginTop: 4 }}>
+              <div style={{ color: "var(--text)", fontSize: 14.5, marginTop: 6 }}>
                 {d.carrier || "No carrier set"}
                 {d.policy_product ? ` · ${d.policy_product}` : ""}
-                {d.coverage_amount ? ` · $${d.coverage_amount} coverage` : ""}
-                {d.state ? ` · ${d.state}` : ""}
+                {d.coverage_amount ? ` · ${formatCurrency(d.coverage_amount)} coverage` : ""}
+                {d.monthly_premium ? ` · ${formatCurrency(d.monthly_premium)}/mo` : ""}
+              </div>
+              <div style={{ color: "var(--text)", fontSize: 14.5, marginTop: 2 }}>
+                Effective: {formatDate(d.effective_date) || "—"}
               </div>
               <div style={{ color: "#9a9a9a", fontSize: 13, marginTop: 2 }}>
-                Effective: {d.effective_date || "—"} · Submitted: {d.application_submitted_date || "—"}
+                Submitted: {formatDate(d.application_submitted_date) || "—"}
               </div>
             </div>
           </a>
