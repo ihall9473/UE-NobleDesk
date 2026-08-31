@@ -123,6 +123,14 @@ export default function CarriersPage() {
                     </a>
                   </div>
                 ))}
+                {carrier.extraPhones?.map((extra) => (
+                  <div key={extra.label}>
+                    <div className="subtitle" style={{ marginBottom: 2, fontSize: 13 }}>{extra.label}</div>
+                    <a href={`tel:${extra.value.replace(/[^\d+]/g, "")}`} style={{ fontWeight: 600 }}>
+                      {extra.value}
+                    </a>
+                  </div>
+                ))}
               </div>
             </div>
           );
