@@ -12,9 +12,9 @@ create table if not exists profiles (
   created_at timestamptz default now()
 );
 
--- Already deployed this app before business_name existed? Run this line
--- by itself to add it without losing any existing profile data:
--- alter table profiles add column if not exists business_name text;
+-- Already deployed this app before business_name existed? Safe to re-run
+-- any time - adds it without losing any existing profile data:
+alter table profiles add column if not exists business_name text;
 
 -- Every number an agent owns in their Twilio account, not just the one
 -- currently active. Lets them register/keep several numbers (e.g. one per
@@ -72,13 +72,13 @@ update contacts set twilio_number = (
   select twilio_number from profiles where profiles.id = contacts.owner_id
 ) where twilio_number is null;
 
--- If you already ran this schema before this column existed, run this line
--- by itself to add it without losing any existing contacts:
--- alter table contacts add column if not exists type text not null default 'lead' check (type in ('lead', 'client'));
+-- If you already ran this schema before this column existed, safe to
+-- re-run any time - adds it without losing any existing contacts:
+alter table contacts add column if not exists type text not null default 'lead' check (type in ('lead', 'client'));
 
--- Already deployed this app before the "deleted_at" column existed? Run
--- this line by itself to add it without losing any existing contacts:
--- alter table contacts add column if not exists deleted_at timestamptz;
+-- Already deployed this app before the "deleted_at" column existed? Safe
+-- to re-run any time - adds it without losing any existing contacts:
+alter table contacts add column if not exists deleted_at timestamptz;
 
 create table if not exists messages (
   id uuid primary key default gen_random_uuid(),
@@ -170,8 +170,8 @@ alter table client_details add constraint client_details_account_type_check
 -- exists" - and won't touch your existing contacts, messages, or numbers).
 
 -- Already have client_details but missing the newer application_submitted_date
--- column? Run this line by itself:
--- alter table client_details add column if not exists application_submitted_date date default current_date;
+-- column? Safe to re-run any time:
+alter table client_details add column if not exists application_submitted_date date default current_date;
 
 -- Stores each phone/browser that's installed the app and allowed notifications.
 -- A person can have more than one (e.g. installed on two phones).
@@ -185,6 +185,7 @@ create table if not exists push_subscriptions (
 
 alter table push_subscriptions enable row level security;
 
+drop policy if exists "Users manage their own push subscriptions" on push_subscriptions;
 create policy "Users manage their own push subscriptions" on push_subscriptions
   for all using (auth.uid() = owner_id);
 
@@ -200,6 +201,7 @@ create table if not exists suggestions (
 
 alter table suggestions enable row level security;
 
+drop policy if exists "Users submit their own suggestions" on suggestions;
 create policy "Users submit their own suggestions" on suggestions
   for insert with check (auth.uid() = owner_id);
 
@@ -220,6 +222,7 @@ create table if not exists templates (
 
 alter table templates enable row level security;
 
+drop policy if exists "Users manage their own templates" on templates;
 create policy "Users manage their own templates" on templates
   for all using (auth.uid() = owner_id);
 
@@ -242,11 +245,61 @@ create table if not exists carrier_logins (
 
 alter table carrier_logins enable row level security;
 
+drop policy if exists "Users manage their own carrier logins" on carrier_logins;
 create policy "Users manage their own carrier logins" on carrier_logins
   for all using (auth.uid() = owner_id);
 
 -- Already deployed this app before the Carriers page existed? Just run
 -- the create table + policy statements above by themselves.
+
+-- Birthday/holiday/policy-anniversary auto-texts, configured on the
+-- Occasions page. `kind` drives how the date is resolved each year:
+-- 'fixed' (month+day), 'floating' (month+weekday+occurrence, e.g. "3rd
+-- Monday of January"), 'easter', or the two per-contact kinds
+-- 'birthday'/'policy_anniversary' (no fixed date - resolved per contact
+-- from client_details).
+create table if not exists occasions (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid references profiles(id) on delete cascade,
+  name text not null,
+  kind text not null check (kind in ('birthday', 'fixed', 'floating', 'easter', 'policy_anniversary')),
+  month integer,
+  day integer,
+  weekday integer,
+  occurrence integer,
+  enabled boolean not null default true,
+  message text not null default '',
+  created_at timestamptz default now()
+);
+
+alter table occasions enable row level security;
+
+drop policy if exists "Users manage their own occasions" on occasions;
+create policy "Users manage their own occasions" on occasions
+  for all using (auth.uid() = owner_id);
+
+-- One row per occasion actually texted to a contact on a given date -
+-- lets the daily cron job (see app/api/cron/occasions) skip a contact
+-- it already texted today instead of double-sending.
+create table if not exists occasion_sends (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid references profiles(id) on delete cascade,
+  occasion_id uuid references occasions(id) on delete cascade,
+  contact_id uuid references contacts(id) on delete cascade,
+  sent_date date not null,
+  created_at timestamptz default now(),
+  unique (occasion_id, contact_id, sent_date)
+);
+
+alter table occasion_sends enable row level security;
+
+drop policy if exists "Users manage their own occasion sends" on occasion_sends;
+create policy "Users manage their own occasion sends" on occasion_sends
+  for all using (auth.uid() = owner_id);
+
+-- Already deployed this app before Occasions existed? Just run the two
+-- create table + policy blocks above by themselves - safe to run again
+-- ("if not exists") and won't touch anything else.
 
 -- Row Level Security: makes sure people can only ever see their own data,
 -- even if there were ever a bug in the app code.
@@ -254,15 +307,19 @@ alter table profiles enable row level security;
 alter table contacts enable row level security;
 alter table messages enable row level security;
 
+drop policy if exists "Users see their own profile" on profiles;
 create policy "Users see their own profile" on profiles
   for select using (auth.uid() = id);
 
+drop policy if exists "Users update their own profile" on profiles;
 create policy "Users update their own profile" on profiles
   for update using (auth.uid() = id);
 
+drop policy if exists "Users manage their own contacts" on contacts;
 create policy "Users manage their own contacts" on contacts
   for all using (auth.uid() = owner_id);
 
+drop policy if exists "Users manage their own messages" on messages;
 create policy "Users manage their own messages" on messages
   for all using (auth.uid() = owner_id);
 
@@ -271,9 +328,9 @@ create policy "Users manage their own messages" on messages
 -- update profiles set role = 'admin' where id = (select id from auth.users where email = 'you@example.com');
 
 -- Already deployed this app before the "member" role was renamed to "agent"?
--- Run these two lines by themselves to migrate existing rows and the check
+-- Safe to re-run any time - migrates existing rows and the check
 -- constraint without losing any data:
--- alter table profiles drop constraint if exists profiles_role_check;
--- update profiles set role = 'agent' where role = 'member';
--- alter table profiles add constraint profiles_role_check check (role in ('admin', 'manager', 'agent'));
--- alter table profiles alter column role set default 'agent';
+alter table profiles drop constraint if exists profiles_role_check;
+update profiles set role = 'agent' where role = 'member';
+alter table profiles add constraint profiles_role_check check (role in ('admin', 'manager', 'agent'));
+alter table profiles alter column role set default 'agent';
