@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef } from "react";
+import { formatPhoneInput } from "@/lib/phoneFormat";
 import AddressAutocomplete from "@/app/components/AddressAutocomplete";
 import BeneficiaryList from "@/app/components/BeneficiaryList";
 import { US_STATES } from "@/lib/usStates";
@@ -76,10 +77,6 @@ export default function ClientSheetPage() {
 
   async function submit(e) {
     e.preventDefault();
-    if (!form.firstName.trim() || !form.lastName.trim() || !form.phone.trim()) {
-      setMessage("First name, last name, and phone number are required.");
-      return;
-    }
     setSaving(true);
     setMessage("");
 
@@ -121,8 +118,8 @@ export default function ClientSheetPage() {
         <div className="card">
           <h3>Proposed Insured</h3>
           <div style={{ display: "flex", gap: 8 }}>
-            <input placeholder="First Name" value={form.firstName} onChange={(e) => set("firstName", e.target.value)} autoComplete="off" required />
-            <input placeholder="Last Name" value={form.lastName} onChange={(e) => set("lastName", e.target.value)} autoComplete="off" required />
+            <input placeholder="First Name" value={form.firstName} onChange={(e) => set("firstName", e.target.value)} autoComplete="off" />
+            <input placeholder="Last Name" value={form.lastName} onChange={(e) => set("lastName", e.target.value)} autoComplete="off" />
           </div>
 
           <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Smoker?</label>
@@ -183,7 +180,7 @@ export default function ClientSheetPage() {
 
         <div className="card">
           <h3>Contact Info</h3>
-          <input placeholder="Phone number" value={form.phone} onChange={(e) => set("phone", e.target.value)} autoComplete="off" required />
+          <input placeholder="Phone number" value={form.phone} onChange={(e) => set("phone", formatPhoneInput(e.target.value))} autoComplete="off" />
           <input placeholder="Email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} autoComplete="off" />
         </div>
 
