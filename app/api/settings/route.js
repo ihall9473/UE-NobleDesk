@@ -13,10 +13,7 @@ export async function GET() {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  // Don't send the auth token back to the browser once saved - only whether it's set.
-  return NextResponse.json({
-    profile: { ...profile, twilio_auth_token: undefined, hasAuthToken: !!profile.twilio_auth_token },
-  });
+  return NextResponse.json({ profile });
 }
 
 export async function PATCH(req) {

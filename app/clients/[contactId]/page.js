@@ -3,7 +3,6 @@ import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import AddressAutocomplete from "@/app/components/AddressAutocomplete";
 import BeneficiaryList from "@/app/components/BeneficiaryList";
-import SensitiveInput from "@/app/components/SensitiveInput";
 import { US_STATES } from "@/lib/usStates";
 import { calculateAge } from "@/lib/age";
 
@@ -60,14 +59,9 @@ export default function ClientDetailPage() {
       ownerRelationship: d.owner_relationship || "",
       accountType: d.account_type || "",
       bankName: d.bank_name || "",
-      // Sensitive fields: intentionally left blank even though they're already
-      // saved. Typing a new value replaces it; leaving blank keeps what's on file.
-      ssn: "",
-      routingNumber: "",
-      accountNumber: "",
-      hasSSN: !!d.ssn,
-      hasRouting: !!d.routingNumber,
-      hasAccount: !!d.accountNumber,
+      ssn: d.ssn || "",
+      routingNumber: d.routingNumber || "",
+      accountNumber: d.accountNumber || "",
     });
   }
 
@@ -249,13 +243,9 @@ export default function ClientDetailPage() {
             <input placeholder="Weight (lbs)" value={form.weight} onChange={(e) => set("weight", e.target.value)} autoComplete="off" />
           </div>
 
-          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>
-            SSN {form.hasSSN && <span style={{ color: "#059669" }}>(on file — leave blank to keep)</span>}
-          </label>
           <input
-            type="password"
-            autoComplete="new-password"
-            placeholder={form.hasSSN ? "•••-••-••••" : "SSN"}
+            autoComplete="off"
+            placeholder="SSN"
             value={form.ssn}
             onChange={(e) => set("ssn", e.target.value)}
           />
@@ -309,13 +299,11 @@ export default function ClientDetailPage() {
             <option value="savings">Savings</option>
             <option value="direct_express">Direct Express</option>
           </select>
-          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>
-            Routing Number {form.hasRouting && <span style={{ color: "#059669" }}>(on file — leave blank to keep)</span>}
-          </label>
-          <SensitiveInput
-            placeholder={form.hasRouting ? "On file - leave blank to keep" : "Routing Number"}
+          <input
+            autoComplete="off"
+            placeholder="Routing Number"
             value={form.routingNumber}
-            onChange={handleRoutingChange}
+            onChange={(e) => handleRoutingChange(e.target.value)}
           />
           <input
             placeholder={lookingUpBank ? "Looking up bank..." : "Bank Name"}
@@ -323,13 +311,11 @@ export default function ClientDetailPage() {
             onChange={(e) => set("bankName", e.target.value)}
             autoComplete="off"
           />
-          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>
-            Account Number {form.hasAccount && <span style={{ color: "#059669" }}>(on file — leave blank to keep)</span>}
-          </label>
-          <SensitiveInput
-            placeholder={form.hasAccount ? "On file - leave blank to keep" : "Account Number"}
+          <input
+            autoComplete="off"
+            placeholder="Account Number"
             value={form.accountNumber}
-            onChange={(v) => set("accountNumber", v)}
+            onChange={(e) => set("accountNumber", e.target.value)}
           />
         </div>
 

@@ -35,6 +35,7 @@ export default function SettingsPage() {
     const data = await res.json();
     setProfile(data.profile);
     setSid(data.profile?.twilio_account_sid || "");
+    setToken(data.profile?.twilio_auth_token || "");
     setBusinessName(data.profile?.business_name || "");
     setPersonalPhone(data.profile?.personal_phone || "");
     setSmsAlertsEnabled(data.profile?.sms_alerts_enabled || false);
@@ -297,9 +298,8 @@ export default function SettingsPage() {
               On that same page, click "show" to reveal your <strong>Auth Token</strong>, copy
               it, then paste it here:
               <input
-                type="password"
-                autoComplete="new-password"
-                placeholder={profile.hasAuthToken ? "Auth Token (already saved - leave blank to keep it)" : "Auth Token"}
+                autoComplete="off"
+                placeholder="Auth Token"
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
                 style={{ marginTop: 8, marginBottom: 0 }}
