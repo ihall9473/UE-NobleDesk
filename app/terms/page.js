@@ -1,8 +1,10 @@
+import { formatDate } from "@/lib/formatDate";
+
 export default function TermsPage() {
   return (
     <div style={{ maxWidth: 680, margin: "0 auto", padding: "40px 20px", lineHeight: 1.7 }}>
       <h1>Terms of Service</h1>
-      <p className="subtitle">Last updated: {new Date().toLocaleDateString()}</p>
+      <p className="subtitle">Last updated: {formatDate(new Date())}</p>
 
       <p>
         These Terms of Service govern text message and phone communications between you and

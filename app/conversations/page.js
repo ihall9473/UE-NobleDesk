@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { formatDateTime } from "@/lib/formatDate";
 
 export default function ConversationsPage() {
   const [conversations, setConversations] = useState([]);
@@ -67,7 +68,7 @@ export default function ConversationsPage() {
                 </span>
               </strong>
               <span style={{ fontSize: 12, color: "#666" }}>
-                {new Date(c.lastMessage.created_at).toLocaleString()}
+                {formatDateTime(c.lastMessage.created_at)}
               </span>
             </div>
             <div style={{ color: "#444", marginTop: 4 }}>
