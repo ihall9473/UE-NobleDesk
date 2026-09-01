@@ -32,6 +32,10 @@ export default function ClientDetailPage() {
       carrier: d.carrier || "",
       policyProduct: d.policy_product || "",
       graded: d.graded === true ? "yes" : d.graded === false ? "no" : "",
+      underwritingStage: d.underwriting_stage || "applied",
+      policyStatus: d.policy_status || "active",
+      commissionStatus: d.commission_status || "pending",
+      termConversionDeadline: d.term_conversion_deadline || "",
       coverageAmount: d.coverage_amount || "",
       monthlyPremium: d.monthly_premium || "",
       policyNumber: d.policy_number || "",
@@ -204,6 +208,21 @@ export default function ClientDetailPage() {
               </select>
             </>
           )}
+          {form.policyProduct === "Term" && (
+            <>
+              <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>
+                Conversion Deadline
+              </label>
+              <p className="subtitle" style={{ marginTop: -4, marginBottom: 4 }}>
+                Last day this term policy can still convert to permanent coverage.
+              </p>
+              <input
+                type="date"
+                value={form.termConversionDeadline}
+                onChange={(e) => set("termConversionDeadline", e.target.value)}
+              />
+            </>
+          )}
           <input placeholder="Policy Number" value={form.policyNumber} onChange={(e) => set("policyNumber", e.target.value)} autoComplete="off" />
           <div style={{ display: "flex", gap: 8 }}>
             <input placeholder="Amount of Coverage" value={form.coverageAmount} onChange={(e) => set("coverageAmount", e.target.value)} autoComplete="off" />
@@ -217,6 +236,36 @@ export default function ClientDetailPage() {
             value={form.applicationSubmittedDate}
             onChange={(e) => set("applicationSubmittedDate", e.target.value)}
           />
+        </div>
+
+        <div className="card">
+          <h3>Pipeline & Commission</h3>
+          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Underwriting Stage</label>
+          <select value={form.underwritingStage} onChange={(e) => set("underwritingStage", e.target.value)}>
+            <option value="applied">Applied</option>
+            <option value="paramed_scheduled">Paramed Scheduled</option>
+            <option value="paramed_complete">Paramed Complete</option>
+            <option value="aps_requested">APS Requested</option>
+            <option value="underwriting">Underwriting</option>
+            <option value="approved">Approved</option>
+            <option value="rated">Rated</option>
+            <option value="declined">Declined</option>
+            <option value="placed">Placed</option>
+          </select>
+
+          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Policy Status</label>
+          <select value={form.policyStatus} onChange={(e) => set("policyStatus", e.target.value)}>
+            <option value="active">Active</option>
+            <option value="lapsed">Lapsed</option>
+            <option value="chargeback">Chargeback</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+
+          <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Commission Status</label>
+          <select value={form.commissionStatus} onChange={(e) => set("commissionStatus", e.target.value)}>
+            <option value="pending">Pending</option>
+            <option value="paid">Paid</option>
+          </select>
         </div>
 
         <div className="card">

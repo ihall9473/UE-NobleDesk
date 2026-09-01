@@ -8,28 +8,32 @@ const CARRIER_ID_BY_NAME = Object.fromEntries(CARRIERS.map((c) => [c.name.toLowe
 
 // Sums up "Families Protected" (one per policy on file), "Submitted
 // Business" (total annualized premium), "Total Monthly Premium", and
-// "Expected Payout" (annual premium x each policy owner's own comp rate
+// expected payout (annual premium x each policy owner's own comp rate
 // for that carrier - a typo'd or "Other" carrier just contributes $0,
-// since there's no rate to match it to) across whichever owner_ids are
-// passed in.
+// since there's no rate to match it to), split into pending vs already
+// paid, across whichever owner_ids are passed in.
 function productionTotals(clientDetails, compRatesByOwner, ownerIds) {
   const ids = new Set(ownerIds);
   const rows = clientDetails.filter((c) => ids.has(c.owner_id));
   const totalMonthlyPremium = rows.reduce((sum, c) => sum + parseCurrency(c.monthly_premium), 0);
 
-  const expectedPayout = rows.reduce((sum, c) => {
-    const carrierId = CARRIER_ID_BY_NAME[(c.carrier || "").trim().toLowerCase()];
-    const pct = carrierId ? compRatesByOwner[c.owner_id]?.[carrierId] : null;
-    if (!pct) return sum;
-    const annualPremium = parseCurrency(c.monthly_premium) * 12;
-    return sum + annualPremium * (pct / 100);
-  }, 0);
+  function payoutFor(matchingRows) {
+    return matchingRows.reduce((sum, c) => {
+      const carrierId = CARRIER_ID_BY_NAME[(c.carrier || "").trim().toLowerCase()];
+      const pct = carrierId ? compRatesByOwner[c.owner_id]?.[carrierId] : null;
+      if (!pct) return sum;
+      const annualPremium = parseCurrency(c.monthly_premium) * 12;
+      return sum + annualPremium * (pct / 100);
+    }, 0);
+  }
 
   return {
     familiesProtected: rows.length,
     submittedBusiness: totalMonthlyPremium * 12,
     totalMonthlyPremium,
-    expectedPayout,
+    expectedPayout: payoutFor(rows),
+    pendingPayout: payoutFor(rows.filter((c) => c.commission_status !== "paid")),
+    paidPayout: payoutFor(rows.filter((c) => c.commission_status === "paid")),
   };
 }
 
@@ -78,7 +82,7 @@ export async function GET() {
   const relevantIds = [user.id, ...downlineIds];
 
   const [{ data: clientDetails, error: cdError }, { data: compRateRows, error: compError }] = await Promise.all([
-    supabaseAdmin.from("client_details").select("owner_id, carrier, monthly_premium").in("owner_id", relevantIds),
+    supabaseAdmin.from("client_details").select("owner_id, carrier, monthly_premium, commission_status").in("owner_id", relevantIds),
     supabaseAdmin.from("carrier_comp_rates").select("owner_id, carrier_id, comp_percentage").in("owner_id", relevantIds),
   ]);
   if (cdError) return NextResponse.json({ error: cdError.message }, { status: 500 });
