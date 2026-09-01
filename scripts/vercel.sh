@@ -5,7 +5,10 @@
 # the REST API works fine as long as every request includes ?teamId=.
 #
 # Reads VERCEL_TOKEN / VERCEL_PROJECT_ID / VERCEL_TEAM_ID from
-# .env.vercel.local (gitignored - never commit that file).
+# .env.vercel.local (gitignored - never commit that file), or from the
+# file named by VERCEL_ENV_FILE if set - use that to manage a second
+# Vercel project (e.g. VERCEL_ENV_FILE=.env.vercel-crm.local) without
+# touching the first project's credentials file.
 #
 # Usage:
 #   scripts/vercel.sh info                        project settings summary
@@ -21,15 +24,16 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-if [ -f .env.vercel.local ]; then
+env_file="${VERCEL_ENV_FILE:-.env.vercel.local}"
+if [ -f "$env_file" ]; then
   set -a
-  source .env.vercel.local
+  source "$env_file"
   set +a
 fi
 
-: "${VERCEL_TOKEN:?Set VERCEL_TOKEN in .env.vercel.local}"
-: "${VERCEL_PROJECT_ID:?Set VERCEL_PROJECT_ID in .env.vercel.local}"
-: "${VERCEL_TEAM_ID:?Set VERCEL_TEAM_ID in .env.vercel.local}"
+: "${VERCEL_TOKEN:?Set VERCEL_TOKEN in $env_file}"
+: "${VERCEL_PROJECT_ID:?Set VERCEL_PROJECT_ID in $env_file}"
+: "${VERCEL_TEAM_ID:?Set VERCEL_TEAM_ID in $env_file}"
 
 api() {
   local method="$1" path="$2" body="${3:-}"
@@ -149,7 +153,7 @@ for e in d.get('envs', []):
     ;;
   redeploy)
     if [ -z "${VERCEL_DEPLOY_HOOK_URL:-}" ]; then
-      echo "No VERCEL_DEPLOY_HOOK_URL set in .env.vercel.local - create a deploy hook first." >&2
+      echo "No VERCEL_DEPLOY_HOOK_URL set in $env_file - create a deploy hook first." >&2
       exit 1
     fi
     curl -sS -X POST "$VERCEL_DEPLOY_HOOK_URL" | python3 -c "
