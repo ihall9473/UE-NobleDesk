@@ -4,17 +4,22 @@ import { CARRIERS, PHONE_CATEGORIES } from "@/lib/carriers";
 
 export default function CarriersPage() {
   const [logins, setLogins] = useState({});
+  const [compRates, setCompRates] = useState({});
   const [loaded, setLoaded] = useState(false);
   const [savingId, setSavingId] = useState("");
   const [savedId, setSavedId] = useState("");
+  const [savingCompId, setSavingCompId] = useState("");
+  const [savedCompId, setSavedCompId] = useState("");
 
   useEffect(() => {
-    fetch("/api/carrier-logins")
-      .then((res) => res.json())
-      .then((data) => {
-        setLogins(data.logins || {});
-        setLoaded(true);
-      });
+    Promise.all([
+      fetch("/api/carrier-logins").then((res) => res.json()),
+      fetch("/api/carrier-comp").then((res) => res.json()),
+    ]).then(([loginData, compData]) => {
+      setLogins(loginData.logins || {});
+      setCompRates(compData.rates || {});
+      setLoaded(true);
+    });
   }, []);
 
   function setField(carrierId, field, value) {
@@ -37,6 +42,21 @@ export default function CarriersPage() {
     if (res.ok) {
       setSavedId(carrierId);
       setTimeout(() => setSavedId(""), 2000);
+    }
+  }
+
+  async function saveCompRate(carrierId) {
+    setSavingCompId(carrierId);
+    setSavedCompId("");
+    const res = await fetch("/api/carrier-comp", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ carrierId, compPercentage: compRates[carrierId] || 0 }),
+    });
+    setSavingCompId("");
+    if (res.ok) {
+      setSavedCompId(carrierId);
+      setTimeout(() => setSavedCompId(""), 2000);
     }
   }
 
@@ -109,6 +129,41 @@ export default function CarriersPage() {
                     {carrier.loginHint}
                   </span>
                 )}
+              </div>
+
+              <label className="label-caps" style={{ display: "block", marginBottom: 8 }}>
+                Your Comp %
+              </label>
+              <p className="subtitle" style={{ marginTop: -4, marginBottom: 8 }}>
+                Your own negotiated commission rate with this carrier, as a % of annual premium.
+                Used to estimate your expected payout on My Team.
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  placeholder="e.g. 80"
+                  value={compRates[carrier.id] ?? ""}
+                  onChange={(e) =>
+                    setCompRates((prev) => ({ ...prev, [carrier.id]: e.target.value }))
+                  }
+                  style={{ maxWidth: 120, marginBottom: 0 }}
+                />
+                <span className="subtitle" style={{ marginBottom: 0 }}>%</span>
+                <button
+                  type="button"
+                  onClick={() => saveCompRate(carrier.id)}
+                  disabled={savingCompId === carrier.id}
+                  style={{ marginBottom: 0, width: "auto" }}
+                >
+                  {savingCompId === carrier.id
+                    ? "Saving..."
+                    : savedCompId === carrier.id
+                    ? "Saved"
+                    : "Save Comp %"}
+                </button>
               </div>
 
               <label className="label-caps" style={{ display: "block", marginBottom: 8 }}>

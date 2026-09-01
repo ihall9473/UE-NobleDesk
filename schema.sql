@@ -252,6 +252,29 @@ create policy "Users manage their own carrier logins" on carrier_logins
 -- Already deployed this app before the Carriers page existed? Just run
 -- the create table + policy statements above by themselves.
 
+-- Each agent's own negotiated commission percentage with each carrier -
+-- different agents can have different comp levels with the same carrier.
+-- Used to estimate expected payout: annual premium x comp_percentage,
+-- summed across an agent's written business. One row per agent per
+-- carrier; carrier_id matches lib/carriers.js's ids, same as carrier_logins.
+create table if not exists carrier_comp_rates (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid references profiles(id) on delete cascade,
+  carrier_id text not null,
+  comp_percentage numeric not null check (comp_percentage >= 0 and comp_percentage <= 100),
+  updated_at timestamptz default now(),
+  unique (owner_id, carrier_id)
+);
+
+alter table carrier_comp_rates enable row level security;
+
+drop policy if exists "Users manage their own comp rates" on carrier_comp_rates;
+create policy "Users manage their own comp rates" on carrier_comp_rates
+  for all using (auth.uid() = owner_id);
+
+-- Already deployed this app before comp rates existed? Just run the
+-- create table + policy statements above by themselves.
+
 -- Birthday/holiday/policy-anniversary auto-texts, configured on the
 -- Occasions page. `kind` drives how the date is resolved each year:
 -- 'fixed' (month+day), 'floating' (month+weekday+occurrence, e.g. "3rd

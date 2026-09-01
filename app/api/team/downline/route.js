@@ -2,18 +2,34 @@ import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { parseCurrency } from "@/lib/formatCurrency";
+import { CARRIERS } from "@/lib/carriers";
+
+const CARRIER_ID_BY_NAME = Object.fromEntries(CARRIERS.map((c) => [c.name.toLowerCase(), c.id]));
 
 // Sums up "Families Protected" (one per policy on file), "Submitted
-// Business" (total annualized premium), and "Total Monthly Premium"
-// across whichever owner_ids are passed in.
-function productionTotals(clientDetails, ownerIds) {
+// Business" (total annualized premium), "Total Monthly Premium", and
+// "Expected Payout" (annual premium x each policy owner's own comp rate
+// for that carrier - a typo'd or "Other" carrier just contributes $0,
+// since there's no rate to match it to) across whichever owner_ids are
+// passed in.
+function productionTotals(clientDetails, compRatesByOwner, ownerIds) {
   const ids = new Set(ownerIds);
   const rows = clientDetails.filter((c) => ids.has(c.owner_id));
   const totalMonthlyPremium = rows.reduce((sum, c) => sum + parseCurrency(c.monthly_premium), 0);
+
+  const expectedPayout = rows.reduce((sum, c) => {
+    const carrierId = CARRIER_ID_BY_NAME[(c.carrier || "").trim().toLowerCase()];
+    const pct = carrierId ? compRatesByOwner[c.owner_id]?.[carrierId] : null;
+    if (!pct) return sum;
+    const annualPremium = parseCurrency(c.monthly_premium) * 12;
+    return sum + annualPremium * (pct / 100);
+  }, 0);
+
   return {
     familiesProtected: rows.length,
     submittedBusiness: totalMonthlyPremium * 12,
     totalMonthlyPremium,
+    expectedPayout,
   };
 }
 
@@ -59,18 +75,28 @@ export async function GET() {
   }
   const downlineIds = flatten(downline);
 
-  const { data: clientDetails, error: cdError } = await supabaseAdmin
-    .from("client_details")
-    .select("owner_id, monthly_premium")
-    .in("owner_id", [user.id, ...downlineIds]);
+  const relevantIds = [user.id, ...downlineIds];
+
+  const [{ data: clientDetails, error: cdError }, { data: compRateRows, error: compError }] = await Promise.all([
+    supabaseAdmin.from("client_details").select("owner_id, carrier, monthly_premium").in("owner_id", relevantIds),
+    supabaseAdmin.from("carrier_comp_rates").select("owner_id, carrier_id, comp_percentage").in("owner_id", relevantIds),
+  ]);
   if (cdError) return NextResponse.json({ error: cdError.message }, { status: 500 });
+  if (compError) return NextResponse.json({ error: compError.message }, { status: 500 });
+
+  // owner_id -> { carrier_id -> comp_percentage }, so each policy is
+  // valued using its own owner's negotiated rate, not the viewer's.
+  const compRatesByOwner = {};
+  for (const r of compRateRows) {
+    (compRatesByOwner[r.owner_id] ||= {})[r.carrier_id] = r.comp_percentage;
+  }
 
   return NextResponse.json({
     me: me ? { id: me.id, name: me.name, role: me.role } : { id: user.id, name: "", role: "agent" },
     upline: upline ? { id: upline.id, name: upline.name, role: upline.role } : null,
     downline,
     inviteCode: process.env.APP_INVITE_CODE || "UpperEchelon",
-    myProduction: productionTotals(clientDetails, [user.id]),
-    downlineProduction: productionTotals(clientDetails, downlineIds),
+    myProduction: productionTotals(clientDetails, compRatesByOwner, [user.id]),
+    downlineProduction: productionTotals(clientDetails, compRatesByOwner, downlineIds),
   });
 }

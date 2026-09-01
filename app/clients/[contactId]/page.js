@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import AddressAutocomplete from "@/app/components/AddressAutocomplete";
 import BeneficiaryList from "@/app/components/BeneficiaryList";
+import CarrierSelect from "@/app/components/CarrierSelect";
 import { US_STATES } from "@/lib/usStates";
 import { calculateAge } from "@/lib/age";
 
@@ -186,7 +187,7 @@ export default function ClientDetailPage() {
             />
           )}
 
-          <input placeholder="Carrier" value={form.carrier} onChange={(e) => set("carrier", e.target.value)} autoComplete="off" />
+          <CarrierSelect value={form.carrier} onChange={(v) => set("carrier", v)} />
           <select value={form.policyProduct} onChange={(e) => set("policyProduct", e.target.value)}>
             <option value="">Select policy product...</option>
             <option value="Whole Life">Whole Life</option>
