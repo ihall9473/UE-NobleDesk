@@ -3,6 +3,7 @@ import { useState, useRef } from "react";
 import { formatPhoneInput } from "@/lib/phoneFormat";
 import AddressAutocomplete from "@/app/components/AddressAutocomplete";
 import BeneficiaryList from "@/app/components/BeneficiaryList";
+import CarrierSelect from "@/app/components/CarrierSelect";
 import { US_STATES } from "@/lib/usStates";
 import { calculateAge } from "@/lib/age";
 
@@ -225,7 +226,7 @@ export default function ClientSheetPage() {
             />
           )}
 
-          <input placeholder="Carrier" value={form.carrier} onChange={(e) => set("carrier", e.target.value)} autoComplete="off" />
+          <CarrierSelect value={form.carrier} onChange={(v) => set("carrier", v)} />
           <div style={{ display: "flex", gap: 8 }}>
             <input placeholder="Coverage Amount" value={form.coverageAmount} onChange={(e) => set("coverageAmount", e.target.value)} autoComplete="off" />
             <input placeholder="Monthly Premium" value={form.monthlyPremium} onChange={(e) => set("monthlyPremium", e.target.value)} autoComplete="off" />
