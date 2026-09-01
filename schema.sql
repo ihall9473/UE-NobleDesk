@@ -364,3 +364,9 @@ alter table profiles alter column role set default 'agent';
 -- anyone who signed up without a referral link.
 alter table profiles add column if not exists invited_by uuid references profiles(id) on delete set null;
 create index if not exists profiles_invited_by_idx on profiles(invited_by);
+
+-- Whether this person has ever sent their personal "Invite Downline"
+-- link. The My Team nav tab stays hidden for agents until this flips to
+-- true (managers/admins always see it), so the nav doesn't clutter up
+-- for agents who aren't building a downline.
+alter table profiles add column if not exists has_invited boolean not null default false;
