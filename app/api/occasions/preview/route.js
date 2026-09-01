@@ -3,8 +3,11 @@ import { supabaseServer } from "@/lib/supabaseServer";
 import { resolveHolidayDate } from "@/lib/holidays";
 import { inferStateFromPhone } from "@/lib/areaCodeToState";
 import { isQuietHoursForState } from "@/lib/stateTimezones";
+import { TEXTING_ENABLED } from "@/lib/features";
 
 export async function GET() {
+  if (!TEXTING_ENABLED) return NextResponse.json({ error: "Not available" }, { status: 404 });
+
   const supabase = supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not logged in" }, { status: 401 });

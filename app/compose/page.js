@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { inferStateFromPhone } from "@/lib/areaCodeToState";
 import { STATE_TIMEZONES } from "@/lib/stateTimezones";
+import { TEXTING_ENABLED } from "@/lib/features";
+import FeatureDisabled from "@/app/components/FeatureDisabled";
 
 const TIMEZONE_LABELS = {
   "America/New_York": "Eastern",
@@ -40,6 +42,11 @@ function timezoneLabel(tz) {
 }
 
 export default function ComposePage() {
+  if (!TEXTING_ENABLED) return <FeatureDisabled />;
+  return <ComposePageInner />;
+}
+
+function ComposePageInner() {
   const [contacts, setContacts] = useState([]);
   const [templates, setTemplates] = useState([]);
   const [filter, setFilter] = useState("all"); // all | lead | client

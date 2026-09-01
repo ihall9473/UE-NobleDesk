@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { ALL_HOLIDAYS, WEEKDAY_NAMES, OCCURRENCE_LABELS } from "@/lib/holidays";
+import { TEXTING_ENABLED } from "@/lib/features";
+import FeatureDisabled from "@/app/components/FeatureDisabled";
 
 const FLOATING_HOLIDAYS = ALL_HOLIDAYS.filter((h) => h.kind === "floating");
 
@@ -27,6 +29,11 @@ function OccasionDateLabel({ occasion }) {
 }
 
 export default function OccasionsPage() {
+  if (!TEXTING_ENABLED) return <FeatureDisabled />;
+  return <OccasionsPageInner />;
+}
+
+function OccasionsPageInner() {
   const [occasions, setOccasions] = useState(null);
   const [search, setSearch] = useState("");
   const [message, setMessage] = useState("");

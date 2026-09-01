@@ -5,6 +5,7 @@ import { resolveHolidayDate } from "@/lib/holidays";
 import { inferStateFromPhone } from "@/lib/areaCodeToState";
 import { isQuietHoursForState } from "@/lib/stateTimezones";
 import { fillMessageTemplate } from "@/lib/messageTemplate";
+import { TEXTING_ENABLED } from "@/lib/features";
 
 // Runs once a day (see vercel.json). Vercel automatically sends this secret
 // as a Bearer token when it triggers the cron.
@@ -17,6 +18,7 @@ export async function GET(req) {
   if (!isAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  if (!TEXTING_ENABLED) return NextResponse.json({ ok: true, sent: 0, skippedQuietHours: 0 });
 
   const today = new Date();
   const todayMonth = today.getMonth() + 1;

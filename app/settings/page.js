@@ -1,7 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
+import { TEXTING_ENABLED } from "@/lib/features";
+import FeatureDisabled from "@/app/components/FeatureDisabled";
 
 export default function SettingsPage() {
+  if (!TEXTING_ENABLED) return <FeatureDisabled />;
+  return <SettingsPageInner />;
+}
+
+function SettingsPageInner() {
   const [profile, setProfile] = useState(null);
   const [sid, setSid] = useState("");
   const [token, setToken] = useState("");
