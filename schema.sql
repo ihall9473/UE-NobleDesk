@@ -334,3 +334,10 @@ alter table profiles drop constraint if exists profiles_role_check;
 update profiles set role = 'agent' where role = 'member';
 alter table profiles add constraint profiles_role_check check (role in ('admin', 'manager', 'agent'));
 alter table profiles alter column role set default 'agent';
+
+-- Who invited this person (their "upline"). Set from their personal
+-- referral link (/signup?ref=<user id>) at signup, or to the inviting
+-- admin/manager's own id when added directly from Team Admin. Null for
+-- anyone who signed up without a referral link.
+alter table profiles add column if not exists invited_by uuid references profiles(id) on delete set null;
+create index if not exists profiles_invited_by_idx on profiles(invited_by);

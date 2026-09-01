@@ -16,6 +16,7 @@ const LINKS = [
       ]
     : []),
   { href: "/carriers", label: "Carriers" },
+  { href: "/team", label: "My Team" },
   { href: "/settings", label: "Settings" },
   { href: "/admin", label: "Admin" },
 ];
@@ -24,6 +25,7 @@ export default function NavBar() {
   const pathname = usePathname();
   if (
     pathname === "/login" ||
+    pathname.startsWith("/signup") ||
     pathname.startsWith("/privacy") ||
     pathname.startsWith("/terms") ||
     pathname.startsWith("/request-info")
