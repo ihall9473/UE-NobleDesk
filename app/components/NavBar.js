@@ -17,6 +17,7 @@ const BASE_LINKS = [
       ]
     : []),
   { href: "/carriers", label: "Carriers" },
+  { href: "/licensing", label: "Licensing" },
   { href: "/settings", label: "Settings" },
   { href: "/admin", label: "Admin" },
 ];
