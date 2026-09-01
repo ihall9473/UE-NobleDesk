@@ -51,13 +51,18 @@ function DownlineNode({ node, depth }) {
 
 export default function TeamPage() {
   const [data, setData] = useState(null);
+  const [loadError, setLoadError] = useState("");
   const [inviteLink, setInviteLink] = useState("");
   const [message, setMessage] = useState("");
 
   useEffect(() => {
     fetch("/api/team/downline")
       .then((r) => r.json())
-      .then(setData);
+      .then((d) => {
+        if (d.error) setLoadError(d.error);
+        else setData(d);
+      })
+      .catch(() => setLoadError("Something went wrong loading your team."));
   }, []);
 
   useEffect(() => {
@@ -71,8 +76,10 @@ export default function TeamPage() {
   async function copyLink() {
     await navigator.clipboard.writeText(inviteLink);
     setMessage("Invite link copied.");
+    fetch("/api/team/status", { method: "POST" }).catch(() => {});
   }
 
+  if (loadError) return <p className="error">{loadError}</p>;
   if (!data) return <p>Loading...</p>;
 
   const totalDownline = countAll(data.downline);
