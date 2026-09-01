@@ -2,6 +2,7 @@
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
+import { TEXTING_ENABLED, APP_NAME } from "@/lib/features";
 
 export default function SignupPage() {
   return (
@@ -45,16 +46,18 @@ function SignupForm() {
     if (loginErr) {
       window.location.href = "/login";
     } else {
-      window.location.href = "/settings";
+      window.location.href = TEXTING_ENABLED ? "/settings" : "/leads";
     }
   }
 
   return (
     <div style={{ maxWidth: 360, margin: "60px auto" }}>
-      <h1>Create your UE NobleDesk account</h1>
-      <p className="subtitle">
-        You'll set up your own Twilio texting number in the next step, billed to you directly.
-      </p>
+      <h1>Create your {APP_NAME} account</h1>
+      {TEXTING_ENABLED && (
+        <p className="subtitle">
+          You'll set up your own Twilio texting number in the next step, billed to you directly.
+        </p>
+      )}
       {error && <p className="error">{error}</p>}
       <form onSubmit={handleSubmit}>
         <input placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} required />
