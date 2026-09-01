@@ -1,8 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
 import { formatDateTime } from "@/lib/formatDate";
+import { TEXTING_ENABLED } from "@/lib/features";
+import FeatureDisabled from "@/app/components/FeatureDisabled";
 
 export default function ConversationsPage() {
+  if (!TEXTING_ENABLED) return <FeatureDisabled />;
+  return <ConversationsPageInner />;
+}
+
+function ConversationsPageInner() {
   const [conversations, setConversations] = useState([]);
   const [numbers, setNumbers] = useState([]);
   const [filter, setFilter] = useState("all");

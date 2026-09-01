@@ -2,14 +2,19 @@
 import { usePathname } from "next/navigation";
 import LogoutButton from "./LogoutButton";
 import Crest from "./Crest";
+import { TEXTING_ENABLED, APP_NAME } from "@/lib/features";
 
 const LINKS = [
   { href: "/leads", label: "Leads" },
   { href: "/clients/sheet", label: "Client Sheet" },
   { href: "/clients", label: "Clients" },
-  { href: "/compose", label: "Send a Text" },
-  { href: "/conversations", label: "Conversations" },
-  { href: "/occasions", label: "Occasions" },
+  ...(TEXTING_ENABLED
+    ? [
+        { href: "/compose", label: "Send a Text" },
+        { href: "/conversations", label: "Conversations" },
+        { href: "/occasions", label: "Occasions" },
+      ]
+    : []),
   { href: "/carriers", label: "Carriers" },
   { href: "/settings", label: "Settings" },
   { href: "/admin", label: "Admin" },
@@ -30,7 +35,7 @@ export default function NavBar() {
     <nav className="nav">
       <a href="/" className="nav-brand">
         <Crest size={26} className="nav-crest" />
-        <span className="nav-wordmark">UE NobleDesk</span>
+        <span className="nav-wordmark">{APP_NAME}</span>
       </a>
       {LINKS.map((link) => {
         const isActive =

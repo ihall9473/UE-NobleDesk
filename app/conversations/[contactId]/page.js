@@ -2,8 +2,15 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { formatDateTime } from "@/lib/formatDate";
+import { TEXTING_ENABLED } from "@/lib/features";
+import FeatureDisabled from "@/app/components/FeatureDisabled";
 
 export default function ThreadPage() {
+  if (!TEXTING_ENABLED) return <FeatureDisabled />;
+  return <ThreadPageInner />;
+}
+
+function ThreadPageInner() {
   const { contactId } = useParams();
   const [contact, setContact] = useState(null);
   const [messages, setMessages] = useState([]);

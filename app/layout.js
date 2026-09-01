@@ -4,15 +4,17 @@ import NavBar from "./components/NavBar";
 import PageTransition from "./components/PageTransition";
 import BackgroundDecals from "./components/BackgroundDecals";
 import SuggestionBox from "./components/SuggestionBox";
+import { TEXTING_ENABLED, APP_NAME } from "@/lib/features";
 
 export const metadata = {
-  title: "UE NobleDesk",
-  description: "Send and receive texts with your clients and leads",
-  manifest: "/manifest.json",
+  title: APP_NAME,
+  description: TEXTING_ENABLED
+    ? "Send and receive texts with your clients and leads"
+    : "Manage your leads and clients",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "UE NobleDesk",
+    title: APP_NAME,
   },
 };
 
