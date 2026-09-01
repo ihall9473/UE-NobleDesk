@@ -165,6 +165,32 @@ alter table client_details drop constraint if exists client_details_account_type
 alter table client_details add constraint client_details_account_type_check
   check (account_type in ('checking', 'savings', 'direct_express'));
 
+-- Underwriting pipeline stage - tracked separately from policy_status
+-- below, since a policy only reaches "placed" once, while policy_status
+-- keeps tracking its health for as long as it's in force after that.
+alter table client_details add column if not exists underwriting_stage text
+  check (underwriting_stage in (
+    'applied', 'paramed_scheduled', 'paramed_complete', 'aps_requested',
+    'underwriting', 'approved', 'rated', 'declined', 'placed'
+  ))
+  default 'applied';
+
+-- Ongoing in-force health of a placed policy - lets an agent flag
+-- something as lapsed/chargeback risk without waiting for real payment
+-- data (this app doesn't process drafts, so this is set by the agent).
+alter table client_details add column if not exists policy_status text not null default 'active'
+  check (policy_status in ('active', 'lapsed', 'chargeback', 'cancelled'));
+
+-- Whether the agent's own commission on this policy has actually been
+-- paid out yet - splits Expected Payout on My Team into pending vs paid.
+alter table client_details add column if not exists commission_status text not null default 'pending'
+  check (commission_status in ('pending', 'paid'));
+
+-- Only meaningful when policy_product = 'Term' - the date this term
+-- policy stops being convertible to permanent coverage. Missing this
+-- deadline loses the client's conversion option permanently.
+alter table client_details add column if not exists term_conversion_deadline date;
+
 -- Already deployed this app before client_details existed? Just run the
 -- create table statement above by itself (it's safe to run again - "if not
 -- exists" - and won't touch your existing contacts, messages, or numbers).

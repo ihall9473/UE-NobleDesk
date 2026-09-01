@@ -24,9 +24,15 @@ function ProductionStats({ production, payoutLabel }) {
       </div>
       <div>
         <div style={{ fontSize: 24, fontWeight: 700, color: "var(--gold)" }}>
-          {formatCurrency(production.expectedPayout)}
+          {formatCurrency(production.pendingPayout)}
         </div>
-        <div className="subtitle" style={{ marginBottom: 0 }}>{payoutLabel}</div>
+        <div className="subtitle" style={{ marginBottom: 0 }}>Pending {payoutLabel}</div>
+      </div>
+      <div>
+        <div style={{ fontSize: 24, fontWeight: 700 }}>
+          {formatCurrency(production.paidPayout)}
+        </div>
+        <div className="subtitle" style={{ marginBottom: 0 }}>Paid {payoutLabel}</div>
       </div>
     </div>
   );
@@ -93,10 +99,10 @@ export default function TeamPage() {
 
       <div className="card">
         <h3>Your Production</h3>
-        <ProductionStats production={data.myProduction} payoutLabel="Expected Payout" />
+        <ProductionStats production={data.myProduction} payoutLabel="Payout" />
         <p className="subtitle" style={{ marginTop: 12, marginBottom: 0 }}>
-          Expected Payout uses your comp % for each carrier, set on the{" "}
-          <a href="/carriers">Carriers</a> page.
+          Payout uses your comp % for each carrier (set on the <a href="/carriers">Carriers</a>{" "}
+          page) and each policy's Commission Status.
         </p>
       </div>
 
@@ -128,7 +134,7 @@ export default function TeamPage() {
 
       <div className="card">
         <h3>Your Downline's Production</h3>
-        <ProductionStats production={data.downlineProduction} payoutLabel="Downline's Expected Payout" />
+        <ProductionStats production={data.downlineProduction} payoutLabel="Downline Payout" />
         <p className="subtitle" style={{ marginTop: 12, marginBottom: 0 }}>
           Each person's own comp % is used for their own policies - this is what's expected to be
           paid to them individually, not to you.

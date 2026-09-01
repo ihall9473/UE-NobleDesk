@@ -3,11 +3,31 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DATE_PRESETS, getDateRange } from "@/lib/dateRanges";
 import { nextDraftInfo } from "@/lib/draftDate";
+import { daysUntilConversion } from "@/lib/termConversion";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { formatDate } from "@/lib/formatDate";
 import UndoToast from "@/app/components/UndoToast";
 
 const DRAFT_WARNING_DAYS = 5;
+const CONVERSION_WARNING_DAYS = 365;
+
+const UNDERWRITING_LABELS = {
+  applied: "Applied",
+  paramed_scheduled: "Paramed Scheduled",
+  paramed_complete: "Paramed Complete",
+  aps_requested: "APS Requested",
+  underwriting: "Underwriting",
+  approved: "Approved",
+  rated: "Rated",
+  declined: "Declined",
+  placed: "Placed",
+};
+
+const POLICY_STATUS_LABELS = {
+  lapsed: "Lapsed",
+  chargeback: "Chargeback",
+  cancelled: "Cancelled",
+};
 
 // Splits the stored full name into first/last for filtering and sorting,
 // without needing separate name fields in the database.
@@ -56,6 +76,7 @@ export default function ClientsPage() {
   const [effectiveCustomDate, setEffectiveCustomDate] = useState("");
   const [effectiveCustomStart, setEffectiveCustomStart] = useState("");
   const [effectiveCustomEnd, setEffectiveCustomEnd] = useState("");
+  const [atRiskOnly, setAtRiskOnly] = useState(false);
 
   async function load() {
     const res = await fetch("/api/clients");
@@ -123,7 +144,9 @@ export default function ClientsPage() {
       matchesEffectiveDate = !!effective && effective >= effectiveDateRange.start && effective <= effectiveDateRange.end;
     }
 
-    return matchesSearch && matchesCarrier && matchesState && matchesDate && matchesEffectiveDate;
+    const matchesAtRisk = !atRiskOnly || ["lapsed", "chargeback"].includes(c.client_details?.policy_status);
+
+    return matchesSearch && matchesCarrier && matchesState && matchesDate && matchesEffectiveDate && matchesAtRisk;
   });
 
   visible = [...visible].sort((a, b) => {
@@ -145,12 +168,22 @@ export default function ClientsPage() {
   const totalAnnual = totalMonthly * 12;
   const clientsWithPremium = visible.filter((c) => c.client_details?.monthly_premium).length;
   const isFiltered =
-    search || carrierFilter !== "all" || stateFilter !== "all" || datePreset !== "all" || effectiveDatePreset !== "all";
+    search || carrierFilter !== "all" || stateFilter !== "all" || datePreset !== "all" ||
+    effectiveDatePreset !== "all" || atRiskOnly;
 
   const upcomingDrafts = allClients
     .map((c) => ({ client: c, draft: nextDraftInfo(c.client_details?.draft_date) }))
     .filter(({ draft }) => draft && draft.daysUntil >= 0 && draft.daysUntil <= DRAFT_WARNING_DAYS)
     .sort((a, b) => a.draft.daysUntil - b.draft.daysUntil);
+
+  const upcomingConversions = allClients
+    .map((c) => ({ client: c, daysUntil: daysUntilConversion(c.client_details?.term_conversion_deadline) }))
+    .filter(({ daysUntil }) => daysUntil !== null && daysUntil >= 0 && daysUntil <= CONVERSION_WARNING_DAYS)
+    .sort((a, b) => a.daysUntil - b.daysUntil);
+
+  const atRiskCount = allClients.filter((c) =>
+    ["lapsed", "chargeback"].includes(c.client_details?.policy_status)
+  ).length;
 
   return (
     <div>
@@ -208,6 +241,47 @@ export default function ClientsPage() {
               </span>
             </a>
           ))}
+        </div>
+      )}
+
+      {upcomingConversions.length > 0 && (
+        <div className="card" style={{ background: "rgba(201, 162, 39, 0.06)", border: "1px solid rgba(201, 162, 39, 0.35)" }}>
+          <div className="label-caps" style={{ color: "var(--gold)" }}>
+            Upcoming Term Conversion Deadlines
+          </div>
+          <p className="subtitle" style={{ marginTop: 4, marginBottom: 8 }}>
+            Miss one of these and the client loses the option to convert this term policy to
+            permanent coverage for good.
+          </p>
+          {upcomingConversions.map(({ client, daysUntil }) => (
+            <a
+              key={client.id}
+              href={`/clients/${client.id}`}
+              style={{ display: "block", textDecoration: "none", color: "inherit", fontSize: 14, marginBottom: 4 }}
+            >
+              <strong>{client.name}</strong>{" "}
+              <span style={{ color: "#9a9a9a" }}>
+                — {daysUntil === 0 ? "deadline is today" : `${daysUntil} day${daysUntil === 1 ? "" : "s"} left to convert`}
+              </span>
+            </a>
+          ))}
+        </div>
+      )}
+
+      {atRiskCount > 0 && (
+        <div className="card" style={{ background: "rgba(248, 113, 113, 0.06)", border: "1px solid rgba(248, 113, 113, 0.35)" }}>
+          <div className="row" style={{ marginBottom: 0 }}>
+            <div className="label-caps" style={{ color: "var(--danger)" }}>
+              {atRiskCount} polic{atRiskCount === 1 ? "y" : "ies"} at chargeback risk
+            </div>
+            <button
+              type="button"
+              onClick={() => setAtRiskOnly((v) => !v)}
+              style={{ width: "auto", marginBottom: 0 }}
+            >
+              {atRiskOnly ? "Show All" : "Show Only These"}
+            </button>
+          </div>
         </div>
       )}
 
@@ -330,6 +404,7 @@ export default function ClientsPage() {
               setEffectiveCustomDate("");
               setEffectiveCustomStart("");
               setEffectiveCustomEnd("");
+              setAtRiskOnly(false);
             }}
             style={{ marginTop: 10, background: "#6b7280" }}
           >
@@ -360,6 +435,11 @@ export default function ClientsPage() {
                   )}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  {POLICY_STATUS_LABELS[d.policy_status] && (
+                    <span className="badge" style={{ color: "var(--danger)", borderColor: "var(--danger)", background: "rgba(248,113,113,0.08)" }}>
+                      {POLICY_STATUS_LABELS[d.policy_status]}
+                    </span>
+                  )}
                   {draftSoon && (
                     <span className="badge" style={{ color: "var(--danger)", borderColor: "var(--danger)", background: "rgba(248,113,113,0.08)" }}>
                       {draft.daysUntil === 0 ? "Drafts today" : `Drafts in ${draft.daysUntil}d`}
@@ -374,6 +454,20 @@ export default function ClientsPage() {
                 {d.coverage_amount ? ` · ${formatCurrency(d.coverage_amount)} coverage` : ""}
                 {d.monthly_premium ? ` · ${formatCurrency(d.monthly_premium)}/mo` : ""}
               </div>
+              {d.underwriting_stage && d.underwriting_stage !== "placed" && (
+                <div style={{ marginTop: 2 }}>
+                  <span
+                    className="badge"
+                    style={
+                      d.underwriting_stage === "declined"
+                        ? { color: "var(--danger)", borderColor: "var(--danger)", background: "rgba(248,113,113,0.08)" }
+                        : { color: "var(--gold)", borderColor: "var(--gold)", background: "rgba(201,162,39,0.08)" }
+                    }
+                  >
+                    {UNDERWRITING_LABELS[d.underwriting_stage]}
+                  </span>
+                </div>
+              )}
               <div style={{ color: "var(--text)", fontSize: 14.5, marginTop: 2 }}>
                 Effective: {formatDate(d.effective_date) || "—"}
               </div>
