@@ -1,6 +1,21 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { parseCurrency } from "@/lib/formatCurrency";
+
+// Sums up "Families Protected" (one per policy on file), "Submitted
+// Business" (total annualized premium), and "Total Monthly Premium"
+// across whichever owner_ids are passed in.
+function productionTotals(clientDetails, ownerIds) {
+  const ids = new Set(ownerIds);
+  const rows = clientDetails.filter((c) => ids.has(c.owner_id));
+  const totalMonthlyPremium = rows.reduce((sum, c) => sum + parseCurrency(c.monthly_premium), 0);
+  return {
+    familiesProtected: rows.length,
+    submittedBusiness: totalMonthlyPremium * 12,
+    totalMonthlyPremium,
+  };
+}
 
 export async function GET() {
   const supabase = supabaseServer();
@@ -35,10 +50,27 @@ export async function GET() {
       }));
   }
 
+  const downline = buildTree(user.id);
+
+  // Every id under me, at any depth - for rolling up production totals
+  // across the whole downline, not just direct invites.
+  function flatten(nodes) {
+    return nodes.flatMap((n) => [n.id, ...flatten(n.children)]);
+  }
+  const downlineIds = flatten(downline);
+
+  const { data: clientDetails, error: cdError } = await supabaseAdmin
+    .from("client_details")
+    .select("owner_id, monthly_premium")
+    .in("owner_id", [user.id, ...downlineIds]);
+  if (cdError) return NextResponse.json({ error: cdError.message }, { status: 500 });
+
   return NextResponse.json({
     me: me ? { id: me.id, name: me.name, role: me.role } : { id: user.id, name: "", role: "agent" },
     upline: upline ? { id: upline.id, name: upline.name, role: upline.role } : null,
-    downline: buildTree(user.id),
+    downline,
     inviteCode: process.env.APP_INVITE_CODE || "UpperEchelon",
+    myProduction: productionTotals(clientDetails, [user.id]),
+    downlineProduction: productionTotals(clientDetails, downlineIds),
   });
 }

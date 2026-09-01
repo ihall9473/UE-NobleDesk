@@ -1,9 +1,29 @@
 "use client";
 import { useEffect, useState } from "react";
 import { formatDate } from "@/lib/formatDate";
+import { formatCurrency } from "@/lib/formatCurrency";
 
 function countAll(nodes) {
   return nodes.reduce((sum, n) => sum + 1 + countAll(n.children), 0);
+}
+
+function ProductionStats({ production }) {
+  return (
+    <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+      <div>
+        <div style={{ fontSize: 24, fontWeight: 700 }}>{production.familiesProtected}</div>
+        <div className="subtitle" style={{ marginBottom: 0 }}>Families Protected</div>
+      </div>
+      <div>
+        <div style={{ fontSize: 24, fontWeight: 700 }}>{formatCurrency(production.submittedBusiness)}</div>
+        <div className="subtitle" style={{ marginBottom: 0 }}>Submitted Business</div>
+      </div>
+      <div>
+        <div style={{ fontSize: 24, fontWeight: 700 }}>{formatCurrency(production.totalMonthlyPremium)}</div>
+        <div className="subtitle" style={{ marginBottom: 0 }}>Total Monthly Premium</div>
+      </div>
+    </div>
+  );
 }
 
 function DownlineNode({ node, depth }) {
@@ -59,6 +79,11 @@ export default function TeamPage() {
       {message && <p className="success">{message}</p>}
 
       <div className="card">
+        <h3>Your Production</h3>
+        <ProductionStats production={data.myProduction} />
+      </div>
+
+      <div className="card">
         <h3>Invite Downline</h3>
         <p className="subtitle" style={{ marginBottom: 8 }}>
           Share your personal link - it already includes the invite code, so whoever signs up
@@ -82,6 +107,11 @@ export default function TeamPage() {
             You're at the top of your line - nobody is recorded as having invited you.
           </p>
         )}
+      </div>
+
+      <div className="card">
+        <h3>Your Downline's Production</h3>
+        <ProductionStats production={data.downlineProduction} />
       </div>
 
       <div className="card">
