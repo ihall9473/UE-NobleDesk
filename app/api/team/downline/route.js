@@ -43,12 +43,16 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: "Not logged in" }, { status: 401 });
 
   // Regular RLS only lets someone see their own profile row, so this needs
-  // the admin client - but only name/role/created_at ever leave this route.
-  const { data: all, error } = await supabaseAdmin
-    .from("profiles")
-    .select("id, name, role, invited_by, created_at");
+  // the admin client. The team hierarchy/leaderboard is company-wide by
+  // design (everyone can see everyone's numbers) - that's the whole point.
+  const [{ data: all, error }, { data: authUsers, error: authErr }] = await Promise.all([
+    supabaseAdmin.from("profiles").select("id, name, role, invited_by, created_at"),
+    supabaseAdmin.auth.admin.listUsers({ perPage: 1000 }),
+  ]);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (authErr) return NextResponse.json({ error: authErr.message }, { status: 500 });
 
+  const emailById = Object.fromEntries((authUsers?.users || []).map((u) => [u.id, u.email]));
   const byId = Object.fromEntries(all.map((p) => [p.id, p]));
   const me = byId[user.id];
   const upline = me?.invited_by ? byId[me.invited_by] : null;
@@ -72,18 +76,15 @@ export async function GET() {
 
   const downline = buildTree(user.id);
 
-  // Every id under me, at any depth - for rolling up production totals
-  // across the whole downline, not just direct invites.
   function flatten(nodes) {
     return nodes.flatMap((n) => [n.id, ...flatten(n.children)]);
   }
   const downlineIds = flatten(downline);
-
-  const relevantIds = [user.id, ...downlineIds];
+  const allIds = all.map((p) => p.id);
 
   const [{ data: clientDetails, error: cdError }, { data: compRateRows, error: compError }] = await Promise.all([
-    supabaseAdmin.from("client_details").select("owner_id, carrier, monthly_premium, commission_status").in("owner_id", relevantIds),
-    supabaseAdmin.from("carrier_comp_rates").select("owner_id, carrier_id, comp_percentage").in("owner_id", relevantIds),
+    supabaseAdmin.from("client_details").select("owner_id, carrier, monthly_premium, commission_status").in("owner_id", allIds),
+    supabaseAdmin.from("carrier_comp_rates").select("owner_id, carrier_id, comp_percentage").in("owner_id", allIds),
   ]);
   if (cdError) return NextResponse.json({ error: cdError.message }, { status: 500 });
   if (compError) return NextResponse.json({ error: compError.message }, { status: 500 });
@@ -95,10 +96,23 @@ export async function GET() {
     (compRatesByOwner[r.owner_id] ||= {})[r.carrier_id] = r.comp_percentage;
   }
 
+  // Everyone in the company, each with their own individual production -
+  // the org tree/leaderboard is built from this on the frontend.
+  const people = all.map((p) => ({
+    id: p.id,
+    name: p.name,
+    role: p.role,
+    email: emailById[p.id] || "",
+    invited_by: p.invited_by,
+    created_at: p.created_at,
+    ...productionTotals(clientDetails, compRatesByOwner, [p.id]),
+  }));
+
   return NextResponse.json({
     me: me ? { id: me.id, name: me.name, role: me.role } : { id: user.id, name: "", role: "agent" },
     upline: upline ? { id: upline.id, name: upline.name, role: upline.role } : null,
     downline,
+    people,
     inviteCode: process.env.APP_INVITE_CODE || "UpperEchelon",
     myProduction: productionTotals(clientDetails, compRatesByOwner, [user.id]),
     downlineProduction: productionTotals(clientDetails, compRatesByOwner, downlineIds),

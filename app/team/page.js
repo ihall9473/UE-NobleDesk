@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { formatDate } from "@/lib/formatDate";
 import { formatCurrency } from "@/lib/formatCurrency";
 
@@ -38,18 +38,124 @@ function ProductionStats({ production, payoutLabel }) {
   );
 }
 
-function DownlineNode({ node, depth }) {
+const LEADERBOARD_COLUMNS = [
+  { key: "name", label: "Name", numeric: false },
+  { key: "role", label: "Role", numeric: false },
+  { key: "familiesProtected", label: "Families Protected", numeric: true },
+  { key: "submittedBusiness", label: "Submitted Business", numeric: true, money: true },
+  { key: "totalMonthlyPremium", label: "Monthly Premium", numeric: true, money: true },
+  { key: "pendingPayout", label: "Pending Payout", numeric: true, money: true },
+  { key: "paidPayout", label: "Paid Payout", numeric: true, money: true },
+];
+
+function Leaderboard({ people, meId }) {
+  const [sortKey, setSortKey] = useState("submittedBusiness");
+  const [sortDir, setSortDir] = useState("desc");
+
+  function toggleSort(key) {
+    if (key === sortKey) {
+      setSortDir((d) => (d === "desc" ? "asc" : "desc"));
+    } else {
+      setSortKey(key);
+      setSortDir(LEADERBOARD_COLUMNS.find((c) => c.key === key)?.numeric ? "desc" : "asc");
+    }
+  }
+
+  const sorted = useMemo(() => {
+    const copy = [...people];
+    copy.sort((a, b) => {
+      const av = a[sortKey];
+      const bv = b[sortKey];
+      const cmp = typeof av === "string" ? av.localeCompare(bv) : av - bv;
+      return sortDir === "desc" ? -cmp : cmp;
+    });
+    return copy;
+  }, [people, sortKey, sortDir]);
+
   return (
-    <div style={{ marginLeft: depth * 20, marginTop: 8 }}>
-      <div className="row" style={{ marginBottom: 0 }}>
-        <span>
-          {node.name}{" "}
-          <span style={{ color: "#666", fontSize: 12, textTransform: "capitalize" }}>({node.role})</span>
-        </span>
-        <span style={{ color: "#666", fontSize: 12 }}>Joined {formatDate(node.created_at)}</span>
+    <div style={{ overflowX: "auto" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+        <thead>
+          <tr>
+            {LEADERBOARD_COLUMNS.map((col) => (
+              <th
+                key={col.key}
+                onClick={() => toggleSort(col.key)}
+                style={{
+                  textAlign: col.numeric ? "right" : "left",
+                  padding: "6px 10px",
+                  cursor: "pointer",
+                  color: "#9a9a9a",
+                  fontSize: 12,
+                  textTransform: "uppercase",
+                  letterSpacing: 0.5,
+                  whiteSpace: "nowrap",
+                  borderBottom: "1px solid rgba(255,255,255,0.1)",
+                }}
+              >
+                {col.label}{sortKey === col.key ? (sortDir === "desc" ? " ↓" : " ↑") : ""}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((p) => (
+            <tr
+              key={p.id}
+              style={{
+                background: p.id === meId ? "rgba(201, 162, 39, 0.08)" : "transparent",
+              }}
+            >
+              <td style={{ padding: "6px 10px", whiteSpace: "nowrap" }}>
+                {p.name}
+                {p.email && (
+                  <div style={{ color: "#666", fontSize: 12 }}>{p.email}</div>
+                )}
+              </td>
+              <td style={{ padding: "6px 10px", textTransform: "capitalize", color: "#9a9a9a" }}>{p.role}</td>
+              <td style={{ padding: "6px 10px", textAlign: "right" }}>{p.familiesProtected}</td>
+              <td style={{ padding: "6px 10px", textAlign: "right" }}>{formatCurrency(p.submittedBusiness)}</td>
+              <td style={{ padding: "6px 10px", textAlign: "right" }}>{formatCurrency(p.totalMonthlyPremium)}</td>
+              <td style={{ padding: "6px 10px", textAlign: "right", color: "var(--gold)" }}>{formatCurrency(p.pendingPayout)}</td>
+              <td style={{ padding: "6px 10px", textAlign: "right" }}>{formatCurrency(p.paidPayout)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function HierarchyNode({ node, depth, meId }) {
+  const isMe = node.id === meId;
+  return (
+    <div style={{ marginLeft: depth * 22, marginTop: 8 }}>
+      <div
+        style={{
+          padding: "8px 10px",
+          borderRadius: 8,
+          background: isMe ? "rgba(201, 162, 39, 0.1)" : "rgba(255,255,255,0.03)",
+          border: isMe ? "1px solid rgba(201, 162, 39, 0.4)" : "1px solid rgba(255,255,255,0.06)",
+        }}
+      >
+        <div className="row" style={{ marginBottom: 0 }}>
+          <span>
+            <strong>{node.name}</strong>{isMe ? " (you)" : ""}{" "}
+            <span style={{ color: "#666", fontSize: 12, textTransform: "capitalize" }}>({node.role})</span>
+            {node.email && (
+              <span style={{ color: "#666", fontSize: 12, marginLeft: 8 }}>{node.email}</span>
+            )}
+          </span>
+          <span style={{ color: "#666", fontSize: 12 }}>Joined {formatDate(node.created_at)}</span>
+        </div>
+        <div style={{ color: "#9a9a9a", fontSize: 13, marginTop: 4 }}>
+          {node.familiesProtected} protected · {formatCurrency(node.submittedBusiness)} submitted ·{" "}
+          {formatCurrency(node.totalMonthlyPremium)}/mo · {formatCurrency(node.pendingPayout)} pending ·{" "}
+          {formatCurrency(node.paidPayout)} paid
+        </div>
       </div>
       {node.children.map((child) => (
-        <DownlineNode key={child.id} node={child} depth={depth + 1} />
+        <HierarchyNode key={child.id} node={child} depth={depth + 1} meId={meId} />
       ))}
     </div>
   );
@@ -60,6 +166,7 @@ export default function TeamPage() {
   const [loadError, setLoadError] = useState("");
   const [inviteLink, setInviteLink] = useState("");
   const [message, setMessage] = useState("");
+  const [treeScope, setTreeScope] = useState("oneLevelUp"); // oneLevelUp | company
 
   useEffect(() => {
     fetch("/api/team/downline")
@@ -85,6 +192,32 @@ export default function TeamPage() {
     fetch("/api/team/status", { method: "POST" }).catch(() => {});
   }
 
+  const hierarchyRoots = useMemo(() => {
+    if (!data) return [];
+    const byId = Object.fromEntries(data.people.map((p) => [p.id, p]));
+    const childrenOf = {};
+    for (const p of data.people) {
+      if (p.invited_by && byId[p.invited_by]) (childrenOf[p.invited_by] ||= []).push(p);
+    }
+    function buildTree(id) {
+      return (childrenOf[id] || [])
+        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+        .map((p) => ({ ...p, children: buildTree(p.id) }));
+    }
+
+    if (treeScope === "company") {
+      return data.people
+        .filter((p) => !p.invited_by || !byId[p.invited_by])
+        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+        .map((p) => ({ ...p, children: buildTree(p.id) }));
+    }
+
+    // One level up: root at my upline (or myself, if I have none).
+    const rootId = data.upline?.id || data.me.id;
+    const root = byId[rootId];
+    return root ? [{ ...root, children: buildTree(rootId) }] : [];
+  }, [data, treeScope]);
+
   if (loadError) return <p className="error">{loadError}</p>;
   if (!data) return <p>Loading...</p>;
 
@@ -93,7 +226,7 @@ export default function TeamPage() {
   return (
     <div>
       <h1>My Team</h1>
-      <p className="subtitle">See who invited you, and everyone you've personally brought in.</p>
+      <p className="subtitle">See who invited you, everyone you've personally brought in, and how the whole team is doing.</p>
 
       {message && <p className="success">{message}</p>}
 
@@ -142,13 +275,54 @@ export default function TeamPage() {
       </div>
 
       <div className="card">
-        <h3>Your Downline ({totalDownline})</h3>
-        {data.downline.length === 0 ? (
-          <p className="subtitle" style={{ marginBottom: 0 }}>
-            Nobody yet. Share your invite link above to start building your downline.
-          </p>
+        <h3>Team Leaderboard ({data.people.length})</h3>
+        <p className="subtitle" style={{ marginBottom: 8 }}>
+          Everyone in the company, ranked by whatever column you click. Your row is highlighted.
+        </p>
+        <Leaderboard people={data.people} meId={data.me.id} />
+      </div>
+
+      <div className="card">
+        <div className="row" style={{ marginBottom: 8 }}>
+          <h3 style={{ margin: 0 }}>Team Hierarchy</h3>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              type="button"
+              onClick={() => setTreeScope("oneLevelUp")}
+              style={{
+                width: "auto",
+                marginBottom: 0,
+                background: treeScope === "oneLevelUp" ? "#c9a227" : "#232323",
+                color: treeScope === "oneLevelUp" ? "#0e0e0f" : "#9a9a9a",
+              }}
+            >
+              One Level Up
+            </button>
+            <button
+              type="button"
+              onClick={() => setTreeScope("company")}
+              style={{
+                width: "auto",
+                marginBottom: 0,
+                background: treeScope === "company" ? "#c9a227" : "#232323",
+                color: treeScope === "company" ? "#0e0e0f" : "#9a9a9a",
+              }}
+            >
+              Whole Company
+            </button>
+          </div>
+        </div>
+        <p className="subtitle" style={{ marginBottom: 8 }}>
+          {treeScope === "oneLevelUp"
+            ? "Your upline, everyone else who shares that upline, and their downlines."
+            : "The full company org chart, from the top down."}
+        </p>
+        {hierarchyRoots.length === 0 ? (
+          <p className="subtitle" style={{ marginBottom: 0 }}>Nobody to show yet.</p>
         ) : (
-          data.downline.map((node) => <DownlineNode key={node.id} node={node} depth={0} />)
+          hierarchyRoots.map((node) => (
+            <HierarchyNode key={node.id} node={node} depth={0} meId={data.me.id} />
+          ))
         )}
       </div>
     </div>
