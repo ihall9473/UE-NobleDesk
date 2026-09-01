@@ -16,7 +16,9 @@ const BASE_LINKS = [
         { href: "/occasions", label: "Occasions" },
       ]
     : []),
+  { href: "/dashboard", label: "Book of Business" },
   { href: "/carriers", label: "Carriers" },
+  { href: "/licensing", label: "Licensing" },
   { href: "/settings", label: "Settings" },
   { href: "/admin", label: "Admin" },
 ];

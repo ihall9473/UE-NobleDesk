@@ -301,6 +301,26 @@ create policy "Users manage their own comp rates" on carrier_comp_rates
 -- Already deployed this app before comp rates existed? Just run the
 -- create table + policy statements above by themselves.
 
+-- Which states each agent is currently licensed/appointed in. A row's
+-- existence means "licensed" - there's nothing else to store per state
+-- yet (renewal dates etc. can be added later), so no boolean column.
+create table if not exists licensed_states (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid references profiles(id) on delete cascade,
+  state text not null,
+  created_at timestamptz default now(),
+  unique (owner_id, state)
+);
+
+alter table licensed_states enable row level security;
+
+drop policy if exists "Users manage their own licensed states" on licensed_states;
+create policy "Users manage their own licensed states" on licensed_states
+  for all using (auth.uid() = owner_id);
+
+-- Already deployed this app before licensed_states existed? Just run
+-- the create table + policy statements above by themselves.
+
 -- Birthday/holiday/policy-anniversary auto-texts, configured on the
 -- Occasions page. `kind` drives how the date is resolved each year:
 -- 'fixed' (month+day), 'floating' (month+weekday+occurrence, e.g. "3rd
