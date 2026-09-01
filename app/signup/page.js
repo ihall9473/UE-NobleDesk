@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabaseBrowser";
 import { TEXTING_ENABLED, APP_NAME } from "@/lib/features";
@@ -14,12 +14,20 @@ export default function SignupPage() {
 
 function SignupForm() {
   const params = useSearchParams();
+  const ref = params.get("ref") || "";
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [inviteCode, setInviteCode] = useState(params.get("code") || "");
+  const [referrerName, setReferrerName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!ref) return;
+    fetch(`/api/signup?ref=${encodeURIComponent(ref)}`)
+      .then((r) => r.json())
+      .then((d) => setReferrerName(d.referrer || ""));
+  }, [ref]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -29,7 +37,7 @@ function SignupForm() {
     const res = await fetch("/api/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password, inviteCode }),
+      body: JSON.stringify({ name, email, password, ref }),
     });
     const data = await res.json();
 
@@ -53,6 +61,9 @@ function SignupForm() {
   return (
     <div style={{ maxWidth: 360, margin: "60px auto" }}>
       <h1>Create your {APP_NAME} account</h1>
+      {referrerName && (
+        <p className="subtitle">You were invited by <strong>{referrerName}</strong>.</p>
+      )}
       {TEXTING_ENABLED && (
         <p className="subtitle">
           You'll set up your own Twilio texting number in the next step, billed to you directly.
@@ -68,12 +79,6 @@ function SignupForm() {
           placeholder="Password (8+ characters)"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <input
-          placeholder="Invite code"
-          value={inviteCode}
-          onChange={(e) => setInviteCode(e.target.value)}
           required
         />
         <button type="submit" disabled={loading}>{loading ? "Creating account..." : "Create Account"}</button>

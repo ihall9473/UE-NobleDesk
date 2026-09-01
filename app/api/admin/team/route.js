@@ -76,7 +76,6 @@ export async function GET() {
   return NextResponse.json({
     team,
     myRole: check.profile.role,
-    inviteCode: process.env.APP_INVITE_CODE || "UpperEchelon",
   });
 }
 
@@ -111,6 +110,7 @@ export async function POST(req) {
     id: created.user.id,
     name,
     role: requestedRole,
+    invited_by: check.profile.id,
   });
 
   if (profileErr) return NextResponse.json({ error: profileErr.message }, { status: 500 });

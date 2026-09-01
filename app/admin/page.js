@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { formatDateTime } from "@/lib/formatDate";
+import { TEXTING_ENABLED } from "@/lib/features";
 
 export default function AdminPage() {
   const [team, setTeam] = useState(null);
@@ -11,7 +12,6 @@ export default function AdminPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [inviteLink, setInviteLink] = useState("");
-  const [inviteCode, setInviteCode] = useState("");
   const [suggestions, setSuggestions] = useState(null);
 
   const isAdmin = myRole === "admin";
@@ -25,7 +25,6 @@ export default function AdminPage() {
     const data = await res.json();
     setTeam(data.team || []);
     setMyRole(data.myRole);
-    setInviteCode(data.inviteCode || "");
   }
 
   async function loadSuggestions() {
@@ -45,7 +44,7 @@ export default function AdminPage() {
 
   async function copyLink() {
     await navigator.clipboard.writeText(inviteLink);
-    setMessage("Invite link copied. Send it along with your invite code.");
+    setMessage("Invite link copied.");
   }
 
   async function addCoworker(e) {
@@ -112,27 +111,15 @@ export default function AdminPage() {
       )}
 
       <div className="card">
-        <h3>Invite link (self-serve)</h3>
+        <h3>Signup link (open to anyone)</h3>
         <p className="subtitle" style={{ marginBottom: 8 }}>
-          Send this link plus your invite code to coworkers. They create their own login and
-          connect their own Twilio account and number — nothing for you to set up per person.
+          Anyone with this link can create their own account - no invite code needed. For a link
+          that also adds someone to your own downline, use "Invite Downline" on the My Team page
+          instead.
         </p>
         <div className="row">
           <code style={{ fontSize: 13 }}>{inviteLink}</code>
           <button onClick={copyLink}>Copy Link</button>
-        </div>
-        <div className="row" style={{ marginTop: 8 }}>
-          <label className="subtitle" style={{ marginRight: 8 }}>Invite code:</label>
-          <code style={{ fontSize: 13 }}>{inviteCode}</code>
-          <button
-            type="button"
-            onClick={() => {
-              navigator.clipboard.writeText(inviteCode);
-              setMessage("Invite code copied.");
-            }}
-          >
-            Copy Code
-          </button>
         </div>
       </div>
 
@@ -156,38 +143,46 @@ export default function AdminPage() {
 
       <h3>Team ({team ? team.length : 0})</h3>
       {team === null && <p>Loading...</p>}
-      {team && team.map((member) => (
-        <div className="card" key={member.id}>
-          <div className="row">
-            <strong>{member.name}</strong>
-            {isAdmin ? (
-              <select
-                value={member.role}
-                onChange={(e) => updateRole(member.id, e.target.value)}
-                style={{ width: "auto", marginBottom: 0 }}
-              >
-                <option value="agent">Agent</option>
-                <option value="manager">Manager</option>
-                <option value="admin">Admin</option>
-              </select>
-            ) : (
-              <span style={{ color: "#666", fontSize: 14, textTransform: "capitalize" }}>{member.role}</span>
+      {team && team.map((member) => {
+        const inviter = team.find((t) => t.id === member.invited_by);
+        return (
+          <div className="card" key={member.id}>
+            <div className="row">
+              <strong>{member.name}</strong>
+              {isAdmin ? (
+                <select
+                  value={member.role}
+                  onChange={(e) => updateRole(member.id, e.target.value)}
+                  style={{ width: "auto", marginBottom: 0 }}
+                >
+                  <option value="agent">Agent</option>
+                  <option value="manager">Manager</option>
+                  <option value="admin">Admin</option>
+                </select>
+              ) : (
+                <span style={{ color: "#666", fontSize: 14, textTransform: "capitalize" }}>{member.role}</span>
+              )}
+            </div>
+            {TEXTING_ENABLED && (
+              <div style={{ color: "#666", fontSize: 13, marginTop: 6 }}>
+                {member.twilio_number ? (
+                  <span>Number: {member.twilio_number}</span>
+                ) : (
+                  <span style={{ color: "#b45309" }}>No number set up yet</span>
+                )}
+              </div>
             )}
+            <div style={{ color: "#666", fontSize: 13, marginTop: 2 }}>
+              {member.contactCount} contact{member.contactCount === 1 ? "" : "s"} ·{" "}
+              {member.messageCount} message{member.messageCount === 1 ? "" : "s"} ·{" "}
+              {member.responseRate === null ? "no texts sent yet" : `${member.responseRate}% response rate`}
+            </div>
+            <div style={{ color: "#666", fontSize: 13, marginTop: 2 }}>
+              {inviter ? `Invited by ${inviter.name}` : "No inviter on record"}
+            </div>
           </div>
-          <div style={{ color: "#666", fontSize: 13, marginTop: 6 }}>
-            {member.twilio_number ? (
-              <span>Number: {member.twilio_number}</span>
-            ) : (
-              <span style={{ color: "#b45309" }}>No number set up yet</span>
-            )}
-          </div>
-          <div style={{ color: "#666", fontSize: 13, marginTop: 2 }}>
-            {member.contactCount} contact{member.contactCount === 1 ? "" : "s"} ·{" "}
-            {member.messageCount} message{member.messageCount === 1 ? "" : "s"} ·{" "}
-            {member.responseRate === null ? "no texts sent yet" : `${member.responseRate}% response rate`}
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
