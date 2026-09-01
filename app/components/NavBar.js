@@ -26,6 +26,7 @@ export default function NavBar() {
   if (
     pathname === "/login" ||
     pathname.startsWith("/signup") ||
+    pathname.startsWith("/set-password") ||
     pathname.startsWith("/privacy") ||
     pathname.startsWith("/terms") ||
     pathname.startsWith("/request-info")
