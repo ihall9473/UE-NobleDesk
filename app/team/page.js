@@ -36,7 +36,9 @@ export default function TeamPage() {
 
   useEffect(() => {
     if (data?.me?.id && typeof window !== "undefined") {
-      setInviteLink(`${window.location.origin}/signup?ref=${data.me.id}`);
+      setInviteLink(
+        `${window.location.origin}/signup?ref=${data.me.id}&code=${encodeURIComponent(data.inviteCode || "")}`
+      );
     }
   }, [data]);
 
@@ -59,7 +61,8 @@ export default function TeamPage() {
       <div className="card">
         <h3>Invite Downline</h3>
         <p className="subtitle" style={{ marginBottom: 8 }}>
-          Share your personal link. Anyone who signs up through it is added to your downline.
+          Share your personal link - it already includes the invite code, so whoever signs up
+          through it is added straight to your downline.
         </p>
         <div className="row">
           <code style={{ fontSize: 13, wordBreak: "break-all" }}>{inviteLink}</code>

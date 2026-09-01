@@ -76,6 +76,7 @@ export async function GET() {
   return NextResponse.json({
     team,
     myRole: check.profile.role,
+    inviteCode: process.env.APP_INVITE_CODE || "UpperEchelon",
   });
 }
 

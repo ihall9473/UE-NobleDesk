@@ -18,6 +18,7 @@ function SignupForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [inviteCode, setInviteCode] = useState(params.get("code") || "");
   const [referrerName, setReferrerName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,7 +38,7 @@ function SignupForm() {
     const res = await fetch("/api/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password, ref }),
+      body: JSON.stringify({ name, email, password, inviteCode, ref }),
     });
     const data = await res.json();
 
@@ -79,6 +80,12 @@ function SignupForm() {
           placeholder="Password (8+ characters)"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <input
+          placeholder="Invite code"
+          value={inviteCode}
+          onChange={(e) => setInviteCode(e.target.value)}
           required
         />
         <button type="submit" disabled={loading}>{loading ? "Creating account..." : "Create Account"}</button>

@@ -39,5 +39,6 @@ export async function GET() {
     me: me ? { id: me.id, name: me.name, role: me.role } : { id: user.id, name: "", role: "agent" },
     upline: upline ? { id: upline.id, name: upline.name, role: upline.role } : null,
     downline: buildTree(user.id),
+    inviteCode: process.env.APP_INVITE_CODE || "UpperEchelon",
   });
 }

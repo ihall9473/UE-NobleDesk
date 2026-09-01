@@ -12,10 +12,14 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  const { name, email, password, ref } = await req.json();
+  const { name, email, password, inviteCode, ref } = await req.json();
 
-  if (!name || !email || !password) {
+  if (!name || !email || !password || !inviteCode) {
     return NextResponse.json({ error: "All fields are required" }, { status: 400 });
+  }
+
+  if (inviteCode !== (process.env.APP_INVITE_CODE || "UpperEchelon")) {
+    return NextResponse.json({ error: "That invite code isn't valid." }, { status: 403 });
   }
 
   if (password.length < 8) {

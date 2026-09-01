@@ -12,6 +12,7 @@ export default function AdminPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [inviteLink, setInviteLink] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
   const [suggestions, setSuggestions] = useState(null);
 
   const isAdmin = myRole === "admin";
@@ -25,6 +26,7 @@ export default function AdminPage() {
     const data = await res.json();
     setTeam(data.team || []);
     setMyRole(data.myRole);
+    setInviteCode(data.inviteCode || "");
   }
 
   async function loadSuggestions() {
@@ -44,7 +46,7 @@ export default function AdminPage() {
 
   async function copyLink() {
     await navigator.clipboard.writeText(inviteLink);
-    setMessage("Invite link copied.");
+    setMessage("Invite link copied. Send it along with your invite code.");
   }
 
   async function addCoworker(e) {
@@ -111,15 +113,28 @@ export default function AdminPage() {
       )}
 
       <div className="card">
-        <h3>Signup link (open to anyone)</h3>
+        <h3>Invite link (self-serve)</h3>
         <p className="subtitle" style={{ marginBottom: 8 }}>
-          Anyone with this link can create their own account - no invite code needed. For a link
-          that also adds someone to your own downline, use "Invite Downline" on the My Team page
-          instead.
+          Send this link plus your invite code to coworkers. They create their own login and pick
+          it up from there. For a link that also adds someone to your own downline, use "Invite
+          Downline" on the My Team page instead - it has the code built in already.
         </p>
         <div className="row">
           <code style={{ fontSize: 13 }}>{inviteLink}</code>
           <button onClick={copyLink}>Copy Link</button>
+        </div>
+        <div className="row" style={{ marginTop: 8 }}>
+          <label className="subtitle" style={{ marginRight: 8 }}>Invite code:</label>
+          <code style={{ fontSize: 13 }}>{inviteCode}</code>
+          <button
+            type="button"
+            onClick={() => {
+              navigator.clipboard.writeText(inviteCode);
+              setMessage("Invite code copied.");
+            }}
+          >
+            Copy Code
+          </button>
         </div>
       </div>
 
