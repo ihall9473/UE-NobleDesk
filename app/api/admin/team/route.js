@@ -8,7 +8,11 @@ async function requireStaff() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Not logged in", status: 401 };
 
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+  const { data: profile, error } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+  // A real DB error (e.g. a permissions/grants problem) looks identical to
+  // "not staff" unless surfaced explicitly - that ambiguity is exactly what
+  // made this so hard to diagnose once, so it gets its own distinct message.
+  if (error) return { error: `Couldn't check your access: ${error.message}`, status: 500 };
   if (profile?.role !== "admin" && profile?.role !== "manager") {
     return { error: "Admins and managers only", status: 403 };
   }

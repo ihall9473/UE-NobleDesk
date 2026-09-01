@@ -14,6 +14,7 @@ export default function AdminPage() {
   const [inviteLink, setInviteLink] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [suggestions, setSuggestions] = useState(null);
+  const [loadError, setLoadError] = useState("");
 
   const isAdmin = myRole === "admin";
 
@@ -24,6 +25,10 @@ export default function AdminPage() {
       return;
     }
     const data = await res.json();
+    if (!res.ok) {
+      setLoadError(data.error || "Something went wrong loading the team.");
+      return;
+    }
     setTeam(data.team || []);
     setMyRole(data.myRole);
     setInviteCode(data.inviteCode || "");
@@ -84,6 +89,10 @@ export default function AdminPage() {
 
   if (team === "forbidden") {
     return <p>This page is for admins and managers only.</p>;
+  }
+
+  if (loadError) {
+    return <p className="error">{loadError}</p>;
   }
 
   return (
