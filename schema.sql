@@ -416,3 +416,97 @@ create index if not exists profiles_invited_by_idx on profiles(invited_by);
 -- true (managers/admins always see it), so the nav doesn't clutter up
 -- for agents who aren't building a downline.
 alter table profiles add column if not exists has_invited boolean not null default false;
+
+-- Follow-up to-dos, optionally tied to a lead or client (contact_id null
+-- means a general task with nothing to link to). Powers the Tasks page and
+-- quick "call back in 3 days" reminders.
+create table if not exists tasks (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid references profiles(id) on delete cascade,
+  contact_id uuid references contacts(id) on delete cascade,
+  title text not null,
+  due_date date,
+  completed boolean not null default false,
+  completed_at timestamptz,
+  created_at timestamptz default now()
+);
+
+create index if not exists tasks_owner_id_idx on tasks(owner_id);
+create index if not exists tasks_contact_id_idx on tasks(contact_id);
+
+alter table tasks enable row level security;
+
+drop policy if exists "Users manage their own tasks" on tasks;
+create policy "Users manage their own tasks" on tasks
+  for all using (auth.uid() = owner_id);
+
+-- Manually-logged activity (calls, meetings, notes, life events) on a
+-- contact - kept separate from `messages`, which is only actual SMS
+-- history, so the timeline can show the whole relationship, not just texts.
+create table if not exists activity_log (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid references profiles(id) on delete cascade,
+  contact_id uuid references contacts(id) on delete cascade,
+  kind text not null default 'note' check (kind in ('note', 'call', 'meeting', 'life_event')),
+  body text not null,
+  created_at timestamptz default now()
+);
+
+create index if not exists activity_log_contact_id_idx on activity_log(contact_id);
+
+alter table activity_log enable row level security;
+
+drop policy if exists "Users manage their own activity log" on activity_log;
+create policy "Users manage their own activity log" on activity_log
+  for all using (auth.uid() = owner_id);
+
+-- Which stage of the sales process a lead is in. Kept on `contacts` (not
+-- just leads) so the stage history survives conversion to a client. Every
+-- new contact starts at 'new', regardless of type.
+alter table contacts add column if not exists pipeline_stage text not null default 'new'
+  check (pipeline_stage in ('new', 'contacted', 'quoted', 'applied', 'issued'));
+
+-- A reusable automated text sequence for nurturing cold leads. `steps` is
+-- an ordered jsonb array of { delayDays, message }, where delayDays counts
+-- from the PREVIOUS step (0 = send immediately on enrollment).
+create table if not exists drip_sequences (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid references profiles(id) on delete cascade,
+  name text not null,
+  steps jsonb not null default '[]'::jsonb,
+  created_at timestamptz default now()
+);
+
+alter table drip_sequences enable row level security;
+
+drop policy if exists "Users manage their own drip sequences" on drip_sequences;
+create policy "Users manage their own drip sequences" on drip_sequences
+  for all using (auth.uid() = owner_id);
+
+-- One row per contact enrolled in a sequence. current_step counts how many
+-- steps have already been sent; next_send_date is compared as a plain date
+-- (like occasion_sends) so the daily cron can find who's due today.
+create table if not exists drip_enrollments (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid references profiles(id) on delete cascade,
+  sequence_id uuid references drip_sequences(id) on delete cascade,
+  contact_id uuid references contacts(id) on delete cascade,
+  current_step integer not null default 0,
+  next_send_date date not null default current_date,
+  active boolean not null default true,
+  created_at timestamptz default now(),
+  unique (sequence_id, contact_id)
+);
+
+create index if not exists drip_enrollments_due_idx on drip_enrollments(active, next_send_date);
+
+alter table drip_enrollments enable row level security;
+
+drop policy if exists "Users manage their own drip enrollments" on drip_enrollments;
+create policy "Users manage their own drip enrollments" on drip_enrollments
+  for all using (auth.uid() = owner_id);
+
+-- When beneficiaries were last confirmed as up to date for this client -
+-- drives the "review beneficiaries" reminder on the Alerts page. Null means
+-- never confirmed.
+alter table client_details add column if not exists beneficiaries_reviewed_at date;

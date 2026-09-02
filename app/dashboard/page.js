@@ -30,6 +30,14 @@ export default function DashboardPage() {
   const averagePolicySize = policiesWithCoverage > 0 ? totalDeathBenefit / policiesWithCoverage : 0;
   const notInForceCount = clients.length - inForce.length;
 
+  // Persistency rate: of everything ever actually placed (has a carrier),
+  // what fraction is still in force? A retention health check, separate
+  // from the in-force valuation above. Scoped to placed policies only, so
+  // a brand-new client with no carrier entered yet doesn't skew the ratio.
+  const placedPolicies = clients.filter((c) => c.client_details?.carrier);
+  const placedAndInForce = placedPolicies.filter((c) => (c.client_details?.policy_status || "active") === "active");
+  const persistencyRate = placedPolicies.length > 0 ? (placedAndInForce.length / placedPolicies.length) * 100 : null;
+
   return (
     <div>
       <h1>Book of Business</h1>
@@ -55,6 +63,12 @@ export default function DashboardPage() {
           <div>
             <div style={{ fontSize: 28, fontWeight: 700 }}>{formatCurrency(averagePolicySize)}</div>
             <div className="subtitle" style={{ marginBottom: 0 }}>Average Policy Size</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 28, fontWeight: 700 }}>
+              {persistencyRate === null ? "—" : `${persistencyRate.toFixed(1)}%`}
+            </div>
+            <div className="subtitle" style={{ marginBottom: 0 }}>Persistency Rate</div>
           </div>
         </div>
       </div>

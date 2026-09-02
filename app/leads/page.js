@@ -2,6 +2,8 @@
 import { useEffect, useState, useRef } from "react";
 import { US_STATES } from "@/lib/usStates";
 import { inferStateFromPhone } from "@/lib/areaCodeToState";
+import { PIPELINE_STAGE_LABELS } from "@/lib/pipelineStages";
+import { TEXTING_ENABLED } from "@/lib/features";
 import UndoToast from "@/app/components/UndoToast";
 
 const STALE_DAYS = 7;
@@ -238,7 +240,17 @@ export default function LeadsPage() {
   return (
     <div>
       <h1>Leads</h1>
-      <p className="subtitle">Add or remove leads, or bring in a whole lead pack at once.</p>
+      <p className="subtitle">
+        Add or remove leads, or bring in a whole lead pack at once. See stages on the{" "}
+        <a href="/pipeline" style={{ color: "#c9a227" }}>Pipeline</a> board
+        {TEXTING_ENABLED && (
+          <>
+            , or nurture cold leads with{" "}
+            <a href="/drip-campaigns" style={{ color: "#c9a227" }}>Drip Campaigns</a>
+          </>
+        )}
+        .
+      </p>
 
       {message && <p className="success">{message}</p>}
 
@@ -340,7 +352,15 @@ export default function LeadsPage() {
                 onChange={() => toggleSelected(c.id)}
               />
               <div>
-                <strong>{c.name}</strong>{" "}
+                <a href={`/clients/${c.id}`} style={{ color: "inherit", textDecoration: "none" }}>
+                  <strong>{c.name}</strong>
+                </a>{" "}
+                <span
+                  className="badge"
+                  title="Pipeline stage - change it on the Pipeline page"
+                >
+                  {PIPELINE_STAGE_LABELS[c.pipeline_stage] || "New"}
+                </span>{" "}
                 {displayState && (
                   <span
                     style={{

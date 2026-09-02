@@ -44,6 +44,19 @@ export async function PATCH(req, { params }) {
   const { contactId } = params;
   const body = await req.json();
 
+  // Quick "mark beneficiaries as reviewed" action from the Alerts page -
+  // a narrow update, not the full-form upsert below (which would need
+  // every other field re-sent or it'd null them out).
+  if (body.markBeneficiariesReviewed) {
+    const { error } = await supabase
+      .from("client_details")
+      .update({ beneficiaries_reviewed_at: new Date().toISOString().slice(0, 10) })
+      .eq("contact_id", contactId)
+      .eq("owner_id", user.id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: true });
+  }
+
   // Restoring a soft-deleted client (undo) - nothing else to do since
   // client_details was never touched.
   if (body.restore) {

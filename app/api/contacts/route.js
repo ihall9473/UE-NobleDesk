@@ -82,7 +82,7 @@ export async function PATCH(req) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not logged in" }, { status: 401 });
 
-  const { id, ids, type, state, restore } = await req.json();
+  const { id, ids, type, state, restore, pipelineStage } = await req.json();
   const targetIds = ids && ids.length > 0 ? ids : id ? [id] : [];
   if (targetIds.length === 0) {
     return NextResponse.json({ error: "id or ids is required" }, { status: 400 });
@@ -97,6 +97,13 @@ export async function PATCH(req) {
   }
   if (state !== undefined) update.state = state || null;
   if (restore) update.deleted_at = null;
+  if (pipelineStage !== undefined) {
+    const validStages = ["new", "contacted", "quoted", "applied", "issued"];
+    if (!validStages.includes(pipelineStage)) {
+      return NextResponse.json({ error: "Invalid pipeline stage" }, { status: 400 });
+    }
+    update.pipeline_stage = pipelineStage;
+  }
 
   const { error } = await supabase
     .from("contacts")
