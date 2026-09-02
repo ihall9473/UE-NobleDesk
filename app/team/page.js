@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { formatDate } from "@/lib/formatDate";
 import { formatCurrency } from "@/lib/formatCurrency";
+import { DATE_PRESETS, getDateRange } from "@/lib/dateRanges";
 
 function countAll(nodes) {
   return nodes.reduce((sum, n) => sum + 1 + countAll(n.children), 0);
@@ -41,11 +42,9 @@ function ProductionStats({ production, payoutLabel }) {
 const LEADERBOARD_COLUMNS = [
   { key: "name", label: "Name", numeric: false },
   { key: "role", label: "Role", numeric: false },
-  { key: "familiesProtected", label: "Families Protected", numeric: true },
+  { key: "familiesProtected", label: "Total Deals", numeric: true },
   { key: "submittedBusiness", label: "Submitted Business", numeric: true, money: true },
   { key: "totalMonthlyPremium", label: "Monthly Premium", numeric: true, money: true },
-  { key: "pendingPayout", label: "Pending Payout", numeric: true, money: true },
-  { key: "paidPayout", label: "Paid Payout", numeric: true, money: true },
 ];
 
 function Leaderboard({ people, meId }) {
@@ -116,8 +115,6 @@ function Leaderboard({ people, meId }) {
               <td style={{ padding: "6px 10px", textAlign: "right" }}>{p.familiesProtected}</td>
               <td style={{ padding: "6px 10px", textAlign: "right" }}>{formatCurrency(p.submittedBusiness)}</td>
               <td style={{ padding: "6px 10px", textAlign: "right" }}>{formatCurrency(p.totalMonthlyPremium)}</td>
-              <td style={{ padding: "6px 10px", textAlign: "right", color: "var(--gold)" }}>{formatCurrency(p.pendingPayout)}</td>
-              <td style={{ padding: "6px 10px", textAlign: "right" }}>{formatCurrency(p.paidPayout)}</td>
             </tr>
           ))}
         </tbody>
@@ -167,16 +164,27 @@ export default function TeamPage() {
   const [inviteLink, setInviteLink] = useState("");
   const [message, setMessage] = useState("");
   const [treeScope, setTreeScope] = useState("oneLevelUp"); // oneLevelUp | company
+  const [datePreset, setDatePreset] = useState("all");
+  const [customDate, setCustomDate] = useState("");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
 
   useEffect(() => {
-    fetch("/api/team/downline")
+    const range = getDateRange(datePreset, customDate, customStart, customEnd);
+    const params = new URLSearchParams();
+    if (range) {
+      params.set("start", range.start);
+      params.set("end", range.end);
+    }
+    const qs = params.toString();
+    fetch(`/api/team/downline${qs ? `?${qs}` : ""}`)
       .then((r) => r.json())
       .then((d) => {
         if (d.error) setLoadError(d.error);
         else setData(d);
       })
       .catch(() => setLoadError("Something went wrong loading your team."));
-  }, []);
+  }, [datePreset, customDate, customStart, customEnd]);
 
   useEffect(() => {
     if (data?.me?.id && typeof window !== "undefined") {
@@ -279,7 +287,39 @@ export default function TeamPage() {
         <p className="subtitle" style={{ marginBottom: 8 }}>
           Everyone in the company, ranked by whatever column you click. Your row is highlighted.
         </p>
-        <Leaderboard people={data.people} meId={data.me.id} />
+
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+          <div style={{ flex: 1, minWidth: 160 }}>
+            <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>
+              Date Range
+            </label>
+            <select value={datePreset} onChange={(e) => setDatePreset(e.target.value)} style={{ marginBottom: 0 }}>
+              {DATE_PRESETS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {datePreset === "customDate" && (
+          <div style={{ marginBottom: 10 }}>
+            <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Date</label>
+            <input type="date" value={customDate} onChange={(e) => setCustomDate(e.target.value)} style={{ marginBottom: 0 }} />
+          </div>
+        )}
+
+        {datePreset === "customRange" && (
+          <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+            <div style={{ flex: 1 }}>
+              <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>From</label>
+              <input type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)} style={{ marginBottom: 0 }} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>To</label>
+              <input type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} style={{ marginBottom: 0 }} />
+            </div>
+          </div>
+        )}
+
+        <Leaderboard people={data.leaderboardPeople} meId={data.me.id} />
       </div>
 
       <div className="card">

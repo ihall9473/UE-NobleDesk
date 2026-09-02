@@ -11,10 +11,19 @@ const CARRIER_ID_BY_NAME = Object.fromEntries(CARRIERS.map((c) => [c.name.toLowe
 // expected payout (annual premium x each policy owner's own comp rate
 // for that carrier - a typo'd or "Other" carrier just contributes $0,
 // since there's no rate to match it to), split into pending vs already
-// paid, across whichever owner_ids are passed in.
-function productionTotals(clientDetails, compRatesByOwner, ownerIds) {
+// paid, across whichever owner_ids are passed in. An optional
+// { start, end } dateRange restricts this to policies whose application
+// was submitted in that window (rows with no submitted date are excluded
+// once a range is active), matching the filter used on the Clients page.
+function productionTotals(clientDetails, compRatesByOwner, ownerIds, dateRange) {
   const ids = new Set(ownerIds);
-  const rows = clientDetails.filter((c) => ids.has(c.owner_id));
+  let rows = clientDetails.filter((c) => ids.has(c.owner_id));
+  if (dateRange) {
+    rows = rows.filter((c) => {
+      const submitted = c.application_submitted_date;
+      return !!submitted && submitted >= dateRange.start && submitted <= dateRange.end;
+    });
+  }
   const totalMonthlyPremium = rows.reduce((sum, c) => sum + parseCurrency(c.monthly_premium), 0);
 
   function payoutFor(matchingRows) {
@@ -37,10 +46,18 @@ function productionTotals(clientDetails, compRatesByOwner, ownerIds) {
   };
 }
 
-export async function GET() {
+export async function GET(req) {
   const supabase = supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not logged in" }, { status: 401 });
+
+  // Leaderboard date-range filter, e.g. /api/team/downline?start=2026-01-01&end=2026-01-31.
+  // Only affects the leaderboard - upline/downline production and the
+  // hierarchy tree stay all-time.
+  const { searchParams } = new URL(req.url);
+  const rangeStart = searchParams.get("start");
+  const rangeEnd = searchParams.get("end");
+  const leaderboardRange = rangeStart && rangeEnd ? { start: rangeStart, end: rangeEnd } : null;
 
   // Regular RLS only lets someone see their own profile row, so this needs
   // the admin client. The team hierarchy/leaderboard is company-wide by
@@ -83,7 +100,10 @@ export async function GET() {
   const allIds = all.map((p) => p.id);
 
   const [{ data: clientDetails, error: cdError }, { data: compRateRows, error: compError }] = await Promise.all([
-    supabaseAdmin.from("client_details").select("owner_id, carrier, monthly_premium, commission_status").in("owner_id", allIds),
+    supabaseAdmin
+      .from("client_details")
+      .select("owner_id, carrier, monthly_premium, commission_status, application_submitted_date")
+      .in("owner_id", allIds),
     supabaseAdmin.from("carrier_comp_rates").select("owner_id, carrier_id, comp_percentage").in("owner_id", allIds),
   ]);
   if (cdError) return NextResponse.json({ error: cdError.message }, { status: 500 });
@@ -97,7 +117,7 @@ export async function GET() {
   }
 
   // Everyone in the company, each with their own individual production -
-  // the org tree/leaderboard is built from this on the frontend.
+  // the org tree is built from this (all-time) on the frontend.
   const people = all.map((p) => ({
     id: p.id,
     name: p.name,
@@ -105,7 +125,18 @@ export async function GET() {
     email: emailById[p.id] || "",
     invited_by: p.invited_by,
     created_at: p.created_at,
-    ...productionTotals(clientDetails, compRatesByOwner, [p.id]),
+    ...productionTotals(clientDetails, compRatesByOwner, [p.id], null),
+  }));
+
+  // Same shape, but honoring the leaderboard's date-range filter (if any).
+  const leaderboardPeople = all.map((p) => ({
+    id: p.id,
+    name: p.name,
+    role: p.role,
+    email: emailById[p.id] || "",
+    invited_by: p.invited_by,
+    created_at: p.created_at,
+    ...productionTotals(clientDetails, compRatesByOwner, [p.id], leaderboardRange),
   }));
 
   return NextResponse.json({
@@ -113,8 +144,9 @@ export async function GET() {
     upline: upline ? { id: upline.id, name: upline.name, role: upline.role } : null,
     downline,
     people,
+    leaderboardPeople,
     inviteCode: process.env.APP_INVITE_CODE || "UpperEchelon",
-    myProduction: productionTotals(clientDetails, compRatesByOwner, [user.id]),
-    downlineProduction: productionTotals(clientDetails, compRatesByOwner, downlineIds),
+    myProduction: productionTotals(clientDetails, compRatesByOwner, [user.id], null),
+    downlineProduction: productionTotals(clientDetails, compRatesByOwner, downlineIds, null),
   });
 }
