@@ -51,13 +51,14 @@ export async function GET(req) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not logged in" }, { status: 401 });
 
-  // Leaderboard date-range filter, e.g. /api/team/downline?start=2026-01-01&end=2026-01-31.
-  // Only affects the leaderboard - upline/downline production and the
-  // hierarchy tree stay all-time.
+  // Page-wide date-range filter, e.g. /api/team/downline?start=2026-01-01&end=2026-01-31.
+  // Applies to every submitted-business figure on the Team page (your
+  // production, downline production, leaderboard, hierarchy stats) - only
+  // the org structure itself (who's upline/downline of whom) stays as-is.
   const { searchParams } = new URL(req.url);
   const rangeStart = searchParams.get("start");
   const rangeEnd = searchParams.get("end");
-  const leaderboardRange = rangeStart && rangeEnd ? { start: rangeStart, end: rangeEnd } : null;
+  const dateRange = rangeStart && rangeEnd ? { start: rangeStart, end: rangeEnd } : null;
 
   // Regular RLS only lets someone see their own profile row, so this needs
   // the admin client. The team hierarchy/leaderboard is company-wide by
@@ -116,8 +117,9 @@ export async function GET(req) {
     (compRatesByOwner[r.owner_id] ||= {})[r.carrier_id] = r.comp_percentage;
   }
 
-  // Everyone in the company, each with their own individual production -
-  // the org tree is built from this (all-time) on the frontend.
+  // Everyone in the company, each with their own individual production
+  // (honoring the date-range filter, if any) - the org tree and leaderboard
+  // are both built from this on the frontend.
   const people = all.map((p) => ({
     id: p.id,
     name: p.name,
@@ -125,18 +127,7 @@ export async function GET(req) {
     email: emailById[p.id] || "",
     invited_by: p.invited_by,
     created_at: p.created_at,
-    ...productionTotals(clientDetails, compRatesByOwner, [p.id], null),
-  }));
-
-  // Same shape, but honoring the leaderboard's date-range filter (if any).
-  const leaderboardPeople = all.map((p) => ({
-    id: p.id,
-    name: p.name,
-    role: p.role,
-    email: emailById[p.id] || "",
-    invited_by: p.invited_by,
-    created_at: p.created_at,
-    ...productionTotals(clientDetails, compRatesByOwner, [p.id], leaderboardRange),
+    ...productionTotals(clientDetails, compRatesByOwner, [p.id], dateRange),
   }));
 
   return NextResponse.json({
@@ -144,9 +135,8 @@ export async function GET(req) {
     upline: upline ? { id: upline.id, name: upline.name, role: upline.role } : null,
     downline,
     people,
-    leaderboardPeople,
     inviteCode: process.env.APP_INVITE_CODE || "UpperEchelon",
-    myProduction: productionTotals(clientDetails, compRatesByOwner, [user.id], null),
-    downlineProduction: productionTotals(clientDetails, compRatesByOwner, downlineIds, null),
+    myProduction: productionTotals(clientDetails, compRatesByOwner, [user.id], dateRange),
+    downlineProduction: productionTotals(clientDetails, compRatesByOwner, downlineIds, dateRange),
   });
 }
