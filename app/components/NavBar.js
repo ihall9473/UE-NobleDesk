@@ -14,6 +14,7 @@ const NAV_GROUPS = [
     children: [
       { href: "/leads", label: "Leads" },
       { href: "/pipeline", label: "Pipeline" },
+      { href: "/quoter", label: "Quoter" },
     ],
   },
   {

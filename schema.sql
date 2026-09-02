@@ -510,3 +510,9 @@ create policy "Users manage their own drip enrollments" on drip_enrollments
 -- drives the "review beneficiaries" reminder on the Alerts page. Null means
 -- never confirmed.
 alter table client_details add column if not exists beneficiaries_reviewed_at date;
+
+-- Each agent's own Insurance Toolkits FEX Lite token (from their personal
+-- widget/link, e.g. insurancetoolkits.com/fex/lite-form/?token=...) - lets
+-- the Quoter page embed their own account's quoter, billed and licensed
+-- under their own Insurance Toolkits subscription.
+alter table profiles add column if not exists insurance_toolkits_token text;

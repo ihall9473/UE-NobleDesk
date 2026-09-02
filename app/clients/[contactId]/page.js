@@ -134,7 +134,12 @@ export default function ClientDetailPage() {
 
   return (
     <div>
-      <a href="/clients" style={{ color: "#c9a227" }}>&larr; Back to Clients</a>
+      <div className="row" style={{ marginBottom: 0 }}>
+        <a href="/clients" style={{ color: "#c9a227" }}>&larr; Back to Clients</a>
+        <a href="/quoter" target="_blank" rel="noopener noreferrer">
+          <button type="button" style={{ width: "auto", marginBottom: 0 }}>Open Quoter</button>
+        </a>
+      </div>
       <h1>{form.name}</h1>
       {message && <p className={message === "Saved." ? "success" : "error"}>{message}</p>}
 

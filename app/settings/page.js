@@ -1,10 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { TEXTING_ENABLED } from "@/lib/features";
-import FeatureDisabled from "@/app/components/FeatureDisabled";
 
 export default function SettingsPage() {
-  if (!TEXTING_ENABLED) return <FeatureDisabled />;
   return <SettingsPageInner />;
 }
 
@@ -15,6 +13,9 @@ function SettingsPageInner() {
   const [businessName, setBusinessName] = useState("");
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const [toolkitsInput, setToolkitsInput] = useState("");
+  const [savingToolkits, setSavingToolkits] = useState(false);
 
   const [personalPhone, setPersonalPhone] = useState("");
   const [smsAlertsEnabled, setSmsAlertsEnabled] = useState(false);
@@ -46,6 +47,7 @@ function SettingsPageInner() {
     setBusinessName(data.profile?.business_name || "");
     setPersonalPhone(data.profile?.personal_phone || "");
     setSmsAlertsEnabled(data.profile?.sms_alerts_enabled || false);
+    setToolkitsInput(data.profile?.insurance_toolkits_token || "");
   }
 
   async function loadTemplates() {
@@ -62,8 +64,10 @@ function SettingsPageInner() {
 
   useEffect(() => {
     load();
-    loadTemplates();
-    loadNumbers();
+    if (TEXTING_ENABLED) {
+      loadTemplates();
+      loadNumbers();
+    }
   }, []);
 
   async function addTemplate(e) {
@@ -212,6 +216,25 @@ function SettingsPageInner() {
     }
   }
 
+  async function saveToolkitsToken(e) {
+    e.preventDefault();
+    setSavingToolkits(true);
+    setMessage("");
+    const res = await fetch("/api/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ insuranceToolkitsToken: toolkitsInput }),
+    });
+    setSavingToolkits(false);
+    const data = await res.json();
+    if (res.ok) {
+      setMessage("Insurance Toolkits connected.");
+      load();
+    } else {
+      setMessage(data.error);
+    }
+  }
+
   async function saveAlerts(e) {
     e.preventDefault();
     setSavingAlerts(true);
@@ -237,11 +260,38 @@ function SettingsPageInner() {
     <div>
       <h1>Your Settings</h1>
       <p className="subtitle">
-        Connect your own Twilio account so your texting number and message costs are billed to you directly.
+        {TEXTING_ENABLED
+          ? "Connect your own Twilio account so your texting number and message costs are billed to you directly."
+          : "Connect the accounts NobleDesk uses on your behalf."}
       </p>
 
       {message && <p className="success">{message}</p>}
 
+      <div className="card">
+        <h3>Connect Insurance Toolkits</h3>
+        <p className="subtitle" style={{ marginBottom: 8 }}>
+          Powers the <a href="/quoter">Quoter</a> page with your own account's rates and carriers.
+          In Insurance Toolkits, open your FEX Lite widget page and paste either your personal
+          link or the widget HTML code below - either one works, we just need the token inside it.
+        </p>
+        <form onSubmit={saveToolkitsToken}>
+          <input
+            placeholder="Your FEX link or widget code from Insurance Toolkits"
+            value={toolkitsInput}
+            onChange={(e) => setToolkitsInput(e.target.value)}
+            autoComplete="off"
+          />
+          <button type="submit" disabled={savingToolkits}>{savingToolkits ? "Saving..." : "Save"}</button>
+        </form>
+        {profile.insurance_toolkits_token && (
+          <p className="subtitle" style={{ marginTop: 10, marginBottom: 0 }}>
+            Connected - your quoter is live on the <a href="/quoter">Quoter</a> page.
+          </p>
+        )}
+      </div>
+
+      {TEXTING_ENABLED && (
+      <>
       <div className="card">
         <h3>1. Connect your Twilio account</h3>
         <p className="subtitle" style={{ marginBottom: 8 }}>
@@ -549,6 +599,8 @@ function SettingsPageInner() {
           <button type="submit" disabled={savingTemplate}>{savingTemplate ? "Saving..." : "Save Template"}</button>
         </form>
       </div>
+      </>
+      )}
     </div>
   );
 }
