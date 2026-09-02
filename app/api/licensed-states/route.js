@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
+import { LICENSE_DOCUMENTS_BUCKET, licenseDocumentPath } from "@/lib/licenseDocuments";
 
 export async function GET() {
   const supabase = supabaseServer();
@@ -8,11 +9,19 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("licensed_states")
-    .select("state")
+    .select("state, document_name, document_uploaded_at")
     .eq("owner_id", user.id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ states: data.map((r) => r.state) });
+
+  const documents = {};
+  for (const row of data) {
+    if (row.document_name) {
+      documents[row.state] = { name: row.document_name, uploadedAt: row.document_uploaded_at };
+    }
+  }
+
+  return NextResponse.json({ states: data.map((r) => r.state), documents });
 }
 
 // Toggles a single state licensed/unlicensed - clicking a state on the map.
@@ -30,6 +39,11 @@ export async function PUT(req) {
       .upsert({ owner_id: user.id, state }, { onConflict: "owner_id,state" });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   } else {
+    // Unlicensing removes the row entirely, so any attached PDF would be
+    // orphaned in storage with nothing left pointing at it - clean it up
+    // too. Best-effort: a state with no document just has nothing to remove.
+    await supabase.storage.from(LICENSE_DOCUMENTS_BUCKET).remove([licenseDocumentPath(user.id, state)]);
+
     const { error } = await supabase
       .from("licensed_states")
       .delete()

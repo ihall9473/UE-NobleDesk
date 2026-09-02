@@ -516,3 +516,39 @@ alter table client_details add column if not exists beneficiaries_reviewed_at da
 -- the Quoter page embed their own account's quoter, billed and licensed
 -- under their own Insurance Toolkits subscription.
 alter table profiles add column if not exists insurance_toolkits_token text;
+
+-- The scanned license PDF for a state, if the agent has uploaded one -
+-- entirely optional, and independent of the licensed/not-licensed toggle
+-- itself. The actual file lives in Supabase Storage (bucket
+-- "license-documents", path "<owner_id>/<state>.pdf"); these columns are
+-- just metadata pointing at it.
+alter table licensed_states add column if not exists document_path text;
+alter table licensed_states add column if not exists document_name text;
+alter table licensed_states add column if not exists document_uploaded_at timestamptz;
+
+-- Private bucket for license PDFs - nothing in it is publicly readable,
+-- only reachable via a signed URL generated for the owning agent.
+insert into storage.buckets (id, name, public)
+values ('license-documents', 'license-documents', false)
+on conflict (id) do nothing;
+
+-- Objects are stored as "<owner_id>/<state>.pdf" - storage.foldername()
+-- returns every path segment except the filename, so element [1] is the
+-- owner_id, and this is the same "only your own rows" pattern as every
+-- other RLS policy in this file, just applied to storage.objects instead
+-- of a regular table.
+drop policy if exists "Users read their own license documents" on storage.objects;
+create policy "Users read their own license documents" on storage.objects
+  for select using (bucket_id = 'license-documents' and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "Users upload their own license documents" on storage.objects;
+create policy "Users upload their own license documents" on storage.objects
+  for insert with check (bucket_id = 'license-documents' and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "Users replace their own license documents" on storage.objects;
+create policy "Users replace their own license documents" on storage.objects
+  for update using (bucket_id = 'license-documents' and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "Users delete their own license documents" on storage.objects;
+create policy "Users delete their own license documents" on storage.objects
+  for delete using (bucket_id = 'license-documents' and (storage.foldername(name))[1] = auth.uid()::text);
