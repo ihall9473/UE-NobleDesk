@@ -15,16 +15,74 @@ const UNLICENSED_COLOR = "#3a3a3a";
 
 export default function LicensingPage() {
   const [licensed, setLicensed] = useState(null);
+  const [documents, setDocuments] = useState({}); // abbr -> { name, uploadedAt }
   const [hovered, setHovered] = useState(null); // abbr currently hovered
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [saving, setSaving] = useState("");
+  const [uploadTarget, setUploadTarget] = useState(null); // abbr the next file picked is for
+  const [uploading, setUploading] = useState("");
+  const [message, setMessage] = useState("");
   const containerRef = useRef(null);
+  const fileInputRef = useRef(null);
+
+  async function loadStates() {
+    const res = await fetch("/api/licensed-states");
+    const d = await res.json();
+    setLicensed(new Set(d.states || []));
+    setDocuments(d.documents || {});
+  }
 
   useEffect(() => {
-    fetch("/api/licensed-states")
-      .then((r) => r.json())
-      .then((d) => setLicensed(new Set(d.states || [])));
+    loadStates();
   }, []);
+
+  function startUpload(abbr) {
+    setUploadTarget(abbr);
+    fileInputRef.current?.click();
+  }
+
+  async function handleFileChosen(e) {
+    const file = e.target.files?.[0];
+    const abbr = uploadTarget;
+    e.target.value = "";
+    if (!file || !abbr) return;
+
+    if (file.type !== "application/pdf") {
+      setMessage("Only PDF files are accepted.");
+      return;
+    }
+
+    setUploading(abbr);
+    setMessage("");
+    const form = new FormData();
+    form.append("state", abbr);
+    form.append("file", file);
+    const res = await fetch("/api/licensed-states/document", { method: "POST", body: form });
+    setUploading("");
+    if (res.ok) {
+      await loadStates();
+    } else {
+      const d = await res.json();
+      setMessage(d.error || "Something went wrong uploading that PDF.");
+    }
+  }
+
+  async function viewDocument(abbr) {
+    const res = await fetch(`/api/licensed-states/document?state=${abbr}`);
+    const d = await res.json();
+    if (d.url) window.open(d.url, "_blank");
+    else setMessage(d.error || "Couldn't open that PDF.");
+  }
+
+  async function removeDocument(abbr) {
+    if (!confirm(`Remove the license PDF for ${STATE_NAMES[abbr]}? The state stays licensed either way.`)) return;
+    await fetch("/api/licensed-states/document", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ state: abbr }),
+    });
+    loadStates();
+  }
 
   async function toggle(abbr) {
     if (!licensed || saving) return;
@@ -82,7 +140,18 @@ export default function LicensingPage() {
       <h1>State Licensing</h1>
       <p className="subtitle">
         Click a state to mark it licensed or not. Licensed in {licensed.size} of {ALL_ABBRS.length}.
+        Attaching a license PDF is optional.
       </p>
+
+      {message && <p className="error">{message}</p>}
+
+      <input
+        type="file"
+        accept="application/pdf"
+        ref={fileInputRef}
+        onChange={handleFileChosen}
+        style={{ display: "none" }}
+      />
 
       <style>{`
         .us-state-map { width: 100%; height: auto; display: block; }
@@ -137,29 +206,57 @@ export default function LicensingPage() {
           <div className="label-caps" style={{ marginBottom: 8 }}>States</div>
           {ALL_ABBRS.map((abbr) => {
             const isLicensed = licensed.has(abbr);
+            const doc = documents[abbr];
             return (
               <div
                 key={abbr}
-                onClick={() => toggle(abbr)}
                 onMouseEnter={() => setHovered(abbr)}
                 onMouseLeave={() => setHovered(null)}
-                className="row"
                 style={{
                   marginBottom: 2,
                   padding: "6px 8px",
                   borderRadius: 6,
-                  cursor: saving ? "wait" : "pointer",
                   background: hovered === abbr ? "rgba(255,255,255,0.06)" : "transparent",
                 }}
               >
-                <span style={{ fontSize: 14 }}>{STATE_NAMES[abbr]} ({abbr})</span>
-                <span style={{ fontSize: 13, color: isLicensed ? "#22c55e" : "#9a9a9a", fontWeight: isLicensed ? 600 : 400 }}>
-                  {isLicensed
-                    ? "Licensed"
-                    : STATE_PRICES[abbr] !== null && STATE_PRICES[abbr] !== undefined
-                    ? formatCurrency(STATE_PRICES[abbr])
-                    : "—"}
-                </span>
+                <div className="row" onClick={() => toggle(abbr)} style={{ marginBottom: 0, cursor: saving ? "wait" : "pointer" }}>
+                  <span style={{ fontSize: 14 }}>{STATE_NAMES[abbr]} ({abbr})</span>
+                  <span style={{ fontSize: 13, color: isLicensed ? "#22c55e" : "#9a9a9a", fontWeight: isLicensed ? 600 : 400 }}>
+                    {isLicensed
+                      ? "Licensed"
+                      : STATE_PRICES[abbr] !== null && STATE_PRICES[abbr] !== undefined
+                      ? formatCurrency(STATE_PRICES[abbr])
+                      : "—"}
+                  </span>
+                </div>
+                {isLicensed && (
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ display: "flex", gap: 8, marginTop: 3, fontSize: 12 }}
+                  >
+                    {doc ? (
+                      <>
+                        <a
+                          onClick={() => viewDocument(abbr)}
+                          style={{ color: "#c9a227", cursor: "pointer" }}
+                          title={doc.name}
+                        >
+                          View License PDF
+                        </a>
+                        <a onClick={() => removeDocument(abbr)} style={{ color: "#666", cursor: "pointer" }}>
+                          Remove
+                        </a>
+                      </>
+                    ) : (
+                      <a
+                        onClick={() => startUpload(abbr)}
+                        style={{ color: "#9a9a9a", cursor: uploading === abbr ? "wait" : "pointer" }}
+                      >
+                        {uploading === abbr ? "Uploading..." : "+ Add License PDF (optional)"}
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })}
