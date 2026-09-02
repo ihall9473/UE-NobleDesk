@@ -41,17 +41,31 @@ const CRM_FEATURES = [
       "Leads stay simple - just a name and number. Once someone becomes a client, move them over and fill in their full policy details: carrier, product, coverage, premium, beneficiaries, and more.",
   },
   {
-    title: "Bulk actions when you need them",
-    body: "Select multiple leads at once to remove them or move them to Clients.",
+    title: "A lead pipeline you can see",
+    body: "Track every lead from New through Contacted, Quoted, Applied, and Issued on the Pipeline board.",
+  },
+  {
+    title: "Follow-up that doesn't slip",
+    body:
+      "Tasks and reminders per client, an activity timeline for notes/calls/meetings, and a Policy Alerts page that flags upcoming premium drafts, term conversion deadlines, at-risk policies, beneficiary reviews, and more - all in one place.",
+  },
+  {
+    title: "Quote without leaving the app",
+    body: "Connect your Insurance Toolkits account once in Settings, then quote using your own contracted rates right from the Quoter page.",
   },
   {
     title: "A full Carriers directory",
     body: "Phone numbers, login info, and agent commissions for every carrier you write with, in one place.",
   },
   {
+    title: "State licensing, with your documents",
+    body:
+      "Track every state you're licensed in on an interactive map, and optionally attach the license PDF once you get appointed - accessible any time.",
+  },
+  {
     title: "Know your upline and downline",
     body:
-      "Invite people into your own downline with a personal link, see who invited you, and see everyone you've brought in on the My Team page.",
+      "Invite people into your own downline with a personal link, see who invited you, and see the whole team's numbers on a leaderboard and org chart on the My Team page.",
   },
 ];
 
@@ -65,10 +79,14 @@ const TEXTING_QUICK_LINKS = [
 ];
 
 const CRM_QUICK_LINKS = [
+  { href: "/quoter", label: "Quoter" },
   { href: "/leads", label: "Leads" },
   { href: "/clients", label: "Clients" },
   { href: "/clients/sheet", label: "Client Sheet" },
+  { href: "/tasks", label: "Tasks" },
+  { href: "/alerts", label: "Alerts" },
   { href: "/carriers", label: "Carriers" },
+  { href: "/licensing", label: "Licensing" },
   { href: "/team", label: "My Team" },
 ];
 
@@ -159,14 +177,24 @@ export default function HomePage() {
         ) : (
           <ol className="subtitle" style={{ paddingLeft: 20, marginBottom: 0 }}>
             <li style={{ marginBottom: 8 }}>
-              Add your first leads on the <a href="/leads">Leads</a> page - one at a time, or paste in a whole list.
+              Add your first leads on the <a href="/leads">Leads</a> page - one at a time, or paste in a whole list -
+              and track their stage on the <a href="/pipeline">Pipeline</a> board.
+            </li>
+            <li style={{ marginBottom: 8 }}>
+              Connect your Insurance Toolkits account in <a href="/settings">Settings</a>, then quote leads right
+              from the <a href="/quoter">Quoter</a> page.
             </li>
             <li style={{ marginBottom: 8 }}>
               Once someone signs a policy, move them to <a href="/clients">Clients</a> and fill out
               their <a href="/clients/sheet">Client Sheet</a>.
             </li>
             <li style={{ marginBottom: 8 }}>
-              Look up carrier phone numbers and logins any time on the <a href="/carriers">Carriers</a> page.
+              Set follow-up reminders on <a href="/tasks">Tasks</a>, and check <a href="/alerts">Alerts</a> for
+              anything time-sensitive - upcoming drafts, deadlines, at-risk policies.
+            </li>
+            <li style={{ marginBottom: 8 }}>
+              Look up carrier phone numbers and logins any time on the <a href="/carriers">Carriers</a> page,
+              and track your appointments on <a href="/licensing">Licensing</a>.
             </li>
             <li>
               Get your personal invite link and see your team on the <a href="/team">My Team</a> page.
