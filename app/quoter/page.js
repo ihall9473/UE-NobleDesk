@@ -34,8 +34,17 @@ export default function QuoterPage() {
 
   return (
     <div>
-      <h1>Quoter</h1>
-      <p className="subtitle">Your own Insurance Toolkits account - same rates and carriers as logging in directly.</p>
+      <div className="row" style={{ marginBottom: 0 }}>
+        <h1 style={{ marginBottom: 0 }}>Quoter</h1>
+        <a href="https://app.insurancetoolkits.com" target="_blank" rel="noopener noreferrer">
+          <button type="button" style={{ width: "auto", marginBottom: 0 }}>Open Full Quoter</button>
+        </a>
+      </div>
+      <p className="subtitle">
+        Your own Insurance Toolkits account - same rates and carriers as logging in directly. Need
+        drug lookup, the health cheat sheet, or carrier comparison? Those aren't in this embedded
+        version - use "Open Full Quoter" above to log into the full site in a new tab.
+      </p>
       <iframe
         src={insuranceToolkitsQuoterUrl(profile.insurance_toolkits_token)}
         style={{ border: "none", width: "100%", height: "1100px", borderRadius: 12 }}
