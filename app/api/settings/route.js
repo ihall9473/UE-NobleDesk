@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
+import { extractInsuranceToolkitsToken } from "@/lib/insuranceToolkits";
 
 export async function GET() {
   const supabase = supabaseServer();
@@ -21,12 +22,27 @@ export async function PATCH(req) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not logged in" }, { status: 401 });
 
-  const { twilioAccountSid, twilioAuthToken, businessName } = await req.json();
+  const { twilioAccountSid, twilioAuthToken, businessName, insuranceToolkitsToken } = await req.json();
 
   const update = {};
   if (twilioAccountSid !== undefined) update.twilio_account_sid = twilioAccountSid;
   if (twilioAuthToken !== undefined && twilioAuthToken !== "") update.twilio_auth_token = twilioAuthToken;
   if (businessName !== undefined) update.business_name = businessName || null;
+
+  if (insuranceToolkitsToken !== undefined) {
+    if (insuranceToolkitsToken === "") {
+      update.insurance_toolkits_token = null;
+    } else {
+      const token = extractInsuranceToolkitsToken(insuranceToolkitsToken);
+      if (!token) {
+        return NextResponse.json(
+          { error: "Couldn't find a token in that - paste your personal FEX link or widget code from Insurance Toolkits." },
+          { status: 400 }
+        );
+      }
+      update.insurance_toolkits_token = token;
+    }
+  }
 
   const { error } = await supabase.from("profiles").update(update).eq("id", user.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
