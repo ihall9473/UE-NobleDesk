@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/occasions",
       "schedule": "0 18 * * *"
+    },
+    {
+      "path": "/api/cron/drip",
+      "schedule": "0 19 * * *"
     }
   ]
 }

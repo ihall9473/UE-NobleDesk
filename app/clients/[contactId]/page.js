@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import AddressAutocomplete from "@/app/components/AddressAutocomplete";
 import BeneficiaryList from "@/app/components/BeneficiaryList";
 import CarrierSelect from "@/app/components/CarrierSelect";
+import ActivityAndTasks from "@/app/components/ActivityAndTasks";
 import { US_STATES } from "@/lib/usStates";
 import { calculateAge } from "@/lib/age";
 
@@ -136,6 +137,8 @@ export default function ClientDetailPage() {
       <a href="/clients" style={{ color: "#c9a227" }}>&larr; Back to Clients</a>
       <h1>{form.name}</h1>
       {message && <p className={message === "Saved." ? "success" : "error"}>{message}</p>}
+
+      <ActivityAndTasks contactId={contactId} />
 
       <form onSubmit={save}>
         <div className="card">
