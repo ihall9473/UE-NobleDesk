@@ -5,54 +5,33 @@ import LogoutButton from "./LogoutButton";
 import Crest from "./Crest";
 import { TEXTING_ENABLED, APP_NAME } from "@/lib/features";
 
-// Grouped under a dropdown so the top bar doesn't turn into a wall of
-// links as more pages get added. Each group's own heading highlights when
-// any of its children is the active page.
-const NAV_GROUPS = [
-  {
-    label: "Leads",
-    children: [
-      { href: "/leads", label: "Leads" },
-      { href: "/pipeline", label: "Pipeline" },
-      { href: "/quoter", label: "Quoter" },
-    ],
-  },
-  {
-    label: "Clients",
-    children: [
-      { href: "/clients", label: "Clients" },
-      { href: "/clients/sheet", label: "Client Sheet" },
-    ],
-  },
-  {
-    label: "Follow-Up",
-    children: [
-      { href: "/tasks", label: "Tasks" },
-      { href: "/alerts", label: "Alerts" },
-      ...(TEXTING_ENABLED ? [{ href: "/drip-campaigns", label: "Drip Campaigns" }] : []),
-    ],
-  },
+// Flat nav, in the exact order requested - only "Leads" stays a dropdown
+// for now (Leads + Pipeline; Quoter got promoted to its own top-level link).
+const NAV_ITEMS = [
+  { href: "/quoter", label: "Quoter" },
+  { href: "/clients/sheet", label: "Client Sheet" },
+  { href: "/clients", label: "Clients" },
+  { href: "/tasks", label: "Tasks" },
+  { href: "/alerts", label: "Alerts" },
   ...(TEXTING_ENABLED
     ? [
-        {
-          label: "Messaging",
-          children: [
-            { href: "/compose", label: "Send a Text" },
-            { href: "/conversations", label: "Conversations" },
-            { href: "/occasions", label: "Occasions" },
-          ],
-        },
+        { href: "/drip-campaigns", label: "Drip Campaigns" },
+        { href: "/compose", label: "Send a Text" },
+        { href: "/conversations", label: "Conversations" },
+        { href: "/occasions", label: "Occasions" },
       ]
     : []),
-  {
-    label: "Business",
-    children: [
-      { href: "/dashboard", label: "Book of Business" },
-      { href: "/carriers", label: "Carriers" },
-      { href: "/licensing", label: "Licensing" },
-    ],
-  },
+  { href: "/carriers", label: "Carriers" },
+  { href: "/licensing", label: "Licensing" },
 ];
+
+const LEADS_GROUP = {
+  label: "Leads",
+  children: [
+    { href: "/leads", label: "Leads" },
+    { href: "/pipeline", label: "Pipeline" },
+  ],
+};
 
 function isLinkActive(href, pathname) {
   if (href === "/clients") {
@@ -103,7 +82,7 @@ export default function NavBar() {
       .catch(() => {});
   }, [hidden]);
 
-  // Close whichever dropdown is open on route change or an outside click.
+  // Close the Leads dropdown on route change or an outside click.
   useEffect(() => {
     setOpenGroup(null);
   }, [pathname]);
@@ -125,14 +104,10 @@ export default function NavBar() {
         <span className="nav-wordmark">{APP_NAME}</span>
       </a>
 
-      {NAV_GROUPS.map((group) => (
-        <NavGroup
-          key={group.label}
-          group={group}
-          pathname={pathname}
-          isOpen={openGroup === group.label}
-          onToggle={() => setOpenGroup((g) => (g === group.label ? null : group.label))}
-        />
+      {NAV_ITEMS.map((item) => (
+        <a key={item.href} href={item.href} className={isLinkActive(item.href, pathname) ? "active" : ""}>
+          {item.label}
+        </a>
       ))}
 
       {/* My Team stays out of the way for agents until they've actually
@@ -141,6 +116,14 @@ export default function NavBar() {
       {showTeamTab && (
         <a href="/team" className={isLinkActive("/team", pathname) ? "active" : ""}>My Team</a>
       )}
+
+      <NavGroup
+        group={LEADS_GROUP}
+        pathname={pathname}
+        isOpen={openGroup === LEADS_GROUP.label}
+        onToggle={() => setOpenGroup((g) => (g === LEADS_GROUP.label ? null : LEADS_GROUP.label))}
+      />
+
       <a href="/settings" className={isLinkActive("/settings", pathname) ? "active" : ""}>Settings</a>
       <a href="/admin" className={isLinkActive("/admin", pathname) ? "active" : ""}>Admin</a>
 

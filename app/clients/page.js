@@ -190,7 +190,12 @@ export default function ClientsPage() {
       <Suspense fallback={null}>
         <UndoFromQuery onFound={(u) => setUndo({ id: u.id, text: `Removed ${u.name || "client"}.` })} />
       </Suspense>
-      <h1>Clients</h1>
+      <div className="row" style={{ marginBottom: 0 }}>
+        <h1 style={{ marginBottom: 0 }}>Clients</h1>
+        <a href="/dashboard" style={{ textDecoration: "none" }}>
+          <button type="button" style={{ width: "auto", marginBottom: 0 }}>Book of Business</button>
+        </a>
+      </div>
       <p className="subtitle">Your book of business — full policy and contact details for every client.</p>
 
       <a href="/clients/sheet" style={{ textDecoration: "none" }}>
