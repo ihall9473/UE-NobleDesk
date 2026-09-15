@@ -5,14 +5,15 @@ import LogoutButton from "./LogoutButton";
 import Crest from "./Crest";
 import { TEXTING_ENABLED, APP_NAME } from "@/lib/features";
 
-// Flat nav, in the exact order requested - only "Leads" stays a dropdown
-// for now (Leads + Pipeline; Quoter got promoted to its own top-level link).
-const NAV_ITEMS = [
+// Flat items before/after the Clients dropdown. Tasks lives under Leads,
+// Alerts lives under Clients now; Quoter/Client Sheet/Carriers/Licensing
+// (and the texting-only items) stay flat top-level links.
+const NAV_ITEMS_BEFORE_CLIENTS = [
   { href: "/quoter", label: "Quoter" },
   { href: "/clients/sheet", label: "Client Sheet" },
-  { href: "/clients", label: "Clients" },
-  { href: "/tasks", label: "Tasks" },
-  { href: "/alerts", label: "Alerts" },
+];
+
+const NAV_ITEMS_AFTER_CLIENTS = [
   ...(TEXTING_ENABLED
     ? [
         { href: "/drip-campaigns", label: "Drip Campaigns" },
@@ -30,6 +31,15 @@ const LEADS_GROUP = {
   children: [
     { href: "/leads", label: "Leads" },
     { href: "/pipeline", label: "Pipeline" },
+    { href: "/tasks", label: "Tasks" },
+  ],
+};
+
+const CLIENTS_GROUP = {
+  label: "Clients",
+  children: [
+    { href: "/clients", label: "Clients" },
+    { href: "/alerts", label: "Alerts" },
   ],
 };
 
@@ -135,7 +145,20 @@ export default function NavBar() {
 
       {!collapsed && (
         <>
-          {NAV_ITEMS.map((item) => (
+          {NAV_ITEMS_BEFORE_CLIENTS.map((item) => (
+            <a key={item.href} href={item.href} className={isLinkActive(item.href, pathname) ? "active" : ""}>
+              {item.label}
+            </a>
+          ))}
+
+          <NavGroup
+            group={CLIENTS_GROUP}
+            pathname={pathname}
+            isOpen={openGroup === CLIENTS_GROUP.label}
+            onToggle={() => setOpenGroup((g) => (g === CLIENTS_GROUP.label ? null : CLIENTS_GROUP.label))}
+          />
+
+          {NAV_ITEMS_AFTER_CLIENTS.map((item) => (
             <a key={item.href} href={item.href} className={isLinkActive(item.href, pathname) ? "active" : ""}>
               {item.label}
             </a>
