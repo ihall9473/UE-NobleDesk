@@ -164,9 +164,14 @@ export default function AdminPage() {
               </div>
             )}
             <div style={{ color: "#666", fontSize: 13, marginTop: 2 }}>
-              {member.contactCount} contact{member.contactCount === 1 ? "" : "s"} ·{" "}
-              {member.messageCount} message{member.messageCount === 1 ? "" : "s"} ·{" "}
-              {member.responseRate === null ? "no texts sent yet" : `${member.responseRate}% response rate`}
+              {member.contactCount} contact{member.contactCount === 1 ? "" : "s"}
+              {TEXTING_ENABLED && (
+                <>
+                  {" "}·{" "}
+                  {member.messageCount} message{member.messageCount === 1 ? "" : "s"} ·{" "}
+                  {member.responseRate === null ? "no texts sent yet" : `${member.responseRate}% response rate`}
+                </>
+              )}
             </div>
             <div style={{ color: "#666", fontSize: 13, marginTop: 2 }}>
               {inviter ? `Invited by ${inviter.name}` : "No inviter on record"}

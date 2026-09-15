@@ -1,7 +1,13 @@
+import { notFound } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { formatDate } from "@/lib/formatDate";
+import { TEXTING_ENABLED } from "@/lib/features";
 
+// Entirely an SMS/A2P consent compliance page - doesn't apply when texting
+// is off, even though nothing in the app links to it either way.
 export default async function PersonalizedPrivacyPolicyPage({ params }) {
+  if (!TEXTING_ENABLED) notFound();
+
   const { userId } = params;
 
   const { data: profile } = await supabaseAdmin

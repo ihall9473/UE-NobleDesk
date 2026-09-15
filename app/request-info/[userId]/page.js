@@ -1,7 +1,13 @@
+import { notFound } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import RequestInfoForm from "@/app/components/RequestInfoForm";
+import { TEXTING_ENABLED } from "@/lib/features";
 
+// The whole point of this page is the SMS opt-in checkbox - doesn't apply
+// when texting is off, even though nothing in the app links to it either way.
 export default async function RequestInfoPage({ params }) {
+  if (!TEXTING_ENABLED) notFound();
+
   const { userId } = params;
 
   const { data: profile } = await supabaseAdmin

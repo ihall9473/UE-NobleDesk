@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { TEXTING_ENABLED } from "@/lib/features";
 
 // Admins and managers can both do day-to-day team management.
 async function requireStaff() {
@@ -31,12 +32,14 @@ export async function GET() {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Pull usage + response rate stats so the admin can see who's actually
-  // using the app and how effective their outreach is.
-  const [{ data: contacts }, { data: messages }] = await Promise.all([
-    supabaseAdmin.from("contacts").select("owner_id"),
-    supabaseAdmin.from("messages").select("owner_id, contact_id, direction"),
-  ]);
+  // Contact counts are a plain CRM stat, always useful. Response rate is
+  // purely a texting concept - only compute/send it (and skip the query
+  // entirely) when texting is actually part of this deployment.
+  const contactsQuery = supabaseAdmin.from("contacts").select("owner_id");
+  const messagesQuery = TEXTING_ENABLED
+    ? supabaseAdmin.from("messages").select("owner_id, contact_id, direction")
+    : Promise.resolve({ data: [] });
+  const [{ data: contacts }, { data: messages }] = await Promise.all([contactsQuery, messagesQuery]);
 
   const contactTotals = {};
   (contacts || []).forEach((c) => {
@@ -73,10 +76,11 @@ export async function GET() {
       twilio_auth_token: undefined,
       twilio_account_sid: undefined,
       insurance_toolkits_token: undefined,
-      hasTwilioConnected: !!p.twilio_account_sid,
+      twilio_number: TEXTING_ENABLED ? p.twilio_number : undefined,
+      hasTwilioConnected: TEXTING_ENABLED ? !!p.twilio_account_sid : undefined,
       contactCount: contactTotals[p.id] || 0,
-      messageCount: messageCounts[p.id] || 0,
-      responseRate, // null = no outbound texts sent yet
+      messageCount: TEXTING_ENABLED ? messageCounts[p.id] || 0 : undefined,
+      responseRate: TEXTING_ENABLED ? responseRate : undefined, // null = no outbound texts sent yet
     };
   });
 
