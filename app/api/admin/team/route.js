@@ -67,7 +67,12 @@ export async function GET() {
 
     return {
       ...p,
-      twilio_auth_token: undefined, // never send tokens to the browser
+      // Never send other people's credentials/tokens to the browser, even
+      // ones the admin UI doesn't render - the API response itself is
+      // inspectable, so stripping only matters if it happens here.
+      twilio_auth_token: undefined,
+      twilio_account_sid: undefined,
+      insurance_toolkits_token: undefined,
       hasTwilioConnected: !!p.twilio_account_sid,
       contactCount: contactTotals[p.id] || 0,
       messageCount: messageCounts[p.id] || 0,
