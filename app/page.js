@@ -100,18 +100,6 @@ export default function HomePage() {
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
           <Crest size={56} glow />
         </div>
-        <p
-          style={{
-            color: "#c9a227",
-            fontWeight: 700,
-            fontSize: 13,
-            letterSpacing: 4,
-            textTransform: "uppercase",
-            marginBottom: 12,
-          }}
-        >
-          The Upper Echelon
-        </p>
         <h1 className="full-width-underline" style={{ display: "inline-block", fontSize: "clamp(38px, 7vw, 72px)" }}>
           Welcome to{" "}
           <span className="login-wordmark" style={{ fontStyle: "italic" }}>

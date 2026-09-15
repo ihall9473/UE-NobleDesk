@@ -3,7 +3,7 @@ import { TEXTING_ENABLED, APP_NAME } from "@/lib/features";
 export default function manifest() {
   return {
     name: APP_NAME,
-    short_name: APP_NAME === "UE NobleDesk" ? "NobleDesk" : "NobleDesk CRM",
+    short_name: APP_NAME,
     description: TEXTING_ENABLED
       ? "Send and receive texts with your clients and leads"
       : "Manage your leads and clients",

@@ -1,6 +1,6 @@
 // Ambient corner ornaments behind every page - crossed spears with a
 // crest at their center and a soft gold glow, echoing the login page's
-// Upper Echelon iconography without competing with page content.
+// shield iconography without competing with page content.
 function Spear({ style, flip = false }) {
   return (
     <svg

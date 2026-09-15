@@ -1,4 +1,4 @@
-# UE NobleDesk — Team Setup Guide
+# NobleDesk — Team Setup Guide
 
 **How this version works:** each coworker signs up themselves, connects
 their own free Twilio account, and buys their own texting number — so
