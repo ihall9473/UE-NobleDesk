@@ -1,4 +1,5 @@
 import Crest from "@/app/components/Crest";
+import AddToHomeScreen from "@/app/components/AddToHomeScreen";
 import { TEXTING_ENABLED, APP_NAME } from "@/lib/features";
 
 const TEXTING_FEATURES = [
@@ -96,6 +97,8 @@ export default function HomePage() {
 
   return (
     <div>
+      <AddToHomeScreen />
+
       <div style={{ textAlign: "center", marginBottom: 36 }}>
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
           <Crest size={56} glow />
