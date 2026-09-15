@@ -22,17 +22,19 @@ export async function POST(req) {
   return NextResponse.json({ ok: true });
 }
 
-// Only true admins can read the full list back, with who submitted each one -
-// not managers, since suggestions get worked directly with the developer.
+// Only people explicitly flagged sees_suggestions can read the full list
+// back - deliberately separate from the 'admin' role, since more people
+// can become admins (team management) without automatically getting
+// access to product feedback that's worked through with the developer.
 export async function GET() {
   const supabase = supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not logged in" }, { status: 401 });
 
-  const { data: profile, error: profileErr } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+  const { data: profile, error: profileErr } = await supabase.from("profiles").select("sees_suggestions").eq("id", user.id).single();
   if (profileErr) return NextResponse.json({ error: profileErr.message }, { status: 500 });
-  if (profile?.role !== "admin") {
-    return NextResponse.json({ error: "Admins only" }, { status: 403 });
+  if (!profile?.sees_suggestions) {
+    return NextResponse.json({ error: "Not allowed" }, { status: 403 });
   }
 
   const { data: suggestions, error } = await supabaseAdmin

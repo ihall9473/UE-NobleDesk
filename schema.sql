@@ -575,3 +575,11 @@ create policy "Users replace their own license documents" on storage.objects
 drop policy if exists "Users delete their own license documents" on storage.objects;
 create policy "Users delete their own license documents" on storage.objects
   for delete using (bucket_id = 'license-documents' and (storage.foldername(name))[1] = auth.uid()::text);
+
+-- Whether this person can see submitted suggestions on the Admin page -
+-- deliberately separate from the 'admin' role, since more people can
+-- become admins (team management, inviting others) without automatically
+-- getting access to product feedback. Nobody gets this by default; grant
+-- it manually with:
+--   update profiles set sees_suggestions = true where id = (select id from auth.users where email = 'you@example.com');
+alter table profiles add column if not exists sees_suggestions boolean not null default false;
