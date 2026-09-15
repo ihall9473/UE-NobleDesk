@@ -268,51 +268,6 @@ export default function TeamPage() {
       {message && <p className="success">{message}</p>}
 
       <div className="card">
-        <h3>Date Range</h3>
-        <p className="subtitle" style={{ marginBottom: 8 }}>
-          Filters every submitted-business figure below (your production, downline production,
-          leaderboard, and hierarchy stats) by application submitted date.
-        </p>
-
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: datePreset === "all" ? 0 : 10 }}>
-          <div style={{ flex: 1, minWidth: 160 }}>
-            <select value={datePreset} onChange={(e) => setDatePreset(e.target.value)} style={{ marginBottom: 0 }}>
-              {DATE_PRESETS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
-            </select>
-          </div>
-        </div>
-
-        {datePreset === "customDate" && (
-          <div>
-            <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Date</label>
-            <input type="date" value={customDate} onChange={(e) => setCustomDate(e.target.value)} style={{ marginBottom: 0 }} />
-          </div>
-        )}
-
-        {datePreset === "customRange" && (
-          <div style={{ display: "flex", gap: 8 }}>
-            <div style={{ flex: 1 }}>
-              <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>From</label>
-              <input type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)} style={{ marginBottom: 0 }} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>To</label>
-              <input type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} style={{ marginBottom: 0 }} />
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="card">
-        <h3>Your Production</h3>
-        <ProductionStats production={data.myProduction} payoutLabel="Payout" />
-        <p className="subtitle" style={{ marginTop: 12, marginBottom: 0 }}>
-          Payout uses your comp % for each carrier (set on the <a href="/carriers">Carriers</a>{" "}
-          page) and each policy's Commission Status.
-        </p>
-      </div>
-
-      <div className="card">
         <h3>Invite Someone</h3>
         <p className="subtitle" style={{ marginBottom: 8 }}>
           Each invite is for one specific person - their last name doubles as a confirmation code,
@@ -375,6 +330,51 @@ export default function TeamPage() {
             ))}
           </div>
         )}
+      </div>
+
+      <div className="card">
+        <h3>Date Range</h3>
+        <p className="subtitle" style={{ marginBottom: 8 }}>
+          Filters every submitted-business figure below (your production, downline production,
+          leaderboard, and hierarchy stats) by application submitted date.
+        </p>
+
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: datePreset === "all" ? 0 : 10 }}>
+          <div style={{ flex: 1, minWidth: 160 }}>
+            <select value={datePreset} onChange={(e) => setDatePreset(e.target.value)} style={{ marginBottom: 0 }}>
+              {DATE_PRESETS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {datePreset === "customDate" && (
+          <div>
+            <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Date</label>
+            <input type="date" value={customDate} onChange={(e) => setCustomDate(e.target.value)} style={{ marginBottom: 0 }} />
+          </div>
+        )}
+
+        {datePreset === "customRange" && (
+          <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ flex: 1 }}>
+              <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>From</label>
+              <input type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)} style={{ marginBottom: 0 }} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>To</label>
+              <input type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} style={{ marginBottom: 0 }} />
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="card">
+        <h3>Your Production</h3>
+        <ProductionStats production={data.myProduction} payoutLabel="Payout" />
+        <p className="subtitle" style={{ marginTop: 12, marginBottom: 0 }}>
+          Payout uses your comp % for each carrier (set on the <a href="/carriers">Carriers</a>{" "}
+          page) and each policy's Commission Status.
+        </p>
       </div>
 
       <div className="card">
