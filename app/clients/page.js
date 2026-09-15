@@ -1,11 +1,12 @@
 "use client";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DATE_PRESETS, getDateRange } from "@/lib/dateRanges";
 import { nextDraftInfo } from "@/lib/draftDate";
 import { daysUntilConversion } from "@/lib/termConversion";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { formatDate } from "@/lib/formatDate";
+import { parseClientImport } from "@/lib/parseClientImport";
 import UndoToast from "@/app/components/UndoToast";
 
 const DRAFT_WARNING_DAYS = 5;
@@ -63,6 +64,10 @@ export default function ClientsPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [undo, setUndo] = useState(null); // { id, text } - shown as a dismissable toast
+  const [importText, setImportText] = useState("");
+  const [importLoading, setImportLoading] = useState(false);
+  const [importMessage, setImportMessage] = useState("");
+  const importFileRef = useRef(null);
 
   const [search, setSearch] = useState("");
   const [carrierFilter, setCarrierFilter] = useState("all");
@@ -116,6 +121,45 @@ export default function ClientsPage() {
     } else {
       setMessage(data.error || "Something went wrong.");
     }
+  }
+
+  async function submitImport(text) {
+    const { rows, skipped } = parseClientImport(text);
+    if (rows.length === 0) {
+      setImportMessage("Couldn't find any valid rows - make sure the first row has column headers and each row has at least a name and phone.");
+      return;
+    }
+    setImportLoading(true);
+    const res = await fetch("/api/clients", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rows }),
+    });
+    setImportLoading(false);
+    const data = await res.json();
+    if (res.ok) {
+      setImportMessage(
+        `Imported ${data.imported} client${data.imported === 1 ? "" : "s"}.` +
+          (skipped > 0 ? ` Skipped ${skipped} row${skipped === 1 ? "" : "s"} missing a name or phone.` : "")
+      );
+      load();
+    } else {
+      setImportMessage(data.error || "Something went wrong.");
+    }
+  }
+
+  async function handleImportPaste(e) {
+    e.preventDefault();
+    await submitImport(importText);
+    setImportText("");
+  }
+
+  async function handleImportFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const text = await file.text();
+    await submitImport(text);
+    if (importFileRef.current) importFileRef.current.value = "";
   }
 
   const allClients = clients || [];
@@ -302,6 +346,33 @@ export default function ClientsPage() {
           <input placeholder="Phone number" value={phone} onChange={(e) => setPhone(e.target.value)} required />
           <button type="submit" disabled={loading}>{loading ? "Adding..." : "Add Client & Continue"}</button>
         </form>
+      </div>
+
+      <div className="card">
+        <h3>Import clients</h3>
+        <p className="subtitle" style={{ marginBottom: 8 }}>
+          Bring over your existing book of business at once - paste or upload a CSV with a header
+          row. Only Name and Phone are required; any of these are also recognized: Email, DOB,
+          Carrier, Policy Number, Product, Coverage Amount, Monthly Premium (or Yearly Premium),
+          and Draft Date. Columns can be in any order, and anything else (beneficiaries, address,
+          SSN, banking) still gets filled in manually per client afterward.
+        </p>
+        {importMessage && <p className="success">{importMessage}</p>}
+        <form onSubmit={handleImportPaste}>
+          <textarea
+            rows={6}
+            placeholder={"Name,Phone,Email,DOB,Carrier,Policy Number,Product,Coverage Amount,Monthly Premium,Draft Date\nMary Fahrig,7193380621,maryfahrig@gmail.com,3/23/1955,Americo,AM03648228,Eagle Select 1,20000,117.61,9/15/2026"}
+            value={importText}
+            onChange={(e) => setImportText(e.target.value)}
+          />
+          <button type="submit" disabled={importLoading}>{importLoading ? "Importing..." : "Import Clients"}</button>
+        </form>
+        <div style={{ marginTop: 12 }}>
+          <label className="subtitle" style={{ display: "block", marginBottom: 6 }}>
+            Or upload a CSV file:
+          </label>
+          <input type="file" accept=".csv,.txt" ref={importFileRef} onChange={handleImportFile} />
+        </div>
       </div>
 
       <div className="card">
