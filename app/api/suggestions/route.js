@@ -22,7 +22,8 @@ export async function POST(req) {
   return NextResponse.json({ ok: true });
 }
 
-// Only admins/managers can read the full list back, with who submitted each one.
+// Only true admins can read the full list back, with who submitted each one -
+// not managers, since suggestions get worked directly with the developer.
 export async function GET() {
   const supabase = supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
@@ -30,8 +31,8 @@ export async function GET() {
 
   const { data: profile, error: profileErr } = await supabase.from("profiles").select("role").eq("id", user.id).single();
   if (profileErr) return NextResponse.json({ error: profileErr.message }, { status: 500 });
-  if (profile?.role !== "admin" && profile?.role !== "manager") {
-    return NextResponse.json({ error: "Admins and managers only" }, { status: 403 });
+  if (profile?.role !== "admin") {
+    return NextResponse.json({ error: "Admins only" }, { status: 403 });
   }
 
   const { data: suggestions, error } = await supabaseAdmin
