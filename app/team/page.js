@@ -161,13 +161,18 @@ function HierarchyNode({ node, depth, meId }) {
 export default function TeamPage() {
   const [data, setData] = useState(null);
   const [loadError, setLoadError] = useState("");
-  const [inviteLink, setInviteLink] = useState("");
   const [message, setMessage] = useState("");
   const [treeScope, setTreeScope] = useState("oneLevelUp"); // oneLevelUp | company
   const [datePreset, setDatePreset] = useState("all");
   const [customDate, setCustomDate] = useState("");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
+
+  const [invites, setInvites] = useState(null);
+  const [inviteRole, setInviteRole] = useState("agent");
+  const [inviteLastName, setInviteLastName] = useState("");
+  const [generating, setGenerating] = useState(false);
+  const [generatedLink, setGeneratedLink] = useState("");
 
   useEffect(() => {
     const range = getDateRange(datePreset, customDate, customStart, customEnd);
@@ -186,18 +191,42 @@ export default function TeamPage() {
       .catch(() => setLoadError("Something went wrong loading your team."));
   }, [datePreset, customDate, customStart, customEnd]);
 
-  useEffect(() => {
-    if (data?.me?.id && typeof window !== "undefined") {
-      setInviteLink(
-        `${window.location.origin}/signup?ref=${data.me.id}&code=${encodeURIComponent(data.inviteCode || "")}`
-      );
-    }
-  }, [data]);
+  async function loadInvites() {
+    const res = await fetch("/api/team/invites");
+    const d = await res.json();
+    setInvites(d.invites || []);
+  }
 
-  async function copyLink() {
-    await navigator.clipboard.writeText(inviteLink);
+  useEffect(() => {
+    loadInvites();
+  }, []);
+
+  async function generateInvite(e) {
+    e.preventDefault();
+    if (!inviteLastName.trim()) return;
+    setGenerating(true);
+    setMessage("");
+    setGeneratedLink("");
+    const res = await fetch("/api/team/invites", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role: inviteRole, lastName: inviteLastName }),
+    });
+    const d = await res.json();
+    setGenerating(false);
+    if (res.ok) {
+      const link = `${window.location.origin}/signup?invite=${d.invite.id}`;
+      setGeneratedLink(link);
+      setInviteLastName("");
+      loadInvites();
+    } else {
+      setMessage(d.error || "Something went wrong.");
+    }
+  }
+
+  async function copyGeneratedLink() {
+    await navigator.clipboard.writeText(generatedLink);
     setMessage("Invite link copied.");
-    fetch("/api/team/status", { method: "POST" }).catch(() => {});
   }
 
   const hierarchyRoots = useMemo(() => {
@@ -284,15 +313,68 @@ export default function TeamPage() {
       </div>
 
       <div className="card">
-        <h3>Invite Downline</h3>
+        <h3>Invite Someone</h3>
         <p className="subtitle" style={{ marginBottom: 8 }}>
-          Share your personal link - it already includes the invite code, so whoever signs up
-          through it is added straight to your downline.
+          Each invite is for one specific person - their last name doubles as a confirmation code,
+          so make a fresh one per invite instead of reusing a link.
         </p>
-        <div className="row">
-          <code style={{ fontSize: 13, wordBreak: "break-all" }}>{inviteLink}</code>
-          <button onClick={copyLink} style={{ width: "auto", flexShrink: 0 }}>Invite Downline</button>
-        </div>
+
+        {data.me.role === "admin" && (
+          <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+            {["admin", "manager", "agent"].map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setInviteRole(r)}
+                style={{
+                  width: "auto",
+                  marginBottom: 0,
+                  textTransform: "capitalize",
+                  background: inviteRole === r ? "#c9a227" : "#232323",
+                  color: inviteRole === r ? "#0e0e0f" : "#9a9a9a",
+                }}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <form onSubmit={generateInvite} className="row" style={{ flexWrap: "wrap" }}>
+          <input
+            placeholder="Their last name"
+            value={inviteLastName}
+            onChange={(e) => setInviteLastName(e.target.value)}
+            style={{ flex: 1, minWidth: 160, marginBottom: 0 }}
+          />
+          <button type="submit" disabled={generating} style={{ width: "auto", flexShrink: 0 }}>
+            {generating ? "Generating..." : `Generate ${data.me.role === "admin" ? `${inviteRole[0].toUpperCase()}${inviteRole.slice(1)} ` : ""}Invite`}
+          </button>
+        </form>
+
+        {generatedLink && (
+          <div className="row" style={{ marginTop: 10 }}>
+            <code style={{ fontSize: 13, wordBreak: "break-all" }}>{generatedLink}</code>
+            <button onClick={copyGeneratedLink} style={{ width: "auto", flexShrink: 0 }}>Copy</button>
+          </div>
+        )}
+
+        {invites && invites.length > 0 && (
+          <div style={{ marginTop: 16 }}>
+            <div className="label-caps" style={{ marginBottom: 8 }}>Invites You've Sent</div>
+            {invites.map((inv) => (
+              <div key={inv.id} className="row" style={{ marginBottom: 4, fontSize: 13 }}>
+                <span>
+                  <strong style={{ textTransform: "capitalize" }}>{inv.role}</strong>{" "}
+                  <span style={{ color: "#9a9a9a" }}>for {inv.last_name}</span>
+                </span>
+                <span style={{ color: inv.used_at ? "#22c55e" : "#9a9a9a" }}>
+                  {inv.used_at ? `Joined as ${inv.used_by_profile?.name || "someone"}` : `Sent ${formatDate(inv.created_at)}`}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="card">

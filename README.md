@@ -42,7 +42,6 @@ anyone's number or billing; you just watch usage and stats.
    | SUPABASE_SERVICE_ROLE_KEY | Supabase service_role key |
    | SUPABASE_ANON_KEY | Supabase anon public key |
    | NEXT_PUBLIC_SUPABASE_ANON_KEY | same value again |
-   | APP_INVITE_CODE | any code you choose — coworkers need this to sign up |
    | NEXT_PUBLIC_VAPID_PUBLIC_KEY | included in `.env.example`, keep as-is |
    | VAPID_PRIVATE_KEY | included in `.env.example`, keep as-is |
    | NEXT_PUBLIC_SITE_URL | your Vercel address, e.g. `https://your-app.vercel.app` |
@@ -67,10 +66,14 @@ anyone's number or billing; you just watch usage and stats.
 
 ## Part 4: How coworkers join and pay for their own texting
 
-Send coworkers **two things**: your site's `/signup` link, and your
-`APP_INVITE_CODE`. From there, each person does this themselves:
+Once you're an admin, send each coworker a personal, single-use invite link
+from the **My Team** page ("Invite Someone" — pick their role, type their
+last name, and it generates a link that only works for that one person;
+they confirm their own last name at signup as a lightweight check). From
+there, each person does this themselves:
 
-1. **Creates their account** — name, email, password, your invite code.
+1. **Creates their account** — name, email, password, and their last name
+   to confirm the invite.
 2. **Connects their own Twilio account** (in **Settings** inside the app):
    - Signs up free at https://www.twilio.com/try-twilio
    - Adds a payment method on their Twilio account (their card, their bill)
