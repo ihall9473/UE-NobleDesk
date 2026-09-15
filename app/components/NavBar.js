@@ -64,7 +64,26 @@ export default function NavBar() {
   const pathname = usePathname();
   const [showTeamTab, setShowTeamTab] = useState(false);
   const [openGroup, setOpenGroup] = useState(null);
+  const [collapsed, setCollapsed] = useState(false);
   const navRef = useRef(null);
+
+  // Remembered per-browser, not shared/critical - fine to skip silently if
+  // storage is unavailable (private browsing, etc.).
+  useEffect(() => {
+    try {
+      setCollapsed(localStorage.getItem("navCollapsed") === "true");
+    } catch {}
+  }, []);
+
+  function toggleCollapsed() {
+    setCollapsed((c) => {
+      const next = !c;
+      try {
+        localStorage.setItem("navCollapsed", String(next));
+      } catch {}
+      return next;
+    });
+  }
 
   const hidden =
     pathname === "/login" ||
@@ -104,28 +123,42 @@ export default function NavBar() {
         <span className="nav-wordmark">{APP_NAME}</span>
       </a>
 
-      {NAV_ITEMS.map((item) => (
-        <a key={item.href} href={item.href} className={isLinkActive(item.href, pathname) ? "active" : ""}>
-          {item.label}
-        </a>
-      ))}
+      <button
+        type="button"
+        className="nav-toggle"
+        onClick={toggleCollapsed}
+        aria-label={collapsed ? "Show navigation" : "Hide navigation"}
+        title={collapsed ? "Show navigation" : "Hide navigation"}
+      >
+        {collapsed ? "☰" : "✕"}
+      </button>
 
-      {/* My Team stays out of the way for agents until they've actually
-          sent an invite - admins/managers always see it since building
-          the org is core to their role. */}
-      {showTeamTab && (
-        <a href="/team" className={isLinkActive("/team", pathname) ? "active" : ""}>My Team</a>
+      {!collapsed && (
+        <>
+          {NAV_ITEMS.map((item) => (
+            <a key={item.href} href={item.href} className={isLinkActive(item.href, pathname) ? "active" : ""}>
+              {item.label}
+            </a>
+          ))}
+
+          {/* My Team stays out of the way for agents until they've actually
+              sent an invite - admins/managers always see it since building
+              the org is core to their role. */}
+          {showTeamTab && (
+            <a href="/team" className={isLinkActive("/team", pathname) ? "active" : ""}>My Team</a>
+          )}
+
+          <NavGroup
+            group={LEADS_GROUP}
+            pathname={pathname}
+            isOpen={openGroup === LEADS_GROUP.label}
+            onToggle={() => setOpenGroup((g) => (g === LEADS_GROUP.label ? null : LEADS_GROUP.label))}
+          />
+
+          <a href="/settings" className={isLinkActive("/settings", pathname) ? "active" : ""}>Settings</a>
+          <a href="/admin" className={isLinkActive("/admin", pathname) ? "active" : ""}>Admin</a>
+        </>
       )}
-
-      <NavGroup
-        group={LEADS_GROUP}
-        pathname={pathname}
-        isOpen={openGroup === LEADS_GROUP.label}
-        onToggle={() => setOpenGroup((g) => (g === LEADS_GROUP.label ? null : LEADS_GROUP.label))}
-      />
-
-      <a href="/settings" className={isLinkActive("/settings", pathname) ? "active" : ""}>Settings</a>
-      <a href="/admin" className={isLinkActive("/admin", pathname) ? "active" : ""}>Admin</a>
 
       <LogoutButton />
     </nav>
