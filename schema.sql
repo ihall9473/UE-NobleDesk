@@ -511,6 +511,29 @@ create policy "Users manage their own drip enrollments" on drip_enrollments
 -- never confirmed.
 alter table client_details add column if not exists beneficiaries_reviewed_at date;
 
+-- Individual signup invites - replaces the old shared org-wide invite code.
+-- Each invite is generated for one specific person (their last name doubles
+-- as a lightweight confirmation code at signup) and can only be redeemed
+-- once. `role` is what the new account gets created with - only an admin
+-- can generate an 'admin' or 'manager' invite; anyone can generate 'agent'.
+create table if not exists invites (
+  id uuid primary key default gen_random_uuid(),
+  inviter_id uuid references profiles(id) on delete cascade,
+  role text not null check (role in ('admin', 'manager', 'agent')),
+  last_name text not null,
+  used_at timestamptz,
+  used_by uuid references profiles(id) on delete set null,
+  created_at timestamptz default now()
+);
+
+create index if not exists invites_inviter_id_idx on invites(inviter_id);
+
+alter table invites enable row level security;
+
+drop policy if exists "Users manage their own invites" on invites;
+create policy "Users manage their own invites" on invites
+  for all using (auth.uid() = inviter_id);
+
 -- Each agent's own Insurance Toolkits FEX Lite token (from their personal
 -- widget/link, e.g. insurancetoolkits.com/fex/lite-form/?token=...) - lets
 -- the Quoter page embed their own account's quoter, billed and licensed

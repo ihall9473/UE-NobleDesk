@@ -135,7 +135,6 @@ export async function GET(req) {
     upline: upline ? { id: upline.id, name: upline.name, role: upline.role } : null,
     downline,
     people,
-    inviteCode: process.env.APP_INVITE_CODE || "UpperEchelon",
     myProduction: productionTotals(clientDetails, compRatesByOwner, [user.id], dateRange),
     downlineProduction: productionTotals(clientDetails, compRatesByOwner, downlineIds, dateRange),
   });
