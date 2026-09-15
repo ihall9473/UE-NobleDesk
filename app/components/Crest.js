@@ -1,4 +1,4 @@
-// The Upper Echelon shield emblem, reused in the nav bar, login page, and
+// The NobleDesk shield emblem, reused in the nav bar, login page, and
 // the welcome/cover page. Pass glow to apply the pulsing gold glow used on
 // the bigger, more prominent versions.
 export default function Crest({ size = 26, glow = false, className = "" }) {

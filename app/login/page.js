@@ -42,20 +42,6 @@ export default function LoginPage() {
         <div className="login-rise" style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
           <Crest size={76} glow />
         </div>
-        <p
-          className="login-rise"
-          style={{
-            color: "#c9a227",
-            fontWeight: 700,
-            fontSize: 14,
-            letterSpacing: 5,
-            textTransform: "uppercase",
-            marginBottom: 18,
-            animationDelay: "0.15s",
-          }}
-        >
-          The Upper Echelon
-        </p>
         <h1
           className="login-rise"
           style={{
@@ -65,7 +51,7 @@ export default function LoginPage() {
             color: "#f5f5f5",
             marginBottom: 14,
             lineHeight: 1.1,
-            animationDelay: "0.3s",
+            animationDelay: "0.15s",
           }}
         >
           <span className="login-wordmark" style={{ fontStyle: "italic" }}>
@@ -80,10 +66,10 @@ export default function LoginPage() {
             margin: "0 auto 28px",
             borderRadius: 2,
             background: "linear-gradient(90deg, transparent, #c9a227, transparent)",
-            animationDelay: "0.45s",
+            animationDelay: "0.3s",
           }}
         />
-        <p className="subtitle login-rise" style={{ marginBottom: 36, fontSize: 16, animationDelay: "0.55s" }}>
+        <p className="subtitle login-rise" style={{ marginBottom: 36, fontSize: 16, animationDelay: "0.4s" }}>
           Log in with the email and password your admin gave you.
         </p>
         {error && <p className="error">{error}</p>}
