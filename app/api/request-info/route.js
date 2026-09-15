@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { normalizePhone } from "@/lib/twilio";
+import { TEXTING_ENABLED } from "@/lib/features";
 
 export async function POST(req) {
+  if (!TEXTING_ENABLED) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
   const { userId, name, phone, consent } = await req.json();
 
   if (!userId || !name || !phone) {
