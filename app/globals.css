@@ -149,6 +149,24 @@ body {
 }
 .nav-dropdown a { text-align: left; }
 
+.nav-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid rgba(201, 162, 39, 0.3);
+  border-radius: 10px;
+  color: var(--gold);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.nav-toggle:hover { background: rgba(201, 162, 39, 0.1); border-color: rgba(201, 162, 39, 0.55); }
+
 .main {
   max-width: 900px;
   margin: 0 auto;
