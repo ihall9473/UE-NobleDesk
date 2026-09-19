@@ -18,21 +18,22 @@ export async function GET() {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Never send encrypted SSN/bank fields to the list view, not even encrypted -
+  // A client can have more than one policy, so client_details comes back as
+  // an array (still `policies`, so nothing downstream has to guess). Never
+  // send encrypted SSN/bank fields to the list view, not even encrypted -
   // just enough to show a masked hint if needed.
   const clients = data.map((c) => {
-    const details = c.client_details || {};
-    return {
-      ...c,
-      client_details: {
+    const policies = (Array.isArray(c.client_details) ? c.client_details : c.client_details ? [c.client_details] : [])
+      .map((details) => ({
         ...details,
         ssn_encrypted: undefined,
         routing_number_encrypted: undefined,
         account_number_encrypted: undefined,
         hasSSN: !!details.ssn_encrypted,
         hasBankInfo: !!details.routing_number_encrypted,
-      },
-    };
+      }));
+    const { client_details, ...rest } = c;
+    return { ...rest, policies };
   });
 
   return NextResponse.json({ clients });
@@ -65,7 +66,7 @@ export async function POST(req) {
         state: body.contactState || null,
         deleted_at: null, // re-adding someone who was previously removed brings them back
       },
-      { onConflict: "owner_id,phone" }
+      { onConflict: "owner_id,phone,name" }
     )
     .select()
     .single();
@@ -105,20 +106,45 @@ async function bulkImport(supabase, ownerId, rows) {
 
   const { data: contacts, error: contactErr } = await supabase
     .from("contacts")
-    .upsert(contactRows, { onConflict: "owner_id,phone" })
+    .upsert(contactRows, { onConflict: "owner_id,phone,name" })
     .select();
   if (contactErr) return NextResponse.json({ error: contactErr.message }, { status: 500 });
 
-  const contactByPhone = new Map(contacts.map((c) => [c.phone, c]));
+  // A phone number alone no longer identifies one contact (household
+  // members can share a line), so match rows back to their contact by
+  // phone + name together.
+  const contactByPhoneName = new Map(contacts.map((c) => [`${c.phone}|${c.name.toLowerCase()}`, c]));
+
+  const contactIds = contacts.map((c) => c.id);
+  const { data: existingPolicies, error: existingErr } = await supabase
+    .from("client_details")
+    .select("id, contact_id, policy_number")
+    .in("contact_id", contactIds);
+  if (existingErr) return NextResponse.json({ error: existingErr.message }, { status: 500 });
+
+  // Re-importing the same sheet later (e.g. after adding new deals)
+  // shouldn't duplicate a policy already on file - match on contact +
+  // policy number and update that row in place instead of inserting again.
+  // A row with no policy number always creates a new policy, since there's
+  // nothing reliable to match it against.
+  const existingByContactAndPolicy = new Map(
+    (existingPolicies || [])
+      .filter((p) => p.policy_number)
+      .map((p) => [`${p.contact_id}|${p.policy_number}`, p.id])
+  );
+
   const today = new Date().toISOString().slice(0, 10);
   const detailsRows = [];
   const notes = [];
 
   cleaned.forEach((r) => {
-    const contact = contactByPhone.get(normalizePhone(r.phone));
+    const contact = contactByPhoneName.get(`${normalizePhone(r.phone)}|${r.name.trim().toLowerCase()}`);
     if (!contact) return;
-    detailsRows.push(buildDetailsRow({ ...r, applicationSubmittedDate: today }, ownerId, contact.id));
-    if (r.productName) {
+    const existingId = r.policyNumber
+      ? existingByContactAndPolicy.get(`${contact.id}|${r.policyNumber}`)
+      : undefined;
+    detailsRows.push(buildDetailsRow({ ...r, applicationSubmittedDate: today }, ownerId, contact.id, existingId));
+    if (r.productName && !existingId) {
       notes.push({
         owner_id: ownerId,
         contact_id: contact.id,

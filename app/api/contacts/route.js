@@ -67,7 +67,7 @@ export async function POST(req) {
 
   const { data, error } = await supabase
     .from("contacts")
-    .upsert(cleaned, { onConflict: "owner_id,phone" })
+    .upsert(cleaned, { onConflict: "owner_id,phone,name" })
     .select();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

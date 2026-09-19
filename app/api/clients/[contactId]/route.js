@@ -20,20 +20,29 @@ export async function GET(req, { params }) {
 
   if (error || !contact) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const details = contact.client_details || {};
-  // Decrypt only here, on the single-record view someone deliberately opened -
-  // never on the list view.
-  const decrypted = {
-    ...details,
-    ssn: decrypt(details.ssn_encrypted) || "",
-    routingNumber: decrypt(details.routing_number_encrypted) || "",
-    accountNumber: decrypt(details.account_number_encrypted) || "",
-  };
-  delete decrypted.ssn_encrypted;
-  delete decrypted.routing_number_encrypted;
-  delete decrypted.account_number_encrypted;
+  // A client can have more than one policy - decrypt each one. Only done
+  // here, on the single-record view someone deliberately opened, never on
+  // the list view.
+  const rawPolicies = Array.isArray(contact.client_details)
+    ? contact.client_details
+    : contact.client_details
+    ? [contact.client_details]
+    : [];
+  const policies = rawPolicies.map((details) => {
+    const decrypted = {
+      ...details,
+      ssn: decrypt(details.ssn_encrypted) || "",
+      routingNumber: decrypt(details.routing_number_encrypted) || "",
+      accountNumber: decrypt(details.account_number_encrypted) || "",
+    };
+    delete decrypted.ssn_encrypted;
+    delete decrypted.routing_number_encrypted;
+    delete decrypted.account_number_encrypted;
+    return decrypted;
+  });
 
-  return NextResponse.json({ contact: { ...contact, client_details: decrypted } });
+  const { client_details, ...rest } = contact;
+  return NextResponse.json({ contact: { ...rest, policies } });
 }
 
 export async function PATCH(req, { params }) {
@@ -46,11 +55,27 @@ export async function PATCH(req, { params }) {
 
   // Quick "mark beneficiaries as reviewed" action from the Alerts page -
   // a narrow update, not the full-form upsert below (which would need
-  // every other field re-sent or it'd null them out).
+  // every other field re-sent or it'd null them out). Targets one specific
+  // policy, since a client can have more than one.
   if (body.markBeneficiariesReviewed) {
+    if (!body.policyId) return NextResponse.json({ error: "policyId is required" }, { status: 400 });
     const { error } = await supabase
       .from("client_details")
       .update({ beneficiaries_reviewed_at: new Date().toISOString().slice(0, 10) })
+      .eq("id", body.policyId)
+      .eq("contact_id", contactId)
+      .eq("owner_id", user.id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: true });
+  }
+
+  // Removing a single policy (e.g. it was entered by mistake), not the
+  // whole client - "Delete Client" below handles removing everyone.
+  if (body.deletePolicyId) {
+    const { error } = await supabase
+      .from("client_details")
+      .delete()
+      .eq("id", body.deletePolicyId)
       .eq("contact_id", contactId)
       .eq("owner_id", user.id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -83,9 +108,13 @@ export async function PATCH(req, { params }) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const detailsRow = buildDetailsRow(body, user.id, contactId);
-  const { error: detailsErr } = await supabase.from("client_details").upsert(detailsRow);
-  if (detailsErr) return NextResponse.json({ error: detailsErr.message }, { status: 500 });
+  // A client can have more than one policy - body.policyId says which one
+  // to update, or omit it (with newPolicy: true) to add another.
+  if (body.policyId || body.newPolicy) {
+    const detailsRow = buildDetailsRow(body, user.id, contactId, body.policyId || undefined);
+    const { error: detailsErr } = await supabase.from("client_details").upsert(detailsRow);
+    if (detailsErr) return NextResponse.json({ error: detailsErr.message }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true });
 }

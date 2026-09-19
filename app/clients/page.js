@@ -37,6 +37,19 @@ function splitName(fullName) {
   return { first: parts[0] || "", last: parts.slice(1).join(" ") || "" };
 }
 
+// A client can have more than one policy (a rewrite, an add-on, one
+// cancelled and replaced) - for anything that needs to boil a client down
+// to a single row (sorting, the carrier/state filters), prefer their most
+// recently updated active policy, falling back to their most recently
+// updated policy of any status.
+function primaryPolicy(client) {
+  const policies = client.policies || [];
+  if (policies.length === 0) return {};
+  const active = policies.filter((p) => (p.policy_status || "active") === "active");
+  const pool = active.length > 0 ? active : policies;
+  return [...pool].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0];
+}
+
 // Isolated in its own component (and Suspense boundary below) since
 // useSearchParams() would otherwise force the whole page out of static
 // rendering. Picked up right after deleting a client from their detail
@@ -164,31 +177,28 @@ export default function ClientsPage() {
 
   const allClients = clients || [];
 
-  const carrierOptions = [...new Set(allClients.map((c) => c.client_details?.carrier).filter(Boolean))].sort();
-  const stateOptions = [...new Set(allClients.map((c) => c.client_details?.state).filter(Boolean))].sort();
+  const carrierOptions = [...new Set(allClients.flatMap((c) => (c.policies || []).map((p) => p.carrier)).filter(Boolean))].sort();
+  const stateOptions = [...new Set(allClients.flatMap((c) => (c.policies || []).map((p) => p.state)).filter(Boolean))].sort();
 
   const dateRange = getDateRange(datePreset, customDate, customStart, customEnd);
   const effectiveDateRange = getDateRange(effectiveDatePreset, effectiveCustomDate, effectiveCustomStart, effectiveCustomEnd);
 
   let visible = allClients.filter((c) => {
+    const policies = c.policies || [];
     const matchesSearch =
       c.name.toLowerCase().includes(search.toLowerCase()) || c.phone.includes(search);
-    const matchesCarrier = carrierFilter === "all" || c.client_details?.carrier === carrierFilter;
-    const matchesState = stateFilter === "all" || c.client_details?.state === stateFilter;
+    const matchesCarrier = carrierFilter === "all" || policies.some((p) => p.carrier === carrierFilter);
+    const matchesState = stateFilter === "all" || policies.some((p) => p.state === stateFilter);
 
-    let matchesDate = true;
-    if (dateRange) {
-      const submitted = c.client_details?.application_submitted_date;
-      matchesDate = !!submitted && submitted >= dateRange.start && submitted <= dateRange.end;
-    }
+    const matchesDate =
+      !dateRange ||
+      policies.some((p) => p.application_submitted_date && p.application_submitted_date >= dateRange.start && p.application_submitted_date <= dateRange.end);
 
-    let matchesEffectiveDate = true;
-    if (effectiveDateRange) {
-      const effective = c.client_details?.effective_date;
-      matchesEffectiveDate = !!effective && effective >= effectiveDateRange.start && effective <= effectiveDateRange.end;
-    }
+    const matchesEffectiveDate =
+      !effectiveDateRange ||
+      policies.some((p) => p.effective_date && p.effective_date >= effectiveDateRange.start && p.effective_date <= effectiveDateRange.end);
 
-    const matchesAtRisk = !atRiskOnly || ["lapsed", "chargeback"].includes(c.client_details?.policy_status);
+    const matchesAtRisk = !atRiskOnly || policies.some((p) => ["lapsed", "chargeback"].includes(p.policy_status));
 
     return matchesSearch && matchesCarrier && matchesState && matchesDate && matchesEffectiveDate && matchesAtRisk;
   });
@@ -196,38 +206,41 @@ export default function ClientsPage() {
   visible = [...visible].sort((a, b) => {
     if (sortBy === "firstName") return splitName(a.name).first.localeCompare(splitName(b.name).first);
     if (sortBy === "lastName") return splitName(a.name).last.localeCompare(splitName(b.name).last);
-    if (sortBy === "carrier") return (a.client_details?.carrier || "").localeCompare(b.client_details?.carrier || "");
-    if (sortBy === "state") return (a.client_details?.state || "").localeCompare(b.client_details?.state || "");
-    if (sortBy === "effectiveDate") return (a.client_details?.effective_date || "").localeCompare(b.client_details?.effective_date || "");
-    if (sortBy === "submittedDate") return (a.client_details?.application_submitted_date || "").localeCompare(b.client_details?.application_submitted_date || "");
+    const pa = primaryPolicy(a);
+    const pb = primaryPolicy(b);
+    if (sortBy === "carrier") return (pa.carrier || "").localeCompare(pb.carrier || "");
+    if (sortBy === "state") return (pa.state || "").localeCompare(pb.state || "");
+    if (sortBy === "effectiveDate") return (pa.effective_date || "").localeCompare(pb.effective_date || "");
+    if (sortBy === "submittedDate") return (pa.application_submitted_date || "").localeCompare(pb.application_submitted_date || "");
     return 0;
   });
 
   const totalMonthly = visible.reduce((sum, c) => {
-    const raw = c.client_details?.monthly_premium;
-    if (!raw) return sum;
-    const num = parseFloat(String(raw).replace(/[^0-9.]/g, ""));
-    return isNaN(num) ? sum : sum + num;
+    return sum + (c.policies || []).reduce((policySum, p) => {
+      const num = parseFloat(String(p.monthly_premium || "").replace(/[^0-9.]/g, ""));
+      return isNaN(num) ? policySum : policySum + num;
+    }, 0);
   }, 0);
   const totalAnnual = totalMonthly * 12;
-  const clientsWithPremium = visible.filter((c) => c.client_details?.monthly_premium).length;
+  const policiesWithPremium = visible.reduce((sum, c) => sum + (c.policies || []).filter((p) => p.monthly_premium).length, 0);
   const isFiltered =
     search || carrierFilter !== "all" || stateFilter !== "all" || datePreset !== "all" ||
     effectiveDatePreset !== "all" || atRiskOnly;
 
   const upcomingDrafts = allClients
-    .map((c) => ({ client: c, draft: nextDraftInfo(c.client_details?.draft_date) }))
+    .flatMap((c) => (c.policies || []).map((p) => ({ client: c, policy: p, draft: nextDraftInfo(p.draft_date) })))
     .filter(({ draft }) => draft && draft.daysUntil >= 0 && draft.daysUntil <= DRAFT_WARNING_DAYS)
     .sort((a, b) => a.draft.daysUntil - b.draft.daysUntil);
 
   const upcomingConversions = allClients
-    .map((c) => ({ client: c, daysUntil: daysUntilConversion(c.client_details?.term_conversion_deadline) }))
+    .flatMap((c) => (c.policies || []).map((p) => ({ client: c, daysUntil: daysUntilConversion(p.term_conversion_deadline) })))
     .filter(({ daysUntil }) => daysUntil !== null && daysUntil >= 0 && daysUntil <= CONVERSION_WARNING_DAYS)
     .sort((a, b) => a.daysUntil - b.daysUntil);
 
-  const atRiskCount = allClients.filter((c) =>
-    ["lapsed", "chargeback"].includes(c.client_details?.policy_status)
-  ).length;
+  const atRiskCount = allClients.reduce(
+    (sum, c) => sum + (c.policies || []).filter((p) => ["lapsed", "chargeback"].includes(p.policy_status)).length,
+    0
+  );
 
   return (
     <div>
@@ -262,7 +275,7 @@ export default function ClientsPage() {
             <div style={{ textAlign: "right", color: "#9a9a9a", fontSize: 13 }}>
               ${totalMonthly.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/mo total
               <br />
-              across {clientsWithPremium} of {isFiltered ? visible.length : allClients.length} clients
+              across {policiesWithPremium} polic{policiesWithPremium === 1 ? "y" : "ies"}
             </div>
           </div>
         </div>
@@ -277,16 +290,17 @@ export default function ClientsPage() {
             Get ahead of an NSF or lapse — a heads-up before these draft, based on the draft date
             saved on each client.
           </p>
-          {upcomingDrafts.map(({ client, draft }) => (
+          {upcomingDrafts.map(({ client, policy, draft }) => (
             <a
-              key={client.id}
+              key={policy.id}
               href={`/clients/${client.id}`}
               style={{ display: "block", textDecoration: "none", color: "inherit", fontSize: 14, marginBottom: 4 }}
             >
               <strong>{client.name}</strong>{" "}
               <span style={{ color: "#9a9a9a" }}>
                 — {draft.daysUntil === 0 ? "drafts today" : `drafts in ${draft.daysUntil} day${draft.daysUntil === 1 ? "" : "s"}`}
-                {client.client_details?.monthly_premium ? ` (${formatCurrency(client.client_details.monthly_premium)})` : ""}
+                {policy.carrier ? ` (${policy.carrier})` : ""}
+                {policy.monthly_premium ? ` (${formatCurrency(policy.monthly_premium)})` : ""}
               </span>
             </a>
           ))}
@@ -495,61 +509,77 @@ export default function ClientsPage() {
       </h3>
       {clients === null && <p>Loading...</p>}
       {visible.map((c) => {
-        const d = c.client_details || {};
-        const draft = nextDraftInfo(d.draft_date);
-        const draftSoon = draft && draft.daysUntil >= 0 && draft.daysUntil <= DRAFT_WARNING_DAYS;
+        const policies = c.policies || [];
+        const p = primaryPolicy(c);
         return (
           <a href={`/clients/${c.id}`} key={c.id} style={{ textDecoration: "none", color: "inherit" }}>
             <div className="card">
               <div className="row">
                 <div>
                   <strong>{c.name}</strong>
-                  {d.state && (
+                  {p.state && (
                     <span style={{ fontSize: 13, color: "#9a9a9a", fontWeight: 600, marginLeft: 8 }}>
-                      {d.state}
+                      {p.state}
+                    </span>
+                  )}
+                  {policies.length > 1 && (
+                    <span style={{ fontSize: 13, color: "#9a9a9a", marginLeft: 8 }}>
+                      {policies.length} policies
                     </span>
                   )}
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  {POLICY_STATUS_LABELS[d.policy_status] && (
-                    <span className="badge" style={{ color: "var(--danger)", borderColor: "var(--danger)", background: "rgba(248,113,113,0.08)" }}>
-                      {POLICY_STATUS_LABELS[d.policy_status]}
-                    </span>
-                  )}
-                  {draftSoon && (
-                    <span className="badge" style={{ color: "var(--danger)", borderColor: "var(--danger)", background: "rgba(248,113,113,0.08)" }}>
-                      {draft.daysUntil === 0 ? "Drafts today" : `Drafts in ${draft.daysUntil}d`}
-                    </span>
-                  )}
-                  <span style={{ fontSize: 13, color: "#9a9a9a" }}>{c.phone}</span>
-                </div>
+                <span style={{ fontSize: 13, color: "#9a9a9a" }}>{c.phone}</span>
               </div>
-              <div style={{ color: "var(--text)", fontSize: 14.5, marginTop: 6 }}>
-                {d.carrier || "No carrier set"}
-                {d.policy_product ? ` · ${d.policy_product}` : ""}
-                {d.coverage_amount ? ` · ${formatCurrency(d.coverage_amount)} coverage` : ""}
-                {d.monthly_premium ? ` · ${formatCurrency(d.monthly_premium)}/mo` : ""}
-              </div>
-              {d.underwriting_stage && d.underwriting_stage !== "placed" && (
-                <div style={{ marginTop: 2 }}>
-                  <span
-                    className="badge"
-                    style={
-                      d.underwriting_stage === "declined"
-                        ? { color: "var(--danger)", borderColor: "var(--danger)", background: "rgba(248,113,113,0.08)" }
-                        : { color: "var(--gold)", borderColor: "var(--gold)", background: "rgba(201,162,39,0.08)" }
-                    }
-                  >
-                    {UNDERWRITING_LABELS[d.underwriting_stage]}
-                  </span>
-                </div>
+              {policies.length === 0 && (
+                <p className="subtitle" style={{ marginTop: 6, marginBottom: 0 }}>No policy details yet.</p>
               )}
-              <div style={{ color: "var(--text)", fontSize: 14.5, marginTop: 2 }}>
-                Effective: {formatDate(d.effective_date) || "—"}
-              </div>
-              <div style={{ color: "#9a9a9a", fontSize: 13, marginTop: 2 }}>
-                Submitted: {formatDate(d.application_submitted_date) || "—"}
-              </div>
+              {policies.map((d) => {
+                const draft = nextDraftInfo(d.draft_date);
+                const draftSoon = draft && draft.daysUntil >= 0 && draft.daysUntil <= DRAFT_WARNING_DAYS;
+                return (
+                  <div
+                    key={d.id}
+                    style={policies.length > 1 ? { marginTop: 10, paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.08)" } : { marginTop: 6 }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                      {POLICY_STATUS_LABELS[d.policy_status] && (
+                        <span className="badge" style={{ color: "var(--danger)", borderColor: "var(--danger)", background: "rgba(248,113,113,0.08)" }}>
+                          {POLICY_STATUS_LABELS[d.policy_status]}
+                        </span>
+                      )}
+                      {draftSoon && (
+                        <span className="badge" style={{ color: "var(--danger)", borderColor: "var(--danger)", background: "rgba(248,113,113,0.08)" }}>
+                          {draft.daysUntil === 0 ? "Drafts today" : `Drafts in ${draft.daysUntil}d`}
+                        </span>
+                      )}
+                      {d.underwriting_stage && d.underwriting_stage !== "placed" && (
+                        <span
+                          className="badge"
+                          style={
+                            d.underwriting_stage === "declined"
+                              ? { color: "var(--danger)", borderColor: "var(--danger)", background: "rgba(248,113,113,0.08)" }
+                              : { color: "var(--gold)", borderColor: "var(--gold)", background: "rgba(201,162,39,0.08)" }
+                          }
+                        >
+                          {UNDERWRITING_LABELS[d.underwriting_stage]}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ color: "var(--text)", fontSize: 14.5 }}>
+                      {d.carrier || "No carrier set"}
+                      {d.policy_product ? ` · ${d.policy_product}` : ""}
+                      {d.coverage_amount ? ` · ${formatCurrency(d.coverage_amount)} coverage` : ""}
+                      {d.monthly_premium ? ` · ${formatCurrency(d.monthly_premium)}/mo` : ""}
+                    </div>
+                    <div style={{ color: "var(--text)", fontSize: 14.5, marginTop: 2 }}>
+                      Effective: {formatDate(d.effective_date) || "—"}
+                    </div>
+                    <div style={{ color: "#9a9a9a", fontSize: 13, marginTop: 2 }}>
+                      Submitted: {formatDate(d.application_submitted_date) || "—"}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </a>
         );

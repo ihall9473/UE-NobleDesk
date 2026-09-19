@@ -46,12 +46,15 @@ export async function GET() {
         .eq("owner_id", user.id)
         .eq("type", "client");
 
+      // A client can have more than one policy - match if ANY of them has
+      // a date of birth on file for today.
       candidates = (clients || []).filter((c) => {
-        const details = Array.isArray(c.client_details) ? c.client_details[0] : c.client_details;
-        const dob = details?.date_of_birth;
-        if (!dob) return false;
-        const d = new Date(dob + "T00:00:00");
-        return d.getMonth() + 1 === todayMonth && d.getDate() === todayDay;
+        const policies = Array.isArray(c.client_details) ? c.client_details : c.client_details ? [c.client_details] : [];
+        return policies.some((p) => {
+          if (!p.date_of_birth) return false;
+          const d = new Date(p.date_of_birth + "T00:00:00");
+          return d.getMonth() + 1 === todayMonth && d.getDate() === todayDay;
+        });
       });
     } else if (occasion.kind === "policy_anniversary") {
       const { data: clients } = await supabase
@@ -60,12 +63,15 @@ export async function GET() {
         .eq("owner_id", user.id)
         .eq("type", "client");
 
+      // Match if ANY of a client's policies was submitted on this day in a
+      // prior year - each policy has its own anniversary.
       candidates = (clients || []).filter((c) => {
-        const details = Array.isArray(c.client_details) ? c.client_details[0] : c.client_details;
-        const submitted = details?.application_submitted_date;
-        if (!submitted) return false;
-        const d = new Date(submitted + "T00:00:00");
-        return d.getMonth() + 1 === todayMonth && d.getDate() === todayDay && year > d.getFullYear();
+        const policies = Array.isArray(c.client_details) ? c.client_details : c.client_details ? [c.client_details] : [];
+        return policies.some((p) => {
+          if (!p.application_submitted_date) return false;
+          const d = new Date(p.application_submitted_date + "T00:00:00");
+          return d.getMonth() + 1 === todayMonth && d.getDate() === todayDay && year > d.getFullYear();
+        });
       });
     }
 

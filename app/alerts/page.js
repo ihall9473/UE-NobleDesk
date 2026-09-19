@@ -31,11 +31,11 @@ export default function AlertsPage() {
     load();
   }, []);
 
-  async function markReviewed(contactId) {
+  async function markReviewed(contactId, policyId) {
     await fetch(`/api/clients/${contactId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ markBeneficiariesReviewed: true }),
+      body: JSON.stringify({ markBeneficiariesReviewed: true, policyId }),
     });
     load();
   }
@@ -68,15 +68,18 @@ export default function AlertsPage() {
         description="Get ahead of an NSF or lapse before it drafts."
         empty={data.upcomingDrafts.length === 0}
       >
-        {data.upcomingDrafts.map(({ client, daysUntil }) => (
-          <a key={client.id} href={`/clients/${client.id}`} style={{ display: "block", textDecoration: "none", color: "inherit", fontSize: 14, marginBottom: 4 }}>
-            <strong>{client.name}</strong>{" "}
-            <span style={{ color: "#9a9a9a" }}>
-              — {daysUntil === 0 ? "drafts today" : `drafts in ${daysUntil} day${daysUntil === 1 ? "" : "s"}`}
-              {client.client_details?.monthly_premium ? ` (${formatCurrency(client.client_details.monthly_premium)})` : ""}
-            </span>
-          </a>
-        ))}
+        {data.upcomingDrafts.map(({ client, policyId, carrier, monthlyPremium, daysUntil }) => {
+          const detail = [carrier, monthlyPremium ? formatCurrency(monthlyPremium) : null].filter(Boolean).join(", ");
+          return (
+            <a key={policyId} href={`/clients/${client.id}`} style={{ display: "block", textDecoration: "none", color: "inherit", fontSize: 14, marginBottom: 4 }}>
+              <strong>{client.name}</strong>{" "}
+              <span style={{ color: "#9a9a9a" }}>
+                — {daysUntil === 0 ? "drafts today" : `drafts in ${daysUntil} day${daysUntil === 1 ? "" : "s"}`}
+                {detail ? ` (${detail})` : ""}
+              </span>
+            </a>
+          );
+        })}
       </AlertCard>
 
       <AlertCard
@@ -85,8 +88,8 @@ export default function AlertsPage() {
         description="Miss one of these and the client loses the option to convert for good."
         empty={data.upcomingConversions.length === 0}
       >
-        {data.upcomingConversions.map(({ client, daysUntil }) => (
-          <a key={client.id} href={`/clients/${client.id}`} style={{ display: "block", textDecoration: "none", color: "inherit", fontSize: 14, marginBottom: 4 }}>
+        {data.upcomingConversions.map(({ client, policyId, daysUntil }) => (
+          <a key={policyId} href={`/clients/${client.id}`} style={{ display: "block", textDecoration: "none", color: "inherit", fontSize: 14, marginBottom: 4 }}>
             <strong>{client.name}</strong>{" "}
             <span style={{ color: "#9a9a9a" }}>— {daysUntil === 0 ? "deadline is today" : `${daysUntil} day${daysUntil === 1 ? "" : "s"} left to convert`}</span>
           </a>
@@ -99,8 +102,8 @@ export default function AlertsPage() {
         description="A good excuse to check in and look for cross-sell/referral opportunities."
         empty={data.upcomingAnniversaries.length === 0}
       >
-        {data.upcomingAnniversaries.map(({ client, daysUntil, years }) => (
-          <a key={client.id} href={`/clients/${client.id}`} style={{ display: "block", textDecoration: "none", color: "inherit", fontSize: 14, marginBottom: 4 }}>
+        {data.upcomingAnniversaries.map(({ client, policyId, daysUntil, years }) => (
+          <a key={policyId} href={`/clients/${client.id}`} style={{ display: "block", textDecoration: "none", color: "inherit", fontSize: 14, marginBottom: 4 }}>
             <strong>{client.name}</strong>{" "}
             <span style={{ color: "#9a9a9a" }}>
               — {years}-year anniversary {daysUntil === 0 ? "is today" : `in ${daysUntil} day${daysUntil === 1 ? "" : "s"}`}
@@ -116,9 +119,11 @@ export default function AlertsPage() {
         empty={data.atRiskPolicies.length === 0}
       >
         {data.atRiskPolicies.map((client) => (
-          <a key={client.id} href={`/clients/${client.id}`} style={{ display: "block", textDecoration: "none", color: "inherit", fontSize: 14, marginBottom: 4 }}>
+          <a key={client.client_details.id} href={`/clients/${client.id}`} style={{ display: "block", textDecoration: "none", color: "inherit", fontSize: 14, marginBottom: 4 }}>
             <strong>{client.name}</strong>{" "}
-            <span style={{ color: "#9a9a9a", textTransform: "capitalize" }}>— {client.client_details?.policy_status}</span>
+            <span style={{ color: "#9a9a9a", textTransform: "capitalize" }}>
+              — {client.client_details?.policy_status}{client.client_details?.carrier ? ` (${client.client_details.carrier})` : ""}
+            </span>
           </a>
         ))}
       </AlertCard>
@@ -130,11 +135,11 @@ export default function AlertsPage() {
         empty={data.beneficiaryReviewNeeded.length === 0}
       >
         {data.beneficiaryReviewNeeded.map((client) => (
-          <div key={client.id} className="row" style={{ marginBottom: 6 }}>
+          <div key={client.policyId} className="row" style={{ marginBottom: 6 }}>
             <a href={`/clients/${client.id}`} style={{ textDecoration: "none", color: "inherit", fontSize: 14 }}>
               <strong>{client.name}</strong>
             </a>
-            <button type="button" onClick={() => markReviewed(client.id)} style={{ width: "auto", marginBottom: 0, fontSize: 12, padding: "4px 10px" }}>
+            <button type="button" onClick={() => markReviewed(client.id, client.policyId)} style={{ width: "auto", marginBottom: 0, fontSize: 12, padding: "4px 10px" }}>
               Mark Reviewed
             </button>
           </div>
