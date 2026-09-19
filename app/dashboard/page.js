@@ -13,29 +13,27 @@ export default function DashboardPage() {
 
   if (!clients) return <p>Loading...</p>;
 
+  // A client can have more than one policy - flatten to one row per policy,
+  // since this valuation is about policies, not clients.
+  const policies = clients.flatMap((c) => c.policies || []);
+
   // "In force" = still active - lapsed/chargeback/cancelled policies are
   // no longer paying premium or covering anyone, so they don't belong in
   // a book-of-business valuation.
-  const inForce = clients.filter((c) => (c.client_details?.policy_status || "active") === "active");
+  const inForce = policies.filter((p) => (p.policy_status || "active") === "active");
 
-  const totalMonthlyPremium = inForce.reduce(
-    (sum, c) => sum + parseCurrency(c.client_details?.monthly_premium),
-    0
-  );
-  const totalDeathBenefit = inForce.reduce(
-    (sum, c) => sum + parseCurrency(c.client_details?.coverage_amount),
-    0
-  );
-  const policiesWithCoverage = inForce.filter((c) => c.client_details?.coverage_amount).length;
+  const totalMonthlyPremium = inForce.reduce((sum, p) => sum + parseCurrency(p.monthly_premium), 0);
+  const totalDeathBenefit = inForce.reduce((sum, p) => sum + parseCurrency(p.coverage_amount), 0);
+  const policiesWithCoverage = inForce.filter((p) => p.coverage_amount).length;
   const averagePolicySize = policiesWithCoverage > 0 ? totalDeathBenefit / policiesWithCoverage : 0;
-  const notInForceCount = clients.length - inForce.length;
+  const notInForceCount = policies.length - inForce.length;
 
   // Persistency rate: of everything ever actually placed (has a carrier),
   // what fraction is still in force? A retention health check, separate
   // from the in-force valuation above. Scoped to placed policies only, so
   // a brand-new client with no carrier entered yet doesn't skew the ratio.
-  const placedPolicies = clients.filter((c) => c.client_details?.carrier);
-  const placedAndInForce = placedPolicies.filter((c) => (c.client_details?.policy_status || "active") === "active");
+  const placedPolicies = policies.filter((p) => p.carrier);
+  const placedAndInForce = placedPolicies.filter((p) => (p.policy_status || "active") === "active");
   const persistencyRate = placedPolicies.length > 0 ? (placedAndInForce.length / placedPolicies.length) * 100 : null;
 
   return (

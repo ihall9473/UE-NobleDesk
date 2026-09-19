@@ -29,7 +29,7 @@ export async function POST(req) {
       type: "lead",
       sms_consent: !!consent,
     },
-    { onConflict: "owner_id,phone" }
+    { onConflict: "owner_id,phone,name" }
   );
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

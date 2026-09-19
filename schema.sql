@@ -46,8 +46,15 @@ create table if not exists contacts (
   sms_consent boolean not null default true, -- false only when someone explicitly declined the texting checkbox on the public Request Info form
   created_at timestamptz default now(),
   deleted_at timestamptz, -- soft delete: set instead of actually deleting, so "Undo" can restore
-  unique(owner_id, phone)
+  unique(owner_id, phone, name)
 );
+
+-- Already deployed this app when a phone number could only ever belong to
+-- one contact? Widen it to (owner_id, phone, name) so household members who
+-- share a phone line (e.g. spouses) can each have their own contact record -
+-- safe to re-run any time, and doesn't touch any existing contacts:
+alter table contacts drop constraint if exists contacts_owner_id_phone_key;
+alter table contacts add constraint contacts_owner_id_phone_name_key unique (owner_id, phone, name);
 
 -- Already deployed this app before the "state" column existed? Safe to
 -- re-run any time - adds it without losing any existing contacts:
@@ -93,12 +100,15 @@ create index if not exists messages_contact_id_idx on messages(contact_id);
 create index if not exists contacts_owner_id_idx on contacts(owner_id);
 create index if not exists profiles_twilio_number_idx on profiles(twilio_number);
 
--- Full policy/underwriting details for a client, one row per contact of
--- type 'client'. Kept separate from `contacts` since leads never need
--- these fields. SSN and bank numbers are stored encrypted (see lib/encryption.js) -
--- this column just holds the encrypted text, never the real number.
+-- Full policy/underwriting details for a client - one row per POLICY, not
+-- per client, since the same client can have more than one (a rewrite, an
+-- additional policy, one cancelled and replaced). Kept separate from
+-- `contacts` since leads never need these fields. SSN and bank numbers are
+-- stored encrypted (see lib/encryption.js) - this column just holds the
+-- encrypted text, never the real number.
 create table if not exists client_details (
-  contact_id uuid primary key references contacts(id) on delete cascade,
+  id uuid primary key default gen_random_uuid(),
+  contact_id uuid references contacts(id) on delete cascade,
   owner_id uuid references profiles(id) on delete cascade,
   carrier text,
   policy_product text check (policy_product in ('Whole Life', 'Term', 'IUL')),
@@ -142,6 +152,19 @@ alter table client_details enable row level security;
 drop policy if exists "Users manage their own client details" on client_details;
 create policy "Users manage their own client details" on client_details
   for all using (auth.uid() = owner_id);
+
+-- Already deployed this app before a client could have more than one
+-- policy? contact_id used to be the primary key (one row per client) - this
+-- gives every row its own id instead and drops that old constraint, so a
+-- client can have several policies (a rewrite, an add-on, one cancelled and
+-- replaced) without the newest overwriting the last. Safe to re-run any
+-- time, and doesn't touch any existing policy data:
+alter table client_details add column if not exists id uuid default gen_random_uuid();
+update client_details set id = gen_random_uuid() where id is null;
+alter table client_details alter column id set not null;
+alter table client_details drop constraint if exists client_details_pkey;
+alter table client_details add constraint client_details_pkey primary key (id);
+create index if not exists client_details_contact_id_idx on client_details(contact_id);
 
 -- Already deployed this app before the Client Sheet fields existed? These
 -- add the new columns without losing any existing client data - safe to

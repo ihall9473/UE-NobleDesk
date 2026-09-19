@@ -65,12 +65,15 @@ export async function GET(req) {
           .eq("owner_id", profile.id)
           .eq("type", "client");
 
+        // A client can have more than one policy - match if ANY of them
+        // has a date of birth on file for today.
         matchingContacts = (clients || []).filter((c) => {
-          const details = Array.isArray(c.client_details) ? c.client_details[0] : c.client_details;
-          const dob = details?.date_of_birth;
-          if (!dob) return false;
-          const d = new Date(dob + "T00:00:00");
-          return d.getMonth() + 1 === todayMonth && d.getDate() === todayDay;
+          const policies = Array.isArray(c.client_details) ? c.client_details : c.client_details ? [c.client_details] : [];
+          return policies.some((p) => {
+            if (!p.date_of_birth) return false;
+            const d = new Date(p.date_of_birth + "T00:00:00");
+            return d.getMonth() + 1 === todayMonth && d.getDate() === todayDay;
+          });
         });
       } else if (occasion.kind === "policy_anniversary") {
         const { data: clients } = await supabaseAdmin
@@ -79,21 +82,23 @@ export async function GET(req) {
           .eq("owner_id", profile.id)
           .eq("type", "client");
 
+        // Each policy has its own anniversary - use whichever one of a
+        // client's policies actually lands on today, skipping the day it
+        // was submitted (only fire starting one year later).
         matchingContacts = (clients || [])
           .map((c) => {
-            const details = Array.isArray(c.client_details) ? c.client_details[0] : c.client_details;
-            return { contact: c, submitted: details?.application_submitted_date };
+            const policies = Array.isArray(c.client_details) ? c.client_details : c.client_details ? [c.client_details] : [];
+            const anniversary = policies.find((p) => {
+              if (!p.application_submitted_date) return false;
+              const d = new Date(p.application_submitted_date + "T00:00:00");
+              return d.getMonth() + 1 === todayMonth && d.getDate() === todayDay && year > d.getFullYear();
+            });
+            return { contact: c, anniversary };
           })
-          .filter(({ submitted }) => {
-            if (!submitted) return false;
-            const d = new Date(submitted + "T00:00:00");
-            // Skip the day the policy was actually submitted - only fire on
-            // real anniversaries, starting one year later.
-            return d.getMonth() + 1 === todayMonth && d.getDate() === todayDay && year > d.getFullYear();
-          })
-          .map(({ contact, submitted }) => ({
+          .filter(({ anniversary }) => !!anniversary)
+          .map(({ contact, anniversary }) => ({
             ...contact,
-            _years: year - new Date(submitted + "T00:00:00").getFullYear(),
+            _years: year - new Date(anniversary.application_submitted_date + "T00:00:00").getFullYear(),
           }));
       }
 
