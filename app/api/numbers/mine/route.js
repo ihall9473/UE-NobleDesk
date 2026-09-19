@@ -8,7 +8,7 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not logged in" }, { status: 401 });
 
-  const { data: profile } = await supabase.from("profiles").select("twilio_number").eq("id", user.id).single();
+  const { data: profile } = await supabase.from("profiles").select("mailchimp_number").eq("id", user.id).single();
   const { data: numbers, error } = await supabase
     .from("phone_numbers")
     .select("*")
@@ -17,7 +17,7 @@ export async function GET() {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ numbers, active: profile?.twilio_number || null });
+  return NextResponse.json({ numbers, active: profile?.mailchimp_number || null });
 }
 
 // Rename (label) one of your numbers - e.g. "A2P Campaign" vs "Personal".

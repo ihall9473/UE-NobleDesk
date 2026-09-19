@@ -33,7 +33,7 @@ function ConversationsPageInner() {
   }
 
   const visible =
-    filter === "all" ? conversations : conversations.filter((c) => c.twilio_number === filter);
+    filter === "all" ? conversations : conversations.filter((c) => c.mailchimp_number === filter);
 
   return (
     <div>
@@ -82,9 +82,9 @@ function ConversationsPageInner() {
               {c.lastMessage.direction === "outbound" ? "You: " : ""}
               {c.lastMessage.body}
             </div>
-            {numbers.length > 1 && c.twilio_number && (
+            {numbers.length > 1 && c.mailchimp_number && (
               <div style={{ fontSize: 11, color: "#888", marginTop: 4 }}>
-                via {numberLabel(c.twilio_number)}
+                via {numberLabel(c.mailchimp_number)}
               </div>
             )}
           </div>

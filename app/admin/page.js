@@ -156,8 +156,8 @@ export default function AdminPage() {
             </div>
             {TEXTING_ENABLED && (
               <div style={{ color: "#666", fontSize: 13, marginTop: 6 }}>
-                {member.twilio_number ? (
-                  <span>Number: {member.twilio_number}</span>
+                {member.mailchimp_number ? (
+                  <span>Number: {member.mailchimp_number}</span>
                 ) : (
                   <span style={{ color: "#b45309" }}>No number set up yet</span>
                 )}

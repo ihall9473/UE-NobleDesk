@@ -75,9 +75,10 @@ export async function GET() {
       // inspectable, so stripping only matters if it happens here.
       twilio_auth_token: undefined,
       twilio_account_sid: undefined,
+      mailchimp_api_key: undefined,
       insurance_toolkits_token: undefined,
-      twilio_number: TEXTING_ENABLED ? p.twilio_number : undefined,
-      hasTwilioConnected: TEXTING_ENABLED ? !!p.twilio_account_sid : undefined,
+      mailchimp_number: TEXTING_ENABLED ? p.mailchimp_number : undefined,
+      hasMailchimpConnected: TEXTING_ENABLED ? !!p.mailchimp_api_key : undefined,
       contactCount: contactTotals[p.id] || 0,
       messageCount: TEXTING_ENABLED ? messageCounts[p.id] || 0 : undefined,
       responseRate: TEXTING_ENABLED ? responseRate : undefined, // null = no outbound texts sent yet
@@ -94,7 +95,7 @@ export async function GET() {
 
 // Creates a brand-new coworker login (alternative to self-serve signup).
 // They'll get an email to set their own password, then connect their own
-// Twilio account and number themselves in Settings.
+// Mailchimp account and number themselves in Settings.
 export async function POST(req) {
   const check = await requireStaff();
   if (check.error) return NextResponse.json({ error: check.error }, { status: check.status });
@@ -130,7 +131,7 @@ export async function POST(req) {
   return NextResponse.json({ ok: true });
 }
 
-// Change a coworker's role. (Numbers/Twilio are self-managed now, in Settings.)
+// Change a coworker's role. (Numbers/Mailchimp are self-managed now, in Settings.)
 export async function PATCH(req) {
   const check = await requireStaff();
   if (check.error) return NextResponse.json({ error: check.error }, { status: check.status });

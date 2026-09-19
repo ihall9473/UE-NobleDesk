@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
-import { normalizePhone } from "@/lib/twilio";
+import { normalizePhone } from "@/lib/phone";
 
 export async function GET(req) {
   const supabase = supabaseServer();

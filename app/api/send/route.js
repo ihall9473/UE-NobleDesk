@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
-import { twilioClientFor } from "@/lib/twilio";
+import { mailchimpConfigFor, sendSms } from "@/lib/mailchimp";
 import { fillMessageTemplate } from "@/lib/messageTemplate";
 
+// Sends to every selected recipient as its own individual text - never a
+// group thread - by looping this one at a time, same as Compose always has.
 export async function POST(req) {
   const supabase = supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
@@ -14,16 +16,10 @@ export async function POST(req) {
     .eq("id", user.id)
     .single();
 
-  const twilioClient = twilioClientFor(profile);
-  if (!twilioClient) {
+  const mailchimp = mailchimpConfigFor(profile);
+  if (!mailchimp) {
     return NextResponse.json(
-      { error: "Connect your own Twilio account in Settings first." },
-      { status: 400 }
-    );
-  }
-  if (!profile?.twilio_number) {
-    return NextResponse.json(
-      { error: "You don't have a texting number yet. Buy one in Settings." },
+      { error: "Connect your own Mailchimp account and texting number in Settings first." },
       { status: 400 }
     );
   }
@@ -48,21 +44,17 @@ export async function POST(req) {
       continue;
     }
     try {
-      const fromNumber = contact.twilio_number || profile.twilio_number;
+      const fromNumber = contact.mailchimp_number || mailchimp.from;
       const body = fillMessageTemplate(message, contact);
-      await twilioClient.messages.create({
-        from: fromNumber,
-        to: contact.phone,
-        body,
-      });
+      await sendSms({ apiKey: mailchimp.apiKey, from: fromNumber, to: contact.phone, text: body });
       await supabase.from("messages").insert({
         contact_id: contact.id,
         owner_id: user.id,
         direction: "outbound",
         body,
       });
-      if (!contact.twilio_number) {
-        await supabase.from("contacts").update({ twilio_number: fromNumber }).eq("id", contact.id);
+      if (!contact.mailchimp_number) {
+        await supabase.from("contacts").update({ mailchimp_number: fromNumber }).eq("id", contact.id);
       }
       results.push({ contact: contact.name, ok: true });
     } catch (err) {

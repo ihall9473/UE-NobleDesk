@@ -12,7 +12,7 @@ export default async function PersonalizedTermsPage({ params }) {
 
   const { data: profile } = await supabaseAdmin
     .from("profiles")
-    .select("name, twilio_number, business_name")
+    .select("name, mailchimp_number, business_name")
     .eq("id", userId)
     .single();
 
@@ -20,7 +20,7 @@ export default async function PersonalizedTermsPage({ params }) {
   const email = userData?.user?.email || "";
 
   const name = profile?.name || "This agent";
-  const phone = profile?.twilio_number || "";
+  const phone = profile?.mailchimp_number || "";
   const businessName = profile?.business_name || "";
 
   return (

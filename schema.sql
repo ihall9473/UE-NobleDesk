@@ -16,6 +16,19 @@ create table if not exists profiles (
 -- any time - adds it without losing any existing profile data:
 alter table profiles add column if not exists business_name text;
 
+-- Texting runs on Mailchimp Transactional now, not Twilio. Auth is a
+-- single API key (no separate account SID/auth token pair the way Twilio
+-- used), and the sending number is provisioned through Mailchimp's own
+-- dashboard rather than bought via API - see lib/mailchimp.js. The old
+-- twilio_* columns above are unused now and left in place only so nothing
+-- breaks if you haven't re-run this migration everywhere yet; safe to drop
+-- them yourself once you've confirmed Mailchimp is working:
+--   alter table profiles drop column if exists twilio_account_sid;
+--   alter table profiles drop column if exists twilio_auth_token;
+--   alter table profiles drop column if exists twilio_number;
+alter table profiles add column if not exists mailchimp_api_key text;
+alter table profiles add column if not exists mailchimp_number text unique;
+
 -- Every number an agent owns in their Twilio account, not just the one
 -- currently active. Lets them register/keep several numbers (e.g. one per
 -- A2P campaign) and switch which one is used for new outbound texts.
@@ -71,6 +84,10 @@ alter table contacts add column if not exists sms_consent boolean not null defau
 -- your existing conversations with it. All safe to re-run.
 alter table contacts add column if not exists twilio_number text; -- which of the agent's numbers this conversation is happening on
 
+-- Same idea as twilio_number above, now that texting runs on Mailchimp -
+-- which of the agent's Mailchimp sending numbers this conversation is on.
+alter table contacts add column if not exists mailchimp_number text;
+
 insert into phone_numbers (owner_id, phone_number)
   select id, twilio_number from profiles where twilio_number is not null
   on conflict (phone_number) do nothing;
@@ -99,6 +116,7 @@ create table if not exists messages (
 create index if not exists messages_contact_id_idx on messages(contact_id);
 create index if not exists contacts_owner_id_idx on contacts(owner_id);
 create index if not exists profiles_twilio_number_idx on profiles(twilio_number);
+create index if not exists profiles_mailchimp_number_idx on profiles(mailchimp_number);
 
 -- Full policy/underwriting details for a client - one row per POLICY, not
 -- per client, since the same client can have more than one (a rewrite, an

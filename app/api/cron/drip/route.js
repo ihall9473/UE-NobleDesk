@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { twilioClientFor } from "@/lib/twilio";
+import { mailchimpConfigFor, sendSms } from "@/lib/mailchimp";
 import { isQuietHoursForState } from "@/lib/stateTimezones";
 import { inferStateFromPhone } from "@/lib/areaCodeToState";
 import { fillMessageTemplate } from "@/lib/messageTemplate";
@@ -72,17 +72,18 @@ export async function GET(req) {
       profileCache[enrollment.owner_id] = profile;
     }
     const profile = profileCache[enrollment.owner_id];
-    const twilioClient = twilioClientFor(profile);
-    if (!twilioClient || !profile?.twilio_number) continue;
+    const mailchimp = mailchimpConfigFor(profile);
+    if (!mailchimp) continue;
 
     const body = fillMessageTemplate(step.message, contact);
     if (!body.trim()) continue;
 
     try {
-      await twilioClient.messages.create({
-        from: contact.twilio_number || profile.twilio_number,
+      await sendSms({
+        apiKey: mailchimp.apiKey,
+        from: contact.mailchimp_number || mailchimp.from,
         to: contact.phone,
-        body,
+        text: body,
       });
       await supabaseAdmin.from("messages").insert({
         contact_id: contact.id,

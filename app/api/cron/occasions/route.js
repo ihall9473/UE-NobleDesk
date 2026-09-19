@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { twilioClientFor } from "@/lib/twilio";
+import { mailchimpConfigFor, sendSms } from "@/lib/mailchimp";
 import { resolveHolidayDate } from "@/lib/holidays";
 import { inferStateFromPhone } from "@/lib/areaCodeToState";
 import { isQuietHoursForState } from "@/lib/stateTimezones";
@@ -29,15 +29,15 @@ export async function GET(req) {
   const { data: profiles } = await supabaseAdmin
     .from("profiles")
     .select("*")
-    .not("twilio_account_sid", "is", null)
-    .not("twilio_number", "is", null);
+    .not("mailchimp_api_key", "is", null)
+    .not("mailchimp_number", "is", null);
 
   let totalSent = 0;
   let totalSkippedQuietHours = 0;
 
   for (const profile of profiles || []) {
-    const twilioClient = twilioClientFor(profile);
-    if (!twilioClient) continue;
+    const mailchimp = mailchimpConfigFor(profile);
+    if (!mailchimp) continue;
 
     const { data: occasions } = await supabaseAdmin
       .from("occasions")
@@ -127,10 +127,11 @@ export async function GET(req) {
         if (!body.trim()) continue;
 
         try {
-          await twilioClient.messages.create({
-            from: profile.twilio_number,
+          await sendSms({
+            apiKey: mailchimp.apiKey,
+            from: contact.mailchimp_number || mailchimp.from,
             to: contact.phone,
-            body,
+            text: body,
           });
           await supabaseAdmin.from("messages").insert({
             contact_id: contact.id,

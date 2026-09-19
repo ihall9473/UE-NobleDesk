@@ -1,8 +1,8 @@
 # NobleDesk — Team Setup Guide
 
-**How this version works:** each coworker signs up themselves, connects
-their own free Twilio account, and buys their own texting number — so
-Twilio bills each person individually, not you. You (the admin) never touch
+**How this version works:** each coworker signs up themselves and connects
+their own Mailchimp Transactional account and texting number — so Mailchimp
+bills each person individually, not you. You (the admin) never touch
 anyone's number or billing; you just watch usage and stats.
 
 > **Already have this app deployed?** You just need one quick database
@@ -74,25 +74,30 @@ there, each person does this themselves:
 
 1. **Creates their account** — name, email, password, and their last name
    to confirm the invite.
-2. **Connects their own Twilio account** (in **Settings** inside the app):
-   - Signs up free at https://www.twilio.com/try-twilio
-   - Adds a payment method on their Twilio account (their card, their bill)
-   - Registers their business info under **Messaging → Regulatory
-     Compliance → A2P 10DLC** — required before real-volume texting works.
-     This can take a few days to a couple weeks to get approved.
-   - Copies their **Account SID** and **Auth Token** from the Twilio
-     Console into the app's Settings page.
-3. **Buys their own number** right there in Settings — search by area code,
-   click Buy. Costs about $1.15/month plus roughly $0.012–0.013 per text,
-   charged to their own Twilio account, not yours.
+2. **Connects their own Mailchimp Transactional account** (in **Settings**
+   inside the app):
+   - Signs up for Mailchimp Transactional (Essentials plan or higher) and
+     adds a text messaging credit plan.
+   - Gets their SMS sending program approved with a sending number — this
+     is Mailchimp's own carrier registration process. Can take a few days
+     to get approved.
+   - Copies their **API key** from Mailchimp Transactional's Settings →
+     API Keys into the app's Settings page.
+3. **Registers their number** right there in Settings by pasting the
+   sending number Mailchimp assigned them - Mailchimp doesn't offer a
+   self-serve search/buy flow the way some providers do, so this is a
+   one-time paste once your program is approved. Message/number costs are
+   charged to their own Mailchimp account, not yours - check Mailchimp's
+   current SMS pricing for exact rates.
 
 No number gets bought or assigned by you. If someone hasn't finished this
-setup, they'll simply see a message telling them to connect Twilio before
-they can send texts — everything else in the app still works for them.
+setup, they'll simply see a message telling them to connect Mailchimp
+before they can send texts — everything else in the app still works for
+them.
 
 **Alternative:** you can still invite someone directly by email from the
-Admin page instead of using the link — they still connect their own Twilio
-account and number themselves in Settings either way.
+Admin page instead of using the link — they still connect their own
+Mailchimp account and number themselves in Settings either way.
 
 ---
 
@@ -190,12 +195,11 @@ Either way, all 150 (or however many) leads get added in one click.
 
 ## Costs, per person
 
-- Twilio number: ~$1.15/month
-- Texting: ~$0.012–0.013 per text sent or received, all-in with carrier fees
-- 10DLC campaign registration: typically $1.50–$10/month
+- Mailchimp Transactional plan + SMS credits: check Mailchimp's current
+  pricing - this replaced the old Twilio-based setup
 - Supabase & Vercel: free tier covers your whole team comfortably
 
-Since it's all on individual Twilio accounts, there's no company-wide
+Since it's all on individual Mailchimp accounts, there's no company-wide
 texting bill to manage — each person's usage is their own.
 
 ## If something breaks

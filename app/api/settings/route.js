@@ -22,11 +22,10 @@ export async function PATCH(req) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not logged in" }, { status: 401 });
 
-  const { twilioAccountSid, twilioAuthToken, businessName, insuranceToolkitsToken } = await req.json();
+  const { mailchimpApiKey, businessName, insuranceToolkitsToken } = await req.json();
 
   const update = {};
-  if (twilioAccountSid !== undefined) update.twilio_account_sid = twilioAccountSid;
-  if (twilioAuthToken !== undefined && twilioAuthToken !== "") update.twilio_auth_token = twilioAuthToken;
+  if (mailchimpApiKey !== undefined && mailchimpApiKey !== "") update.mailchimp_api_key = mailchimpApiKey;
   if (businessName !== undefined) update.business_name = businessName || null;
 
   if (insuranceToolkitsToken !== undefined) {

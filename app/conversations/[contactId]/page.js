@@ -60,7 +60,7 @@ function ThreadPageInner() {
       <h1>{contact.name}</h1>
       <p className="subtitle">
         {contact.phone}
-        {contact.twilio_number && <> &middot; via {contact.twilio_number}</>}
+        {contact.mailchimp_number && <> &middot; via {contact.mailchimp_number}</>}
       </p>
 
       <div className="thread">

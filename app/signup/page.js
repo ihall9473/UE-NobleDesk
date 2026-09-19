@@ -100,7 +100,7 @@ function SignupForm() {
       </p>
       {TEXTING_ENABLED && (
         <p className="subtitle">
-          You'll set up your own Twilio texting number in the next step, billed to you directly.
+          You'll set up your own Mailchimp texting number in the next step, billed to you directly.
         </p>
       )}
       {error && <p className="error">{error}</p>}

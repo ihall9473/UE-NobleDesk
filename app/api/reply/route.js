@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
-import { twilioClientFor } from "@/lib/twilio";
+import { mailchimpConfigFor, sendSms } from "@/lib/mailchimp";
 import { fillMessageTemplate } from "@/lib/messageTemplate";
 
 export async function POST(req) {
@@ -14,10 +14,10 @@ export async function POST(req) {
     .eq("id", user.id)
     .single();
 
-  const twilioClient = twilioClientFor(profile);
-  if (!twilioClient || !profile?.twilio_number) {
+  const mailchimp = mailchimpConfigFor(profile);
+  if (!mailchimp) {
     return NextResponse.json(
-      { error: "Connect your Twilio account and get a number in Settings first." },
+      { error: "Connect your Mailchimp account and texting number in Settings first." },
       { status: 400 }
     );
   }
@@ -36,21 +36,19 @@ export async function POST(req) {
   }
 
   try {
-    const fromNumber = contact.twilio_number || profile.twilio_number;
+    const fromNumber = contact.mailchimp_number || mailchimp.from;
     const body = fillMessageTemplate(message, contact);
-    await twilioClient.messages.create({
-      from: fromNumber,
-      to: contact.phone,
-      body,
-    });
+    // Replying within an existing thread - they've already been messaging
+    // this number, so no fresh one-time consent prompt is needed.
+    await sendSms({ apiKey: mailchimp.apiKey, from: fromNumber, to: contact.phone, text: body, consent: "recurring-no-confirm" });
     await supabase.from("messages").insert({
       contact_id: contactId,
       owner_id: user.id,
       direction: "outbound",
       body,
     });
-    if (!contact.twilio_number) {
-      await supabase.from("contacts").update({ twilio_number: fromNumber }).eq("id", contactId);
+    if (!contact.mailchimp_number) {
+      await supabase.from("contacts").update({ mailchimp_number: fromNumber }).eq("id", contactId);
     }
     return NextResponse.json({ ok: true });
   } catch (err) {

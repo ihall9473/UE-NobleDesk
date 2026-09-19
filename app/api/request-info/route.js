@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { normalizePhone } from "@/lib/twilio";
+import { normalizePhone } from "@/lib/phone";
 import { TEXTING_ENABLED } from "@/lib/features";
 
 export async function POST(req) {

@@ -29,9 +29,9 @@ const TEXTING_FEATURES = [
       "Replies land in Conversations automatically, tagged by lead or client, so nothing gets lost in a text thread on your personal phone.",
   },
   {
-    title: "Your own Twilio number and billing",
+    title: "Your own Mailchimp number and billing",
     body:
-      "Connect your own Twilio account in Settings - your number, your billing, your data. NobleDesk never buys a number or sends a text on your behalf without you.",
+      "Connect your own Mailchimp account in Settings - your number, your billing, your data. NobleDesk never texts on your behalf without you.",
   },
 ];
 
@@ -153,7 +153,7 @@ export default function HomePage() {
         {TEXTING_ENABLED ? (
           <ol className="subtitle" style={{ paddingLeft: 20, marginBottom: 0 }}>
             <li style={{ marginBottom: 8 }}>
-              Connect your Twilio account and buy your texting number in <a href="/settings">Settings</a>.
+              Connect your Mailchimp account and texting number in <a href="/settings">Settings</a>.
             </li>
             <li style={{ marginBottom: 8 }}>
               Add your first leads on the <a href="/leads">Leads</a> page - one at a time, or paste in a whole list.

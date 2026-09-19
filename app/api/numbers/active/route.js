@@ -23,7 +23,7 @@ export async function POST(req) {
     return NextResponse.json({ error: "That number isn't linked to your account yet." }, { status: 404 });
   }
 
-  const { error } = await supabase.from("profiles").update({ twilio_number: phoneNumber }).eq("id", user.id);
+  const { error } = await supabase.from("profiles").update({ mailchimp_number: phoneNumber }).eq("id", user.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ ok: true, active: phoneNumber });
