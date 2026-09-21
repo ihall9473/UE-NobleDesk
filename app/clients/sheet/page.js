@@ -6,6 +6,7 @@ import BeneficiaryList from "@/app/components/BeneficiaryList";
 import CarrierSelect from "@/app/components/CarrierSelect";
 import { US_STATES } from "@/lib/usStates";
 import { calculateAge } from "@/lib/age";
+import { formatCurrency } from "@/lib/formatCurrency";
 
 const initialForm = {
   firstName: "",
@@ -60,6 +61,16 @@ export default function ClientSheetPage() {
 
   function set(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
+  }
+
+  // Formats to "$X,XXX.XX" once the agent clicks away, rather than fighting
+  // their cursor by reformatting on every keystroke. Leaves the field as
+  // typed if it doesn't look like a number (e.g. still blank).
+  function formatMoneyOnBlur(field) {
+    return (e) => {
+      const formatted = formatCurrency(e.target.value);
+      if (formatted) set(field, formatted);
+    };
   }
 
   function handleRoutingChange(value) {
@@ -232,8 +243,20 @@ export default function ClientSheetPage() {
 
           <CarrierSelect value={form.carrier} onChange={(v) => set("carrier", v)} />
           <div style={{ display: "flex", gap: 8 }}>
-            <input placeholder="Coverage Amount" value={form.coverageAmount} onChange={(e) => set("coverageAmount", e.target.value)} autoComplete="off" />
-            <input placeholder="Monthly Premium" value={form.monthlyPremium} onChange={(e) => set("monthlyPremium", e.target.value)} autoComplete="off" />
+            <input
+              placeholder="Coverage Amount"
+              value={form.coverageAmount}
+              onChange={(e) => set("coverageAmount", e.target.value)}
+              onBlur={formatMoneyOnBlur("coverageAmount")}
+              autoComplete="off"
+            />
+            <input
+              placeholder="Monthly Premium"
+              value={form.monthlyPremium}
+              onChange={(e) => set("monthlyPremium", e.target.value)}
+              onBlur={formatMoneyOnBlur("monthlyPremium")}
+              autoComplete="off"
+            />
           </div>
 
           <select value={form.policyProduct} onChange={(e) => set("policyProduct", e.target.value)}>
