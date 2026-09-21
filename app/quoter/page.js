@@ -4,6 +4,7 @@ import { insuranceToolkitsQuoterUrl } from "@/lib/insuranceToolkits";
 
 export default function QuoterPage() {
   const [profile, setProfile] = useState(null);
+  const [tryFullSite, setTryFullSite] = useState(false);
 
   useEffect(() => {
     fetch("/api/settings")
@@ -50,6 +51,26 @@ export default function QuoterPage() {
         style={{ border: "none", width: "100%", height: "1100px", borderRadius: 12 }}
         title="Insurance Toolkits Quoter"
       />
+
+      <div className="card" style={{ marginTop: 24 }}>
+        <h3>Experimental: embed the full site</h3>
+        <p className="subtitle" style={{ marginBottom: 8 }}>
+          Most logged-in web apps block being embedded in someone else's page for security reasons,
+          so this will likely come up blank or refuse to load - but here's an attempt at it below.
+          If it works, you'll be able to log in and use everything, including drug lookup and the
+          health cheat sheet, right here.
+        </p>
+        <button type="button" onClick={() => setTryFullSite((v) => !v)}>
+          {tryFullSite ? "Hide" : "Try Loading the Full Site Here"}
+        </button>
+        {tryFullSite && (
+          <iframe
+            src="https://app.insurancetoolkits.com"
+            style={{ border: "1px solid rgba(255,255,255,0.12)", width: "100%", height: "1100px", borderRadius: 12, marginTop: 12 }}
+            title="Insurance Toolkits Full Site (experimental)"
+          />
+        )}
+      </div>
     </div>
   );
 }
