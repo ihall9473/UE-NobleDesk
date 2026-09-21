@@ -1,4 +1,5 @@
 "use client";
+import { formatPhoneInput } from "@/lib/phoneFormat";
 
 export default function BeneficiaryList({ label, beneficiaries, onChange }) {
   function updateOne(index, field, value) {
@@ -68,7 +69,7 @@ export default function BeneficiaryList({ label, beneficiaries, onChange }) {
           <input
             placeholder="Phone Number"
             value={b.phone || ""}
-            onChange={(e) => updateOne(i, "phone", e.target.value)}
+            onChange={(e) => updateOne(i, "phone", formatPhoneInput(e.target.value))}
             autoComplete="off"
             style={{ marginBottom: 8 }}
           />

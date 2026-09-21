@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { TEXTING_ENABLED } from "@/lib/features";
+import { formatPhoneInput } from "@/lib/phoneFormat";
 
 export default function SettingsPage() {
   return <SettingsPageInner />;
@@ -401,7 +402,7 @@ function SettingsPageInner() {
           <input
             placeholder="Your personal cell number"
             value={personalPhone}
-            onChange={(e) => setPersonalPhone(e.target.value)}
+            onChange={(e) => setPersonalPhone(formatPhoneInput(e.target.value))}
           />
           <div className="checkbox-row">
             <input

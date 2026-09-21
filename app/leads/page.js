@@ -4,6 +4,7 @@ import { US_STATES } from "@/lib/usStates";
 import { inferStateFromPhone } from "@/lib/areaCodeToState";
 import { PIPELINE_STAGE_LABELS } from "@/lib/pipelineStages";
 import { TEXTING_ENABLED } from "@/lib/features";
+import { formatPhoneInput } from "@/lib/phoneFormat";
 import UndoToast from "@/app/components/UndoToast";
 
 const STALE_DAYS = 7;
@@ -295,7 +296,7 @@ export default function LeadsPage() {
         <h3>Add one lead</h3>
         <form onSubmit={addOne}>
           <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
-          <input placeholder="Phone number" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+          <input placeholder="Phone number" value={phone} onChange={(e) => setPhone(formatPhoneInput(e.target.value))} required />
           <select value={state} onChange={(e) => setState(e.target.value)}>
             <option value="">State (optional - guessed from area code if left blank)</option>
             {US_STATES.map((s) => <option key={s} value={s}>{s}</option>)}

@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import PolicyForm from "@/app/components/PolicyForm";
 import ActivityAndTasks from "@/app/components/ActivityAndTasks";
 import { US_STATES } from "@/lib/usStates";
+import { formatPhoneInput } from "@/lib/phoneFormat";
 
 export default function ClientDetailPage() {
   const { contactId } = useParams();
@@ -88,7 +89,7 @@ export default function ClientDetailPage() {
         <h3>Contact Info</h3>
         <form onSubmit={saveContact}>
           <input placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="off" required />
-          <input placeholder="Phone number" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="off" required />
+          <input placeholder="Phone number" value={phone} onChange={(e) => setPhone(formatPhoneInput(e.target.value))} autoComplete="off" required />
 
           <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>State</label>
           <select value={contactState} onChange={(e) => setContactState(e.target.value)}>

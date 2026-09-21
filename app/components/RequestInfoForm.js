@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { formatPhoneInput } from "@/lib/phoneFormat";
 
 export default function RequestInfoForm({ userId, agentName }) {
   const [name, setName] = useState("");
@@ -41,7 +42,7 @@ export default function RequestInfoForm({ userId, agentName }) {
     <form onSubmit={handleSubmit} className="card">
       {error && <p className="error">{error}</p>}
       <input placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} required />
-      <input placeholder="Your phone number" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+      <input placeholder="Your phone number" value={phone} onChange={(e) => setPhone(formatPhoneInput(e.target.value))} required />
 
       <div className="checkbox-row" style={{ alignItems: "flex-start" }}>
         <input

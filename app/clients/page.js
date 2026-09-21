@@ -7,6 +7,7 @@ import { daysUntilConversion } from "@/lib/termConversion";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { formatDate } from "@/lib/formatDate";
 import { parseClientImport } from "@/lib/parseClientImport";
+import { formatPhoneInput } from "@/lib/phoneFormat";
 import UndoToast from "@/app/components/UndoToast";
 
 const DRAFT_WARNING_DAYS = 5;
@@ -361,7 +362,7 @@ export default function ClientsPage() {
         </p>
         <form onSubmit={addClient}>
           <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
-          <input placeholder="Phone number" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+          <input placeholder="Phone number" value={phone} onChange={(e) => setPhone(formatPhoneInput(e.target.value))} required />
           <button type="submit" disabled={loading}>{loading ? "Adding..." : "Add Client & Continue"}</button>
         </form>
       </div>
