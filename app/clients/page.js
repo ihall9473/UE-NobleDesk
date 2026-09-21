@@ -80,6 +80,7 @@ export default function ClientsPage() {
   const [importText, setImportText] = useState("");
   const [importLoading, setImportLoading] = useState(false);
   const [importMessage, setImportMessage] = useState("");
+  const [importFailed, setImportFailed] = useState(false);
   const importFileRef = useRef(null);
 
   const [search, setSearch] = useState("");
@@ -140,6 +141,7 @@ export default function ClientsPage() {
     const { rows, skipped } = parseClientImport(text);
     if (rows.length === 0) {
       setImportMessage("Couldn't find any valid rows - make sure the first row has column headers and each row has at least a name and phone.");
+      setImportFailed(true);
       return;
     }
     setImportLoading(true);
@@ -155,9 +157,11 @@ export default function ClientsPage() {
         `Imported ${data.imported} client${data.imported === 1 ? "" : "s"}.` +
           (skipped > 0 ? ` Skipped ${skipped} row${skipped === 1 ? "" : "s"} missing a name or phone.` : "")
       );
+      setImportFailed(false);
       load();
     } else {
       setImportMessage(data.error || "Something went wrong.");
+      setImportFailed(true);
     }
   }
 
@@ -371,7 +375,7 @@ export default function ClientsPage() {
           and Draft Date. Columns can be in any order, and anything else (beneficiaries, address,
           SSN, banking) still gets filled in manually per client afterward.
         </p>
-        {importMessage && <p className="success">{importMessage}</p>}
+        {importMessage && <p className={importFailed ? "error" : "success"}>{importMessage}</p>}
         <form onSubmit={handleImportPaste}>
           <textarea
             rows={6}
