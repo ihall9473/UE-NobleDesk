@@ -16,7 +16,6 @@ const NAV_ITEMS_BEFORE_CLIENTS = [
 const NAV_ITEMS_AFTER_CLIENTS = [
   ...(TEXTING_ENABLED
     ? [
-        { href: "/drip-campaigns", label: "Drip Campaigns" },
         { href: "/compose", label: "Send a Text" },
         { href: "/conversations", label: "Conversations" },
         { href: "/occasions", label: "Occasions" },
