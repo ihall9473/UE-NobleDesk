@@ -16,6 +16,12 @@ function AlertCard({ title, color, description, empty, children }) {
 const DANGER_RGB = "248, 113, 113";
 const GOLD_RGB = "201, 162, 39";
 
+const AT_RISK_STATUS_LABELS = {
+  nsf: "NSF",
+  lapsed: "Lapsed",
+  chargeback: "Chargeback",
+};
+
 export default function AlertsPage() {
   const [data, setData] = useState(null);
   const [message, setMessage] = useState("");
@@ -115,14 +121,15 @@ export default function AlertsPage() {
       <AlertCard
         title="At-Risk Policies"
         color={DANGER_RGB}
-        description="Lapsed or chargeback status - commission clawback risk."
+        description="NSF, lapsed, or chargeback status - call these first."
         empty={data.atRiskPolicies.length === 0}
       >
         {data.atRiskPolicies.map((client) => (
           <a key={client.client_details.id} href={`/clients/${client.id}`} style={{ display: "block", textDecoration: "none", color: "inherit", fontSize: 14, marginBottom: 4 }}>
             <strong>{client.name}</strong>{" "}
-            <span style={{ color: "#9a9a9a", textTransform: "capitalize" }}>
-              — {client.client_details?.policy_status}{client.client_details?.carrier ? ` (${client.client_details.carrier})` : ""}
+            <span style={{ color: "#9a9a9a" }}>
+              — {AT_RISK_STATUS_LABELS[client.client_details?.policy_status] || client.client_details?.policy_status}
+              {client.client_details?.carrier ? ` (${client.client_details.carrier})` : ""}
             </span>
           </a>
         ))}

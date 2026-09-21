@@ -220,7 +220,14 @@ alter table client_details add column if not exists underwriting_stage text
 -- something as lapsed/chargeback risk without waiting for real payment
 -- data (this app doesn't process drafts, so this is set by the agent).
 alter table client_details add column if not exists policy_status text not null default 'active'
-  check (policy_status in ('active', 'lapsed', 'chargeback', 'cancelled'));
+  check (policy_status in ('active', 'nsf', 'lapsed', 'chargeback', 'cancelled'));
+
+-- Already deployed this app before "nsf" was a policy status option? Run
+-- these two lines by themselves to widen the existing check constraint
+-- without losing any existing client data:
+alter table client_details drop constraint if exists client_details_policy_status_check;
+alter table client_details add constraint client_details_policy_status_check
+  check (policy_status in ('active', 'nsf', 'lapsed', 'chargeback', 'cancelled'));
 
 -- Whether the agent's own commission on this policy has actually been
 -- paid out yet - splits Expected Payout on My Team into pending vs paid.

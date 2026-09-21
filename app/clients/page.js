@@ -26,6 +26,7 @@ const UNDERWRITING_LABELS = {
 };
 
 const POLICY_STATUS_LABELS = {
+  nsf: "NSF",
   lapsed: "Lapsed",
   chargeback: "Chargeback",
   cancelled: "Cancelled",
@@ -203,7 +204,7 @@ export default function ClientsPage() {
       !effectiveDateRange ||
       policies.some((p) => p.effective_date && p.effective_date >= effectiveDateRange.start && p.effective_date <= effectiveDateRange.end);
 
-    const matchesAtRisk = !atRiskOnly || policies.some((p) => ["lapsed", "chargeback"].includes(p.policy_status));
+    const matchesAtRisk = !atRiskOnly || policies.some((p) => ["nsf", "lapsed", "chargeback"].includes(p.policy_status));
 
     return matchesSearch && matchesCarrier && matchesState && matchesDate && matchesEffectiveDate && matchesAtRisk;
   });
@@ -243,7 +244,7 @@ export default function ClientsPage() {
     .sort((a, b) => a.daysUntil - b.daysUntil);
 
   const atRiskCount = allClients.reduce(
-    (sum, c) => sum + (c.policies || []).filter((p) => ["lapsed", "chargeback"].includes(p.policy_status)).length,
+    (sum, c) => sum + (c.policies || []).filter((p) => ["nsf", "lapsed", "chargeback"].includes(p.policy_status)).length,
     0
   );
 
@@ -340,7 +341,7 @@ export default function ClientsPage() {
         <div className="card" style={{ background: "rgba(248, 113, 113, 0.06)", border: "1px solid rgba(248, 113, 113, 0.35)" }}>
           <div className="row" style={{ marginBottom: 0 }}>
             <div className="label-caps" style={{ color: "var(--danger)" }}>
-              {atRiskCount} polic{atRiskCount === 1 ? "y" : "ies"} at chargeback risk
+              {atRiskCount} polic{atRiskCount === 1 ? "y" : "ies"} need attention (NSF, lapsed, or chargeback)
             </div>
             <button
               type="button"
@@ -533,7 +534,7 @@ export default function ClientsPage() {
                     </span>
                   )}
                 </div>
-                <span style={{ fontSize: 13, color: "#9a9a9a" }}>{c.phone}</span>
+                <span style={{ fontSize: 16, fontWeight: 600, color: "var(--text)" }}>{c.phone}</span>
               </div>
               {policies.length === 0 && (
                 <p className="subtitle" style={{ marginTop: 6, marginBottom: 0 }}>No policy details yet.</p>

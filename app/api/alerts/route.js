@@ -72,7 +72,7 @@ export async function GET() {
     .sort((a, b) => a.anniversary.daysUntil - b.anniversary.daysUntil);
 
   const atRiskPolicies = policyRows
-    .filter(({ policy }) => ["lapsed", "chargeback"].includes(policy.policy_status))
+    .filter(({ policy }) => ["nsf", "lapsed", "chargeback"].includes(policy.policy_status))
     .map(({ client, policy }) => ({ ...client, client_details: policy }))
     .sort((a, b) => a.name.localeCompare(b.name));
 

@@ -259,6 +259,7 @@ export default function PolicyForm({ contactId, policy, defaultOpen, onSaved, on
           <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Policy Status</label>
           <select value={form.policyStatus} onChange={(e) => set("policyStatus", e.target.value)}>
             <option value="active">Active</option>
+            <option value="nsf">NSF</option>
             <option value="lapsed">Lapsed</option>
             <option value="chargeback">Chargeback</option>
             <option value="cancelled">Cancelled</option>
