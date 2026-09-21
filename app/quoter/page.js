@@ -52,9 +52,9 @@ export default function QuoterPage() {
         title="Insurance Toolkits Quoter"
       />
 
-      <div className="card" style={{ marginTop: 24 }}>
-        <h3>Experimental: embed the full site</h3>
-        <p className="subtitle" style={{ marginBottom: 8 }}>
+      <div className="card" style={{ marginTop: 24, background: "#fff" }}>
+        <h3 style={{ color: "#1a1a1a" }}>Experimental: embed the full site</h3>
+        <p style={{ marginBottom: 8, color: "#4a4a4a" }}>
           Most logged-in web apps block being embedded in someone else's page for security reasons,
           so this will likely come up blank or refuse to load - but here's an attempt at it below.
           If it works, you'll be able to log in and use everything, including drug lookup and the
@@ -66,7 +66,7 @@ export default function QuoterPage() {
         {tryFullSite && (
           <iframe
             src="https://app.insurancetoolkits.com"
-            style={{ border: "1px solid rgba(255,255,255,0.12)", width: "100%", height: "1100px", borderRadius: 12, marginTop: 12, background: "#fff" }}
+            style={{ border: "1px solid rgba(0,0,0,0.12)", width: "100%", height: "1100px", borderRadius: 12, marginTop: 12, background: "#fff" }}
             title="Insurance Toolkits Full Site (experimental)"
           />
         )}
