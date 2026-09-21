@@ -96,13 +96,24 @@ async function bulkImport(supabase, ownerId, rows) {
     return NextResponse.json({ error: "No valid rows found - each needs at least a name and phone number" }, { status: 400 });
   }
 
-  const contactRows = cleaned.map((r) => ({
-    owner_id: ownerId,
-    name: r.name.trim(),
-    phone: normalizePhone(r.phone),
-    type: "client",
-    deleted_at: null, // re-importing someone who was previously removed brings them back
-  }));
+  // One row per contact, even though a client can appear on multiple CSV
+  // rows (one per policy) - Postgres's upsert can't update the same target
+  // row twice within a single statement, so duplicates have to be collapsed
+  // before they ever reach the database.
+  const contactRowsByKey = new Map();
+  cleaned.forEach((r) => {
+    const key = `${normalizePhone(r.phone)}|${r.name.trim().toLowerCase()}`;
+    if (!contactRowsByKey.has(key)) {
+      contactRowsByKey.set(key, {
+        owner_id: ownerId,
+        name: r.name.trim(),
+        phone: normalizePhone(r.phone),
+        type: "client",
+        deleted_at: null, // re-importing someone who was previously removed brings them back
+      });
+    }
+  });
+  const contactRows = [...contactRowsByKey.values()];
 
   const { data: contacts, error: contactErr } = await supabase
     .from("contacts")
