@@ -170,5 +170,5 @@ async function bulkImport(supabase, ownerId, rows) {
 
   if (notes.length > 0) await supabase.from("activity_log").insert(notes);
 
-  return NextResponse.json({ imported: detailsRows.length });
+  return NextResponse.json({ imported: detailsRows.length, clients: contactRows.length });
 }

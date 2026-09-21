@@ -155,7 +155,7 @@ export default function ClientsPage() {
     const data = await res.json();
     if (res.ok) {
       setImportMessage(
-        `Imported ${data.imported} client${data.imported === 1 ? "" : "s"}.` +
+        `Imported ${data.imported} polic${data.imported === 1 ? "y" : "ies"} across ${data.clients} client${data.clients === 1 ? "" : "s"}.` +
           (skipped > 0 ? ` Skipped ${skipped} row${skipped === 1 ? "" : "s"} missing a name or phone.` : "")
       );
       setImportFailed(false);
