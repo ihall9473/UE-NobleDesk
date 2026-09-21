@@ -48,7 +48,7 @@ export default function QuoterPage() {
       </p>
       <iframe
         src={insuranceToolkitsQuoterUrl(profile.insurance_toolkits_token)}
-        style={{ border: "none", width: "100%", height: "1100px", borderRadius: 12 }}
+        style={{ border: "none", width: "100%", height: "1100px", borderRadius: 12, background: "#fff" }}
         title="Insurance Toolkits Quoter"
       />
 
@@ -66,7 +66,7 @@ export default function QuoterPage() {
         {tryFullSite && (
           <iframe
             src="https://app.insurancetoolkits.com"
-            style={{ border: "1px solid rgba(255,255,255,0.12)", width: "100%", height: "1100px", borderRadius: 12, marginTop: 12 }}
+            style={{ border: "1px solid rgba(255,255,255,0.12)", width: "100%", height: "1100px", borderRadius: 12, marginTop: 12, background: "#fff" }}
             title="Insurance Toolkits Full Site (experimental)"
           />
         )}
