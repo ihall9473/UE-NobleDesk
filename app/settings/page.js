@@ -138,6 +138,24 @@ function SettingsPageInner() {
     }
   }
 
+  async function removeNumber(phoneNumber) {
+    if (!confirm(`Remove ${phoneNumber} from your list? This doesn't affect any past conversations, just what shows up here to send from.`)) return;
+    setMessage("");
+    const res = await fetch("/api/numbers/mine", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phoneNumber }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setMessage(`Removed ${phoneNumber}.`);
+      load();
+      loadNumbers();
+    } else {
+      setMessage(data.error);
+    }
+  }
+
   async function linkNumber(e) {
     e.preventDefault();
     if (profile.mailchimp_number) {
@@ -305,6 +323,7 @@ function SettingsPageInner() {
           there's no in-app search/buy the way some other providers work. Once you have a number,
           paste it below to register it here.
         </p>
+        {message && <p className={message.startsWith("Removed") || message.startsWith("Linked") || message.startsWith("Switched") ? "success" : "error"}>{message}</p>}
         {numbers.length > 0 && (
           <>
             <p className="subtitle" style={{ marginBottom: 8 }}>
@@ -333,11 +352,16 @@ function SettingsPageInner() {
                       </span>
                     )}
                   </span>
-                  {!isActive && (
-                    <button onClick={() => switchActive(n.phone_number)} disabled={switchingTo === n.phone_number}>
-                      {switchingTo === n.phone_number ? "Switching..." : "Set Active"}
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {!isActive && (
+                      <button onClick={() => switchActive(n.phone_number)} disabled={switchingTo === n.phone_number}>
+                        {switchingTo === n.phone_number ? "Switching..." : "Set Active"}
+                      </button>
+                    )}
+                    <button onClick={() => removeNumber(n.phone_number)} style={{ background: "#dc2626" }}>
+                      Remove
                     </button>
-                  )}
+                  </div>
                 </div>
               );
             })}
