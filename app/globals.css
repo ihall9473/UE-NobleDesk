@@ -30,41 +30,52 @@ body {
   position: relative;
 }
 
-/* Grander glass nav */
+/* Grander glass nav - a fixed left sidebar */
 .nav {
-  position: sticky;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 22px 44px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  width: 250px;
+  padding: 26px 18px;
+  overflow-y: auto;
   background:
-    radial-gradient(ellipse 700px 140px at 15% 0%, rgba(201, 162, 39, 0.08), transparent),
-    rgba(10, 10, 11, 0.8);
+    radial-gradient(ellipse 320px 500px at 0% 0%, rgba(201, 162, 39, 0.08), transparent),
+    rgba(10, 10, 11, 0.86);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  top: 0;
   z-index: 50;
-  flex-wrap: wrap;
   box-shadow:
-    0 1px 0 rgba(201, 162, 39, 0.55),
-    0 12px 30px -12px rgba(0, 0, 0, 0.6);
+    1px 0 0 rgba(201, 162, 39, 0.55),
+    12px 0 30px -12px rgba(0, 0, 0, 0.6);
 }
 .nav::after {
   content: "";
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(201, 162, 39, 0.9), transparent);
+  top: 0;
+  bottom: 0;
+  right: -1px;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(201, 162, 39, 0.9), transparent);
+}
+.nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(201, 162, 39, 0.25);
 }
 .nav-brand {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-right: 22px;
-  padding-right: 22px;
-  border-right: 1px solid rgba(201, 162, 39, 0.25);
+  min-width: 0;
   text-decoration: none;
 }
 .nav-crest {
@@ -84,10 +95,15 @@ body {
   background-clip: text;
   color: transparent;
   transition: background-position 0.6s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .nav-brand:hover .nav-wordmark { background-position: 100% center; }
 .nav a {
   position: relative;
+  display: block;
+  width: 100%;
   color: var(--text-muted);
   text-decoration: none;
   text-transform: uppercase;
@@ -111,6 +127,10 @@ body {
 .nav-group { position: relative; }
 .nav-group-trigger {
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
   color: var(--text-muted);
   background: transparent;
   text-transform: uppercase;
@@ -133,21 +153,14 @@ body {
 }
 .nav-caret { font-size: 8px; margin-left: 2px; opacity: 0.7; }
 .nav-dropdown {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  min-width: 180px;
-  padding: 8px;
-  background: rgba(18, 18, 16, 0.97);
-  border: 1px solid rgba(201, 162, 39, 0.25);
-  border-radius: 14px;
-  box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.7);
-  z-index: 60;
+  gap: 2px;
+  margin: 2px 0 4px 14px;
+  padding-left: 10px;
+  border-left: 1px solid rgba(201, 162, 39, 0.25);
 }
-.nav-dropdown a { text-align: left; }
+.nav-dropdown a { text-align: left; font-size: 11.5px; padding: 8px 14px; }
 
 .nav-toggle {
   display: flex;
@@ -167,10 +180,15 @@ body {
 }
 .nav-toggle:hover { background: rgba(201, 162, 39, 0.1); border-color: rgba(201, 162, 39, 0.55); }
 
+.nav-footer {
+  margin-top: auto;
+  padding-top: 18px;
+}
+
 .main {
   max-width: 900px;
-  margin: 0 auto;
-  padding: 48px 24px 90px;
+  margin: 0 0 0 250px;
+  padding: 48px 40px 90px;
   position: relative;
   z-index: 1;
 }
