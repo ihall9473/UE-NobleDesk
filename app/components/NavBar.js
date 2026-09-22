@@ -135,20 +135,22 @@ export default function NavBar() {
 
   return (
     <nav className="nav" ref={navRef}>
-      <a href="/" className="nav-brand">
-        <Crest size={26} className="nav-crest" />
-        <span className="nav-wordmark">{APP_NAME}</span>
-      </a>
+      <div className="nav-header">
+        <a href="/" className="nav-brand">
+          <Crest size={26} className="nav-crest" />
+          <span className="nav-wordmark">{APP_NAME}</span>
+        </a>
 
-      <button
-        type="button"
-        className="nav-toggle"
-        onClick={toggleCollapsed}
-        aria-label={collapsed ? "Show navigation" : "Hide navigation"}
-        title={collapsed ? "Show navigation" : "Hide navigation"}
-      >
-        {collapsed ? "☰" : "✕"}
-      </button>
+        <button
+          type="button"
+          className="nav-toggle"
+          onClick={toggleCollapsed}
+          aria-label={collapsed ? "Show navigation" : "Hide navigation"}
+          title={collapsed ? "Show navigation" : "Hide navigation"}
+        >
+          {collapsed ? "☰" : "✕"}
+        </button>
+      </div>
 
       {!collapsed && (
         <>
@@ -180,7 +182,9 @@ export default function NavBar() {
         </>
       )}
 
-      <LogoutButton />
+      <div className="nav-footer">
+        <LogoutButton />
+      </div>
     </nav>
   );
 }

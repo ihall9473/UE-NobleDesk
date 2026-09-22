@@ -21,7 +21,7 @@ export default function LogoutButton() {
         fontWeight: 600,
         letterSpacing: "1.1px",
         textTransform: "uppercase",
-        marginLeft: "auto",
+        width: "100%",
         transition: "color 0.15s ease, border-color 0.15s ease, background 0.15s ease",
       }}
       onMouseEnter={(e) => {
