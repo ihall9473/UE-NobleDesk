@@ -53,8 +53,8 @@ export default function QuoterPage() {
       />
 
       <div className="card" style={{ marginTop: 24, background: "#fff" }}>
-        <h3 style={{ color: "#1a1a1a" }}>Experimental: embed the full site</h3>
-        <p style={{ marginBottom: 8, color: "#4a4a4a" }}>
+        <h3 style={{ color: "#000" }}>Experimental: embed the full site</h3>
+        <p style={{ marginBottom: 8, color: "#000" }}>
           Most logged-in web apps block being embedded in someone else's page for security reasons,
           so this will likely come up blank or refuse to load - but here's an attempt at it below.
           If it works, you'll be able to log in and use everything, including drug lookup and the
