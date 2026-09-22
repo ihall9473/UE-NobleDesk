@@ -5,25 +5,20 @@ import LogoutButton from "./LogoutButton";
 import Crest from "./Crest";
 import { TEXTING_ENABLED, APP_NAME } from "@/lib/features";
 
-// Flat items before/after the Clients dropdown. Tasks lives under Leads,
-// Alerts lives under Clients now; Quoter/Client Sheet/Carriers/Licensing
-// (and the texting-only items) stay flat top-level links.
-const NAV_ITEMS_BEFORE_CLIENTS = [
+// Quoter and Client Sheet stay flat top-level links; everything else with
+// more than one destination is grouped into a dropdown.
+const NAV_ITEMS_BEFORE_GROUPS = [
   { href: "/quoter", label: "Quoter" },
   { href: "/clients/sheet", label: "Client Sheet" },
 ];
 
-const NAV_ITEMS_AFTER_CLIENTS = [
-  ...(TEXTING_ENABLED
-    ? [
-        { href: "/compose", label: "Send a Text" },
-        { href: "/conversations", label: "Conversations" },
-        { href: "/occasions", label: "Occasions" },
-      ]
-    : []),
-  { href: "/carriers", label: "Carriers" },
-  { href: "/licensing", label: "Licensing" },
-];
+const CLIENTS_GROUP = {
+  label: "Clients",
+  children: [
+    { href: "/clients", label: "Book of Business" },
+    { href: "/alerts", label: "Alerts" },
+  ],
+};
 
 const LEADS_GROUP = {
   label: "Leads",
@@ -34,13 +29,26 @@ const LEADS_GROUP = {
   ],
 };
 
-const CLIENTS_GROUP = {
-  label: "Clients",
+const MESSAGING_GROUP = {
+  label: "Messaging",
   children: [
-    { href: "/clients", label: "Clients" },
-    { href: "/alerts", label: "Alerts" },
+    { href: "/compose", label: "Send a Text" },
+    { href: "/conversations", label: "Conversations" },
+    { href: "/occasions", label: "Occasions" },
   ],
 };
+
+const LICENSING_GROUP = {
+  label: "Licensing",
+  children: [
+    { href: "/carriers", label: "Carriers" },
+    { href: "/licensing", label: "States" },
+  ],
+};
+
+// Texting-only groups are dropped entirely on the App Store build (see
+// lib/features.js), not just hidden.
+const NAV_GROUPS = [CLIENTS_GROUP, LEADS_GROUP, ...(TEXTING_ENABLED ? [MESSAGING_GROUP] : []), LICENSING_GROUP];
 
 function isLinkActive(href, pathname) {
   if (href === "/clients") {
@@ -110,7 +118,7 @@ export default function NavBar() {
       .catch(() => {});
   }, [hidden]);
 
-  // Close the Leads dropdown on route change or an outside click.
+  // Close any open dropdown on route change or an outside click.
   useEffect(() => {
     setOpenGroup(null);
   }, [pathname]);
@@ -144,23 +152,20 @@ export default function NavBar() {
 
       {!collapsed && (
         <>
-          {NAV_ITEMS_BEFORE_CLIENTS.map((item) => (
+          {NAV_ITEMS_BEFORE_GROUPS.map((item) => (
             <a key={item.href} href={item.href} className={isLinkActive(item.href, pathname) ? "active" : ""}>
               {item.label}
             </a>
           ))}
 
-          <NavGroup
-            group={CLIENTS_GROUP}
-            pathname={pathname}
-            isOpen={openGroup === CLIENTS_GROUP.label}
-            onToggle={() => setOpenGroup((g) => (g === CLIENTS_GROUP.label ? null : CLIENTS_GROUP.label))}
-          />
-
-          {NAV_ITEMS_AFTER_CLIENTS.map((item) => (
-            <a key={item.href} href={item.href} className={isLinkActive(item.href, pathname) ? "active" : ""}>
-              {item.label}
-            </a>
+          {NAV_GROUPS.map((group) => (
+            <NavGroup
+              key={group.label}
+              group={group}
+              pathname={pathname}
+              isOpen={openGroup === group.label}
+              onToggle={() => setOpenGroup((g) => (g === group.label ? null : group.label))}
+            />
           ))}
 
           {/* My Team stays out of the way for agents until they've actually
@@ -169,13 +174,6 @@ export default function NavBar() {
           {showTeamTab && (
             <a href="/team" className={isLinkActive("/team", pathname) ? "active" : ""}>My Team</a>
           )}
-
-          <NavGroup
-            group={LEADS_GROUP}
-            pathname={pathname}
-            isOpen={openGroup === LEADS_GROUP.label}
-            onToggle={() => setOpenGroup((g) => (g === LEADS_GROUP.label ? null : LEADS_GROUP.label))}
-          />
 
           <a href="/settings" className={isLinkActive("/settings", pathname) ? "active" : ""}>Settings</a>
           <a href="/admin" className={isLinkActive("/admin", pathname) ? "active" : ""}>Admin</a>
