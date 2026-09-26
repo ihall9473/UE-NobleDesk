@@ -195,6 +195,54 @@ body {
   z-index: 1;
 }
 
+.nav-backdrop { display: none; }
+.nav-mobile-toggle { display: none; }
+
+/* Below this width the sidebar can't share space with the page - it
+   becomes a full-height overlay drawer instead, closed by default, and
+   content reclaims the full screen. */
+@media (max-width: 880px) {
+  .nav {
+    width: min(82vw, 300px);
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: 4px 0 24px -8px rgba(0, 0, 0, 0.7);
+  }
+  .nav.nav-open { transform: translateX(0); }
+
+  .nav-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 49;
+  }
+
+  .nav-mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 18px;
+    left: 18px;
+    width: 40px;
+    height: 40px;
+    z-index: 55;
+    background: rgba(10, 10, 11, 0.9);
+    border: 1px solid rgba(201, 162, 39, 0.4);
+    border-radius: 10px;
+    color: var(--gold);
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.6);
+  }
+
+  .main {
+    margin-left: 0;
+    padding: 80px 20px 60px;
+  }
+}
+
 .page-transition {
   animation: pageIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }

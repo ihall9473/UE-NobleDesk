@@ -118,9 +118,18 @@ export default function NavBar() {
       .catch(() => {});
   }, [hidden]);
 
-  // Close any open dropdown on route change or an outside click.
+  // Close any open dropdown on route change or an outside click. On a
+  // narrow screen the drawer is a full overlay, so also close it - on
+  // desktop the sidebar stays put, since it isn't covering anything.
   useEffect(() => {
     setOpenGroup(null);
+    try {
+      if (window.matchMedia("(max-width: 880px)").matches) {
+        setCollapsed(true);
+        localStorage.setItem("navCollapsed", "true");
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   useEffect(() => {
@@ -134,7 +143,27 @@ export default function NavBar() {
   if (hidden) return null;
 
   return (
-    <nav className="nav" ref={navRef}>
+    <>
+      {/* Only visible on narrow screens, and only while the drawer is
+          closed - the in-drawer toggle above goes off-screen with it, so
+          this is the one thing that has to live outside <nav>. */}
+      {collapsed && (
+        <button
+          type="button"
+          className="nav-mobile-toggle"
+          onClick={toggleCollapsed}
+          aria-label="Show navigation"
+          title="Show navigation"
+        >
+          ☰
+        </button>
+      )}
+
+      {/* Tapping outside the open drawer closes it, same as an outside
+          click already does for a dropdown - mobile only (CSS-gated). */}
+      {!collapsed && <div className="nav-backdrop" onClick={toggleCollapsed} />}
+
+      <nav className={`nav${!collapsed ? " nav-open" : ""}`} ref={navRef}>
       <div className="nav-header">
         <a href="/" className="nav-brand">
           <Crest size={26} className="nav-crest" />
@@ -185,6 +214,7 @@ export default function NavBar() {
       <div className="nav-footer">
         <LogoutButton />
       </div>
-    </nav>
+      </nav>
+    </>
   );
 }
