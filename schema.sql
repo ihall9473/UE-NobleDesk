@@ -67,6 +67,7 @@ create table if not exists contacts (
 -- share a phone line (e.g. spouses) can each have their own contact record -
 -- safe to re-run any time, and doesn't touch any existing contacts:
 alter table contacts drop constraint if exists contacts_owner_id_phone_key;
+alter table contacts drop constraint if exists contacts_owner_id_phone_name_key;
 alter table contacts add constraint contacts_owner_id_phone_name_key unique (owner_id, phone, name);
 
 -- Already deployed this app before the "state" column existed? Safe to
