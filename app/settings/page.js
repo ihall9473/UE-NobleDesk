@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { TEXTING_ENABLED } from "@/lib/features";
 import { formatPhoneInput } from "@/lib/phoneFormat";
+import { buildPrivacyPolicyText, buildTermsOfServiceText } from "@/lib/complianceText";
 
 export default function SettingsPage() {
   return <SettingsPageInner />;
@@ -418,48 +419,70 @@ function SettingsPageInner() {
       <div className="card" id="compliance-pages">
         <h3>4. Your compliance pages (for Mailchimp registration)</h3>
         <p className="subtitle" style={{ marginBottom: 8 }}>
-          Use these links when Mailchimp's SMS program approval form asks for a Privacy Policy,
-          Terms of Service, or a Call to Action (CTA) / opt-in page - they automatically show your
-          own name and number, nothing to edit. If your program gets rejected over the CTA, use
-          the Request Info link below as the CTA URL - it's a real, live page showing exactly how
-          someone opts in (name, phone, and a consent checkbox), which is what the review needs to
-          be able to verify.
+          Mailchimp's SMS program approval form asks you to paste in the actual wording of your
+          Privacy Policy and Terms of Service - not a link. Copy the text below into those fields
+          when you set up your own Mailchimp program. It already has your name and number filled
+          in, nothing to edit.
         </p>
         {typeof window !== "undefined" && (
           <>
             <div style={{ marginBottom: 10 }}>
               <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Privacy Policy</label>
-              <div className="row">
-                <code style={{ fontSize: 13, wordBreak: "break-all" }}>
-                  {window.location.origin}/privacy/{profile.id}
-                </code>
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin}/privacy/${profile.id}`);
-                    setMessage("Privacy Policy link copied.");
-                  }}
-                >
-                  Copy
-                </button>
-              </div>
+              <textarea
+                readOnly
+                value={buildPrivacyPolicyText({
+                  name: profile.name,
+                  businessName: profile.business_name,
+                  phone: profile.mailchimp_number,
+                })}
+                rows={8}
+                style={{ width: "100%", fontSize: 13 }}
+                onFocus={(e) => e.target.select()}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(
+                    buildPrivacyPolicyText({
+                      name: profile.name,
+                      businessName: profile.business_name,
+                      phone: profile.mailchimp_number,
+                    })
+                  );
+                  setMessage("Privacy Policy text copied.");
+                }}
+              >
+                Copy
+              </button>
             </div>
             <div>
               <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>Terms of Service</label>
-              <div className="row">
-                <code style={{ fontSize: 13, wordBreak: "break-all" }}>
-                  {window.location.origin}/terms/{profile.id}
-                </code>
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin}/terms/${profile.id}`);
-                    setMessage("Terms of Service link copied.");
-                  }}
-                >
-                  Copy
-                </button>
-              </div>
+              <textarea
+                readOnly
+                value={buildTermsOfServiceText({
+                  name: profile.name,
+                  businessName: profile.business_name,
+                  phone: profile.mailchimp_number,
+                })}
+                rows={8}
+                style={{ width: "100%", fontSize: 13 }}
+                onFocus={(e) => e.target.select()}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(
+                    buildTermsOfServiceText({
+                      name: profile.name,
+                      businessName: profile.business_name,
+                      phone: profile.mailchimp_number,
+                    })
+                  );
+                  setMessage("Terms of Service text copied.");
+                }}
+              >
+                Copy
+              </button>
             </div>
             <div style={{ marginTop: 10 }}>
               <label className="subtitle" style={{ display: "block", marginBottom: 4 }}>
